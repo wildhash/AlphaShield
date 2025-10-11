@@ -7,6 +7,14 @@ from alphashield.database.mongodb_client import MongoDBClient
 from alphashield.database.embeddings import EmbeddingsClient
 
 
+# Import schema validation utilities
+try:
+    from alphashield.schemas.validation import validate_and_prepare_for_mongo
+    SCHEMAS_AVAILABLE = True
+except ImportError:
+    SCHEMAS_AVAILABLE = False
+
+
 class BaseAgent(ABC):
     """Abstract base class for all AlphaShield agents."""
     
@@ -29,12 +37,17 @@ class BaseAgent(ABC):
         
         Args:
             context_type: Type of context being stored
-            data: Context data
+            data: Context data (can be dict or schema instance)
             generate_embedding: Whether to generate embedding for semantic search
             
         Returns:
             Context ID as string.
         """
+        # Convert schema instance to dict if needed
+        if SCHEMAS_AVAILABLE and hasattr(data, 'to_dict'):
+            # This is a schema instance, validate and convert
+            data = validate_and_prepare_for_mongo(data)
+        
         embedding = None
         if generate_embedding and self.embeddings:
             # Create text representation for embedding
@@ -66,6 +79,28 @@ class BaseAgent(ABC):
             context_type=context_type,
             limit=limit
         )
+    
+    def store_structured_output(self, context_type: str, output_schema, 
+                               generate_embedding: bool = False) -> str:
+        """Store structured output using a schema.
+        
+        This is the recommended method for storing agent outputs with
+        validated schemas before MongoDB upload.
+        
+        Args:
+            context_type: Type of context being stored
+            output_schema: Instance of an agent output schema
+            generate_embedding: Whether to generate embedding for semantic search
+            
+        Returns:
+            Context ID as string.
+            
+        Example:
+            >>> from alphashield.schemas import LenderAgentOutput
+            >>> output = LenderAgentOutput(borrower_id="123", approved=True)
+            >>> agent.store_structured_output('lender_assessment', output)
+        """
+        return self.store_context(context_type, output_schema, generate_embedding)
     
     def log_action(self, action: str, details: Dict[str, Any]):
         """Log agent action for audit trail."""
