@@ -1,0 +1,63 @@
+# AlphaShield RL Configuration
+
+# Reward weights (must sum to ~1.0)
+reward:
+  alpha: 0.40      # wealth delta weight
+  beta: 0.15       # coverage/affordability weight
+  gamma: 0.15      # fairness weight
+  delta: 0.10      # user satisfaction weight
+  lambda1: 0.10    # drawdown penalty weight
+  lambda2: 0.05    # anomaly penalty weight
+  lambda3: 0.05    # tax risk penalty weight
+  min_fairness_threshold: 0.50  # minimum fairness to avoid gate zeroing
+
+# Contextual bandit parameters
+bandit:
+  algo: LinUCB
+  alpha: 1.5       # exploration weight (UCB)
+  reg: 0.01        # ridge regularization
+  prior_mean: 0.0  # prior mean for Thompson Sampling (if used)
+  prior_var: 1.0   # prior variance for Thompson Sampling (if used)
+
+# Time horizons and evaluation windows
+horizons:
+  window_days: 30      # rolling window for metrics normalization
+  eval_days: 7         # evaluation window for performance tracking
+  retention_days: 90   # experience retention period
+
+# Exploration parameters
+exploration:
+  epsilon: 0.1         # epsilon-greedy exploration (if used)
+  temperature: 1.0     # softmax temperature (if used)
+
+# Evolutionary search parameters (for nightly meta-optimization)
+evolution:
+  enabled: true
+  population: 20       # population size
+  elite_frac: 0.3      # fraction to keep as elites
+  sigma: 0.1           # mutation standard deviation
+  patience: 5          # generations without improvement before stopping
+  epsilon_improve: 0.01  # minimum improvement threshold
+  max_generations: 30  # maximum generations per run
+  schedule: "0 2 * * *"  # cron schedule (2 AM daily)
+
+# Training parameters
+training:
+  batch_size: 100      # batch size for updates (if applicable)
+  update_frequency: 1  # update after every N decisions
+  mock_mode: false     # use mock feedback for testing
+
+# Agent-specific action spaces (override defaults from context.py)
+agents:
+  Lender:
+    n_actions: 9
+  AlphaTrading:
+    n_actions: 5
+  SpendingGuard:
+    n_actions: 4
+  BudgetAnalyzer:
+    n_actions: 5
+  TaxOptimizer:
+    n_actions: 4
+  ContractReview:
+    n_actions: 3
