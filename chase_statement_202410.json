@@ -1,0 +1,178 @@
+{
+  "document_type": "Credit_Card_Statement",
+  "issuer": "JPMorgan Chase Bank, N.A.",
+  "card_product": "Chase Sapphire Preferred",
+  "statement_period": {
+    "start_date": "2024-10-01",
+    "end_date": "2024-10-31",
+    "days_in_period": 31
+  },
+  "statement_date": "2024-10-31",
+  "payment_due_date": "2024-11-25",
+  "account_information": {
+    "account_number": "****5678",
+    "cardholder_name": "John M. Doe",
+    "card_type": "Visa Signature",
+    "member_since": "2018-03-15",
+    "credit_limit": 5000.00,
+    "available_credit": 1200.00
+  },
+  "account_summary": {
+    "previous_balance": 3200.00,
+    "payments_and_credits": 500.00,
+    "purchases": 1500.00,
+    "cash_advances": 0.00,
+    "fees_charged": 0.00,
+    "interest_charged": 89.50,
+    "new_balance": 4289.50,
+    "minimum_payment_due": 125.00
+  },
+  "payment_information": {
+    "payment_due_date": "2024-11-25",
+    "minimum_payment": 125.00,
+    "new_balance": 4289.50
+  },
+  "transactions": [
+    {
+      "transaction_date": "2024-10-05",
+      "post_date": "2024-10-06",
+      "description": "Amazon.com",
+      "merchant_category": "Shopping",
+      "amount": 245.99,
+      "type": "purchase"
+    },
+    {
+      "transaction_date": "2024-10-08",
+      "post_date": "2024-10-09",
+      "description": "Whole Foods Market",
+      "merchant_category": "Groceries",
+      "amount": 87.34,
+      "type": "purchase"
+    },
+    {
+      "transaction_date": "2024-10-12",
+      "post_date": "2024-10-13",
+      "description": "Shell Gas Station",
+      "merchant_category": "Gas",
+      "amount": 52.10,
+      "type": "purchase"
+    },
+    {
+      "transaction_date": "2024-10-15",
+      "post_date": "2024-10-16",
+      "description": "The Olive Garden",
+      "merchant_category": "Dining",
+      "amount": 65.80,
+      "type": "purchase"
+    },
+    {
+      "transaction_date": "2024-10-18",
+      "post_date": "2024-10-19",
+      "description": "Target",
+      "merchant_category": "Shopping",
+      "amount": 134.25,
+      "type": "purchase"
+    },
+    {
+      "transaction_date": "2024-10-22",
+      "post_date": "2024-10-23",
+      "description": "Starbucks",
+      "merchant_category": "Dining",
+      "amount": 12.45,
+      "type": "purchase"
+    },
+    {
+      "transaction_date": "2024-10-25",
+      "post_date": "2024-10-26",
+      "description": "Netflix",
+      "merchant_category": "Entertainment",
+      "amount": 15.99,
+      "type": "purchase"
+    },
+    {
+      "transaction_date": "2024-10-28",
+      "post_date": "2024-10-29",
+      "description": "CVS Pharmacy",
+      "merchant_category": "Healthcare",
+      "amount": 28.67,
+      "type": "purchase"
+    },
+    {
+      "transaction_date": "2024-10-30",
+      "post_date": "2024-10-31",
+      "description": "Uber",
+      "merchant_category": "Transportation",
+      "amount": 24.30,
+      "type": "purchase"
+    }
+  ],
+  "spending_by_category": {
+    "Shopping": {
+      "transaction_count": 2,
+      "total_amount": 380.24,
+      "percentage_of_total": 25.3
+    },
+    "Dining": {
+      "transaction_count": 2,
+      "total_amount": 78.25,
+      "percentage_of_total": 5.2
+    },
+    "Groceries": {
+      "transaction_count": 1,
+      "total_amount": 87.34,
+      "percentage_of_total": 5.8
+    },
+    "Gas": {
+      "transaction_count": 1,
+      "total_amount": 52.10,
+      "percentage_of_total": 3.5
+    },
+    "Entertainment": {
+      "transaction_count": 1,
+      "total_amount": 15.99,
+      "percentage_of_total": 1.1
+    },
+    "Healthcare": {
+      "transaction_count": 1,
+      "total_amount": 28.67,
+      "percentage_of_total": 1.9
+    },
+    "Transportation": {
+      "transaction_count": 1,
+      "total_amount": 24.30,
+      "percentage_of_total": 1.6
+    }
+  },
+  "spending_patterns": {
+    "total_new_purchases": 1500.00,
+    "total_transactions": 9,
+    "average_transaction_amount": 166.67,
+    "largest_purchase": 245.99,
+    "largest_purchase_merchant": "Amazon.com"
+  },
+  "interest_charges": {
+    "total_interest_charged": 89.50,
+    "purchase_apr": 22.99,
+    "cash_advance_apr": 27.99,
+    "balance_subject_to_interest": 3200.00
+  },
+  "red_flags": [
+    {
+      "flag_type": "High Utilization",
+      "severity": "Medium",
+      "description": "Credit utilization at 85.8% (using $4,290 of $5,000 limit)",
+      "date_identified": "2024-10-31"
+    },
+    {
+      "flag_type": "Interest Charges",
+      "severity": "Medium",
+      "description": "Accruing interest charges of $89.50, indicating carried balance",
+      "impact": "Additional cost on purchases"
+    }
+  ],
+  "financial_health_indicators": {
+    "credit_utilization_ratio": 0.858,
+    "payment_to_balance_ratio": 0.117,
+    "months_carrying_balance": 3
+  }
+}

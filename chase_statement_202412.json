@@ -1,0 +1,206 @@
+{
+  "document_type": "Credit_Card_Statement",
+  "issuer": "JPMorgan Chase Bank, N.A.",
+  "card_product": "Chase Sapphire Preferred",
+  "statement_period": {
+    "start_date": "2024-12-01",
+    "end_date": "2024-12-31",
+    "days_in_period": 31
+  },
+  "statement_date": "2024-12-31",
+  "payment_due_date": "2025-01-25",
+  "account_information": {
+    "account_number": "****5678",
+    "cardholder_name": "John M. Doe",
+    "card_type": "Visa Signature",
+    "member_since": "2018-03-15",
+    "credit_limit": 5000.00,
+    "available_credit": 0.00
+  },
+  "account_summary": {
+    "previous_balance": 5955.25,
+    "payments_and_credits": 175.00,
+    "purchases": 2145.80,
+    "cash_advances": 0.00,
+    "fees_charged": 40.00,
+    "interest_charged": 128.90,
+    "new_balance": 8094.95,
+    "minimum_payment_due": 250.00
+  },
+  "payment_information": {
+    "payment_due_date": "2025-01-25",
+    "minimum_payment": 250.00,
+    "new_balance": 8094.95
+  },
+  "transactions": [
+    {
+      "transaction_date": "2024-12-03",
+      "post_date": "2024-12-04",
+      "description": "Costco Wholesale",
+      "merchant_category": "Shopping",
+      "amount": 385.50,
+      "type": "purchase"
+    },
+    {
+      "transaction_date": "2024-12-06",
+      "post_date": "2024-12-07",
+      "description": "Nordstrom",
+      "merchant_category": "Shopping",
+      "amount": 524.99,
+      "type": "purchase"
+    },
+    {
+      "transaction_date": "2024-12-10",
+      "post_date": "2024-12-11",
+      "description": "The Cheesecake Factory",
+      "merchant_category": "Dining",
+      "amount": 95.60,
+      "type": "purchase"
+    },
+    {
+      "transaction_date": "2024-12-12",
+      "post_date": "2024-12-13",
+      "description": "Shell Gas Station",
+      "merchant_category": "Gas",
+      "amount": 64.30,
+      "type": "purchase"
+    },
+    {
+      "transaction_date": "2024-12-15",
+      "post_date": "2024-12-16",
+      "description": "Apple Store",
+      "merchant_category": "Electronics",
+      "amount": 679.00,
+      "type": "purchase"
+    },
+    {
+      "transaction_date": "2024-12-18",
+      "post_date": "2024-12-19",
+      "description": "Whole Foods Market",
+      "merchant_category": "Groceries",
+      "amount": 143.25,
+      "type": "purchase"
+    },
+    {
+      "transaction_date": "2024-12-20",
+      "post_date": "2024-12-21",
+      "description": "Spotify Premium",
+      "merchant_category": "Entertainment",
+      "amount": 9.99,
+      "type": "purchase"
+    },
+    {
+      "transaction_date": "2024-12-23",
+      "post_date": "2024-12-24",
+      "description": "CVS Pharmacy",
+      "merchant_category": "Healthcare",
+      "amount": 42.15,
+      "type": "purchase"
+    },
+    {
+      "transaction_date": "2024-12-26",
+      "post_date": "2024-12-27",
+      "description": "P.F. Chang's",
+      "merchant_category": "Dining",
+      "amount": 78.90,
+      "type": "purchase"
+    },
+    {
+      "transaction_date": "2024-12-28",
+      "post_date": "2024-12-29",
+      "description": "Uber Eats",
+      "merchant_category": "Dining",
+      "amount": 35.62,
+      "type": "purchase"
+    },
+    {
+      "transaction_date": "2024-12-30",
+      "post_date": "2024-12-31",
+      "description": "Gas Station",
+      "merchant_category": "Gas",
+      "amount": 55.50,
+      "type": "purchase"
+    }
+  ],
+  "spending_by_category": {
+    "Shopping": {
+      "transaction_count": 2,
+      "total_amount": 910.49,
+      "percentage_of_total": 42.4
+    },
+    "Electronics": {
+      "transaction_count": 1,
+      "total_amount": 679.00,
+      "percentage_of_total": 31.6
+    },
+    "Dining": {
+      "transaction_count": 3,
+      "total_amount": 210.12,
+      "percentage_of_total": 9.8
+    },
+    "Groceries": {
+      "transaction_count": 1,
+      "total_amount": 143.25,
+      "percentage_of_total": 6.7
+    },
+    "Gas": {
+      "transaction_count": 2,
+      "total_amount": 119.80,
+      "percentage_of_total": 5.6
+    },
+    "Healthcare": {
+      "transaction_count": 1,
+      "total_amount": 42.15,
+      "percentage_of_total": 2.0
+    },
+    "Entertainment": {
+      "transaction_count": 1,
+      "total_amount": 9.99,
+      "percentage_of_total": 0.5
+    }
+  },
+  "spending_patterns": {
+    "total_new_purchases": 2145.80,
+    "total_transactions": 11,
+    "average_transaction_amount": 195.07,
+    "largest_purchase": 679.00,
+    "largest_purchase_merchant": "Apple Store"
+  },
+  "interest_charges": {
+    "total_interest_charged": 128.90,
+    "purchase_apr": 22.99,
+    "cash_advance_apr": 27.99,
+    "balance_subject_to_interest": 5955.25
+  },
+  "red_flags": [
+    {
+      "flag_type": "Severe Over Limit",
+      "severity": "Critical",
+      "description": "Account balance exceeds credit limit by $3,094.95 (161.9% utilization)",
+      "date_identified": "2024-12-31"
+    },
+    {
+      "flag_type": "Over-Limit Fee",
+      "severity": "High",
+      "description": "Charged $40 over-limit fee this month",
+      "impact": "Additional fees increasing debt burden"
+    },
+    {
+      "flag_type": "Minimum Payment Only",
+      "severity": "Critical",
+      "description": "Paying only minimum for 6 consecutive months",
+      "impact": "Debt growing faster than payments can reduce it"
+    },
+    {
+      "flag_type": "Holiday Spending Spike",
+      "severity": "High",
+      "description": "Purchases increased by 27.4% during holiday season",
+      "impact": "Rapid debt accumulation during seasonal spending"
+    }
+  ],
+  "financial_health_indicators": {
+    "credit_utilization_ratio": 1.619,
+    "payment_to_balance_ratio": 0.029,
+    "months_carrying_balance": 5
+  }
+}

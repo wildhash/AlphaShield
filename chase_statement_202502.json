@@ -1,0 +1,217 @@
+{
+  "document_type": "Credit_Card_Statement",
+  "issuer": "JPMorgan Chase Bank, N.A.",
+  "card_product": "Chase Sapphire Preferred",
+  "statement_period": {
+    "start_date": "2025-02-01",
+    "end_date": "2025-02-28",
+    "days_in_period": 28
+  },
+  "statement_date": "2025-02-28",
+  "payment_due_date": "2025-03-25",
+  "account_information": {
+    "account_number": "****5678",
+    "cardholder_name": "John M. Doe",
+    "card_type": "Visa Signature",
+    "member_since": "2018-03-15",
+    "credit_limit": 5000.00,
+    "available_credit": 0.00
+  },
+  "account_summary": {
+    "previous_balance": 9486.25,
+    "payments_and_credits": 285.00,
+    "purchases": 987.50,
+    "cash_advances": 0.00,
+    "fees_charged": 40.00,
+    "interest_charged": 178.25,
+    "new_balance": 10407.00,
+    "minimum_payment_due": 312.00
+  },
+  "payment_information": {
+    "payment_due_date": "2025-03-25",
+    "minimum_payment": 312.00,
+    "new_balance": 10407.00
+  },
+  "transactions": [
+    {
+      "transaction_date": "2025-02-02",
+      "post_date": "2025-02-03",
+      "description": "Home Depot",
+      "merchant_category": "Home Improvement",
+      "amount": 156.80,
+      "type": "purchase"
+    },
+    {
+      "transaction_date": "2025-02-05",
+      "post_date": "2025-02-06",
+      "description": "Safeway",
+      "merchant_category": "Groceries",
+      "amount": 98.35,
+      "type": "purchase"
+    },
+    {
+      "transaction_date": "2025-02-08",
+      "post_date": "2025-02-09",
+      "description": "Olive Garden",
+      "merchant_category": "Dining",
+      "amount": 72.40,
+      "type": "purchase"
+    },
+    {
+      "transaction_date": "2025-02-10",
+      "post_date": "2025-02-11",
+      "description": "Exxon Gas Station",
+      "merchant_category": "Gas",
+      "amount": 59.90,
+      "type": "purchase"
+    },
+    {
+      "transaction_date": "2025-02-12",
+      "post_date": "2025-02-13",
+      "description": "Amazon Prime",
+      "merchant_category": "Subscription",
+      "amount": 14.99,
+      "type": "purchase"
+    },
+    {
+      "transaction_date": "2025-02-15",
+      "post_date": "2025-02-16",
+      "description": "Ross Dress for Less",
+      "merchant_category": "Shopping",
+      "amount": 134.25,
+      "type": "purchase"
+    },
+    {
+      "transaction_date": "2025-02-18",
+      "post_date": "2025-02-19",
+      "description": "Starbucks",
+      "merchant_category": "Dining",
+      "amount": 15.80,
+      "type": "purchase"
+    },
+    {
+      "transaction_date": "2025-02-20",
+      "post_date": "2025-02-21",
+      "description": "Costco Gas",
+      "merchant_category": "Gas",
+      "amount": 54.20,
+      "type": "purchase"
+    },
+    {
+      "transaction_date": "2025-02-22",
+      "post_date": "2025-02-23",
+      "description": "Petco",
+      "merchant_category": "Pet Supplies",
+      "amount": 89.60,
+      "type": "purchase"
+    },
+    {
+      "transaction_date": "2025-02-25",
+      "post_date": "2025-02-26",
+      "description": "Lyft",
+      "merchant_category": "Transportation",
+      "amount": 22.15,
+      "type": "purchase"
+    },
+    {
+      "transaction_date": "2025-02-27",
+      "post_date": "2025-02-28",
+      "description": "TJ Maxx",
+      "merchant_category": "Shopping",
+      "amount": 98.06,
+      "type": "purchase"
+    }
+  ],
+  "spending_by_category": {
+    "Shopping": {
+      "transaction_count": 2,
+      "total_amount": 232.31,
+      "percentage_of_total": 23.5
+    },
+    "Home Improvement": {
+      "transaction_count": 1,
+      "total_amount": 156.80,
+      "percentage_of_total": 15.9
+    },
+    "Gas": {
+      "transaction_count": 2,
+      "total_amount": 114.10,
+      "percentage_of_total": 11.6
+    },
+    "Groceries": {
+      "transaction_count": 1,
+      "total_amount": 98.35,
+      "percentage_of_total": 10.0
+    },
+    "Dining": {
+      "transaction_count": 2,
+      "total_amount": 88.20,
+      "percentage_of_total": 8.9
+    },
+    "Pet Supplies": {
+      "transaction_count": 1,
+      "total_amount": 89.60,
+      "percentage_of_total": 9.1
+    },
+    "Transportation": {
+      "transaction_count": 1,
+      "total_amount": 22.15,
+      "percentage_of_total": 2.2
+    },
+    "Subscription": {
+      "transaction_count": 1,
+      "total_amount": 14.99,
+      "percentage_of_total": 1.5
+    }
+  },
+  "spending_patterns": {
+    "total_new_purchases": 987.50,
+    "total_transactions": 11,
+    "average_transaction_amount": 89.77,
+    "largest_purchase": 156.80,
+    "largest_purchase_merchant": "Home Depot"
+  },
+  "interest_charges": {
+    "total_interest_charged": 178.25,
+    "purchase_apr": 22.99,
+    "cash_advance_apr": 27.99,
+    "balance_subject_to_interest": 9486.25
+  },
+  "red_flags": [
+    {
+      "flag_type": "Extreme Over Limit",
+      "severity": "Critical",
+      "description": "Account balance exceeds credit limit by $5,407.00 (208.1% utilization)",
+      "date_identified": "2025-02-28"
+    },
+    {
+      "flag_type": "Over-Limit Fee",
+      "severity": "High",
+      "description": "Charged $40 over-limit fee for third consecutive month",
+      "impact": "Repeated over-limit fees increasing debt burden"
+    },
+    {
+      "flag_type": "Minimum Payment Only",
+      "severity": "Critical",
+      "description": "Paying only minimum for 8 consecutive months",
+      "impact": "Deep in debt spiral - balance growing despite payments"
+    },
+    {
+      "flag_type": "Rising Interest Charges",
+      "severity": "Critical",
+      "description": "Interest charges increased to $178.25, highest yet",
+      "impact": "Interest alone is now higher than minimum payment"
+    },
+    {
+      "flag_type": "Account at Risk",
+      "severity": "Critical",
+      "description": "Account severely delinquent, at risk of charge-off",
+      "impact": "Possible account closure, collections, credit score damage"
+    }
+  ],
+  "financial_health_indicators": {
+    "credit_utilization_ratio": 2.081,
+    "payment_to_balance_ratio": 0.030,
+    "months_carrying_balance": 7
+  }
+}
