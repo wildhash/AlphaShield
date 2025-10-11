@@ -235,11 +235,26 @@ AlphaShield/
 │   │   └── embeddings.py           # Voyage AI embeddings
 │   ├── models/
 │   │   └── loan.py                 # Loan data models
+│   ├── schemas/
+│   │   ├── agent_schemas.py        # Output schemas for agents
+│   │   └── validation.py           # Schema validation helpers
 │   └── orchestrator.py             # Multi-agent coordinator
+├── docs/
+│   └── AGENT_SCHEMAS.md            # Schema documentation
 ├── example.py                      # Complete demo
 ├── requirements.txt                # Python dependencies
 └── README.md                       # This file
 ```
+
+### Agent Output Schemas
+
+All agents use standardized output schemas before storing data in MongoDB. This ensures:
+- ✅ Type safety and validation
+- ✅ Consistent data structures across agents
+- ✅ Easy cross-agent coordination
+- ✅ Self-documenting code
+
+See [docs/AGENT_SCHEMAS.md](docs/AGENT_SCHEMAS.md) for detailed schema specifications.
 
 ## 🌟 Future Enhancements
 
