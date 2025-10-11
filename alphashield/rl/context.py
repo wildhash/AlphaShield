@@ -36,6 +36,9 @@ def build_context(
     """
     features = []
     
+    # Bias term (always 1.0)
+    features.append(1.0)
+    
     # Agent encoding (one-hot or hash)
     agent_hash = hash(agent_name) % 100
     features.append(agent_hash / 100.0)
@@ -91,7 +94,7 @@ def get_context_dimension() -> int:
     int
         Feature dimension (currently 13)
     """
-    # agent_hash + user_hash + hour + day + amount + rate + term + 
+    # bias + agent_hash + user_hash + hour + day + amount + rate + term + 
     # coverage + risk + satisfaction + memory_count + memory_similarity
     return 13
 
