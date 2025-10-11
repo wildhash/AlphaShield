@@ -1,0 +1,10 @@
+:root{ --v-bg:#0b0b0c; --paper:#f6efe6; --v-warm:#c07b4b; --v-accent:#4FD1A9; --v-primary:#2b6ce6; --muted:#9aa0a6; }
+.landing-site{min-height:100vh;display:flex;flex-direction:column;background:var(--v-bg)}
+.vintage-hero{display:flex;gap:32px;align-items:flex-start;padding:44px 28px;background-image:linear-gradient(180deg, rgba(0,0,0,0.22), rgba(0,0,0,0.24));}
+.hero-left{flex:1;max-width:760px;color:#efe7dc;font-family:Merriweather,serif}
+.hero-title{font-size:clamp(28px,4.2vw,46px);line-height:1.02;margin-bottom:12px;color:#fff}
+.hero-sub{color:rgba(235,229,221,0.9);margin-bottom:18px}
+.cta-row{display:flex;gap:12px;margin-bottom:18px}
+.btn.large{padding:12px 18px;border-radius:10px;font-size:15px}
+.btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
+.device-card{width:360px;border-radius:12px;padding:12px;background:linear-gradient(180deg, rgba(250,245,240,0.04), rgba(250,245,240,0.02));border:1px solid rgba(255,255,255,0.02)}
