@@ -1,0 +1,218 @@
+{
+  "document_type": "Credit_Card_Statement",
+  "issuer": "JPMorgan Chase Bank, N.A.",
+  "card_product": "Chase Sapphire Preferred",
+  "statement_period": {
+    "start_date": "2025-01-01",
+    "end_date": "2025-01-31",
+    "days_in_period": 31
+  },
+  "statement_date": "2025-01-31",
+  "payment_due_date": "2025-02-25",
+  "account_information": {
+    "account_number": "****5678",
+    "cardholder_name": "John M. Doe",
+    "card_type": "Visa Signature",
+    "member_since": "2018-03-15",
+    "credit_limit": 5000.00,
+    "available_credit": 0.00
+  },
+  "account_summary": {
+    "previous_balance": 8094.95,
+    "payments_and_credits": 250.00,
+    "purchases": 1234.50,
+    "cash_advances": 200.00,
+    "fees_charged": 50.00,
+    "interest_charged": 156.80,
+    "new_balance": 9486.25,
+    "minimum_payment_due": 285.00
+  },
+  "payment_information": {
+    "payment_due_date": "2025-02-25",
+    "minimum_payment": 285.00,
+    "new_balance": 9486.25
+  },
+  "transactions": [
+    {
+      "transaction_date": "2025-01-03",
+      "post_date": "2025-01-04",
+      "description": "Cash Advance - ATM Withdrawal",
+      "merchant_category": "Cash Advance",
+      "amount": 200.00,
+      "type": "cash_advance"
+    },
+    {
+      "transaction_date": "2025-01-05",
+      "post_date": "2025-01-06",
+      "description": "Walmart Supercenter",
+      "merchant_category": "Shopping",
+      "amount": 178.90,
+      "type": "purchase"
+    },
+    {
+      "transaction_date": "2025-01-08",
+      "post_date": "2025-01-09",
+      "description": "Kroger",
+      "merchant_category": "Groceries",
+      "amount": 105.45,
+      "type": "purchase"
+    },
+    {
+      "transaction_date": "2025-01-12",
+      "post_date": "2025-01-13",
+      "description": "McDonald's",
+      "merchant_category": "Dining",
+      "amount": 24.30,
+      "type": "purchase"
+    },
+    {
+      "transaction_date": "2025-01-15",
+      "post_date": "2025-01-16",
+      "description": "BP Gas Station",
+      "merchant_category": "Gas",
+      "amount": 61.80,
+      "type": "purchase"
+    },
+    {
+      "transaction_date": "2025-01-18",
+      "post_date": "2025-01-19",
+      "description": "Target",
+      "merchant_category": "Shopping",
+      "amount": 243.75,
+      "type": "purchase"
+    },
+    {
+      "transaction_date": "2025-01-20",
+      "post_date": "2025-01-21",
+      "description": "Hulu Subscription",
+      "merchant_category": "Entertainment",
+      "amount": 14.99,
+      "type": "purchase"
+    },
+    {
+      "transaction_date": "2025-01-23",
+      "post_date": "2025-01-24",
+      "description": "Rite Aid",
+      "merchant_category": "Healthcare",
+      "amount": 37.55,
+      "type": "purchase"
+    },
+    {
+      "transaction_date": "2025-01-26",
+      "post_date": "2025-01-27",
+      "description": "Panera Bread",
+      "merchant_category": "Dining",
+      "amount": 32.80,
+      "type": "purchase"
+    },
+    {
+      "transaction_date": "2025-01-28",
+      "post_date": "2025-01-29",
+      "description": "Uber",
+      "merchant_category": "Transportation",
+      "amount": 28.45,
+      "type": "purchase"
+    },
+    {
+      "transaction_date": "2025-01-30",
+      "post_date": "2025-01-31",
+      "description": "Regal Cinemas",
+      "merchant_category": "Entertainment",
+      "amount": 35.51,
+      "type": "purchase"
+    }
+  ],
+  "spending_by_category": {
+    "Cash Advance": {
+      "transaction_count": 1,
+      "total_amount": 200.00,
+      "percentage_of_total": 13.9
+    },
+    "Shopping": {
+      "transaction_count": 2,
+      "total_amount": 422.65,
+      "percentage_of_total": 29.5
+    },
+    "Groceries": {
+      "transaction_count": 1,
+      "total_amount": 105.45,
+      "percentage_of_total": 7.4
+    },
+    "Dining": {
+      "transaction_count": 2,
+      "total_amount": 57.10,
+      "percentage_of_total": 4.0
+    },
+    "Gas": {
+      "transaction_count": 1,
+      "total_amount": 61.80,
+      "percentage_of_total": 4.3
+    },
+    "Entertainment": {
+      "transaction_count": 2,
+      "total_amount": 50.50,
+      "percentage_of_total": 3.5
+    },
+    "Healthcare": {
+      "transaction_count": 1,
+      "total_amount": 37.55,
+      "percentage_of_total": 2.6
+    },
+    "Transportation": {
+      "transaction_count": 1,
+      "total_amount": 28.45,
+      "percentage_of_total": 2.0
+    }
+  },
+  "spending_patterns": {
+    "total_new_purchases": 1234.50,
+    "total_transactions": 11,
+    "average_transaction_amount": 112.23,
+    "largest_purchase": 243.75,
+    "largest_purchase_merchant": "Target"
+  },
+  "interest_charges": {
+    "total_interest_charged": 156.80,
+    "purchase_apr": 22.99,
+    "cash_advance_apr": 27.99,
+    "balance_subject_to_interest": 8094.95,
+    "cash_advance_fee": 10.00
+  },
+  "red_flags": [
+    {
+      "flag_type": "Severe Over Limit",
+      "severity": "Critical",
+      "description": "Account balance exceeds credit limit by $4,486.25 (189.7% utilization)",
+      "date_identified": "2025-01-31"
+    },
+    {
+      "flag_type": "Cash Advance",
+      "severity": "Critical",
+      "description": "Took cash advance of $200 with high APR (27.99%) and $10 fee",
+      "impact": "Very expensive form of borrowing indicating financial stress"
+    },
+    {
+      "flag_type": "Over-Limit Fee",
+      "severity": "High",
+      "description": "Charged $40 over-limit fee this month",
+      "impact": "Additional fees increasing debt burden"
+    },
+    {
+      "flag_type": "Minimum Payment Only",
+      "severity": "Critical",
+      "description": "Paying only minimum for 7 consecutive months",
+      "impact": "Debt spiral - payments barely covering interest"
+    },
+    {
+      "flag_type": "Late Payment Fee",
+      "severity": "High",
+      "description": "Late payment fee may have been assessed",
+      "impact": "Additional $40 fee and negative credit report"
+    }
+  ],
+  "financial_health_indicators": {
+    "credit_utilization_ratio": 1.897,
+    "payment_to_balance_ratio": 0.031,
+    "months_carrying_balance": 6
+  }
+}
