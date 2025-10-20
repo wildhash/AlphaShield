@@ -1,0 +1,16 @@
+risk:
+  target_vol: 0.10
+  max_monthly_dd: 0.03
+  es95_limit: 0.04
+  cr_floor: 1.30
+  pos_cap: 0.25
+  min_cash: 0.05
+  turnover_budget: 0.20
+
+execution:
+  venue: alpaca
+  paper: true
+
+optimizer:
+  mode: qp
+  solver: ECOS
