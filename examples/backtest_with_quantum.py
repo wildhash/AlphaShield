@@ -7,6 +7,7 @@ This shows how to extend BacktestEngine to use quantum optimization.
 import numpy as np
 import pandas as pd
 from typing import Dict, List
+from collections import Counter
 from trading_core.signals.trend import trend_signals
 from trading_core.signals.meanrev import meanrev_signals
 from trading_core.portfolio.optimizer_qp import optimize_with_fallback, setup_quantum_environment
@@ -140,12 +141,22 @@ class QuantumBacktestEngine:
         }
 
     def run(self) -> Dict:
+        """
+        Run the backtest simulation.
+        
+        Returns:
+            Dict with keys:
+                - final_nav (float): Final net asset value
+                - nav_series (List[float]): NAV history over time
+                - cr_series (List[float]): Coverage ratio history
+                - logs (List[Dict]): Detailed logs for each step
+                - method_counts (Dict[str, int]): Count of optimization methods used
+        """
         logs = []
         for t in range(len(self.data)):
             logs.append(self.step(t))
         
         # Count optimization methods used
-        from collections import Counter
         method_counts = Counter(self.optimization_methods)
         
         return {
