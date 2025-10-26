@@ -52,8 +52,16 @@ class LinUCB:
     # ---------- utilities ----------
     def _ensure_inv(self) -> Array:
         if self._A_inv is None:
-            # compute inverses for all actions
-            self._A_inv = np.linalg.inv(self.A)    # (k, d, d)
+            # Compute inverses for all actions individually for numerical stability
+            k = self.A.shape[0]
+            invs = []
+            for a in range(k):
+                try:
+                    invs.append(np.linalg.inv(self.A[a]))
+                except np.linalg.LinAlgError:
+                    # Add small jitter and retry
+                    invs.append(np.linalg.inv(self.A[a] + np.eye(self.A.shape[1]) * 1e-8))
+            self._A_inv = np.stack(invs, axis=0)    # (k, d, d)
         return self._A_inv
 
     def _invalidate_inv(self) -> None:

@@ -14,3 +14,9 @@ execution:
 optimizer:
   mode: qp
   solver: ECOS
+
+# Optional RL configuration
+rl:
+  enabled: false
+  agent_name: AlphaTrading
+  mock_mode: false
