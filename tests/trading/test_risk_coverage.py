@@ -6,6 +6,17 @@ from alphashield.trading.risk_manager import RiskManager
 
 
 def pmt(rate_annual, n_months, principal):
+    """
+    Compute the fixed monthly payment for an amortizing loan given an annual interest rate, term, and principal.
+    
+    Parameters:
+        rate_annual (float): Annual nominal interest rate expressed as a decimal (e.g., 0.08 for 8%).
+        n_months (int): Total number of monthly payments (loan term in months).
+        principal (float): Initial loan principal amount.
+    
+    Returns:
+        monthly_payment (float): The fixed monthly payment amount.
+    """
     r = rate_annual / 12.0
     if r == 0:
         return principal / n_months

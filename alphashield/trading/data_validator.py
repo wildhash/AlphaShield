@@ -9,6 +9,14 @@ from alphashield.utils.errors import DataValidationError
 
 
 def _is_business_day_index(index: pd.Index) -> bool:
+    """
+    Determine whether the given pandas index represents business-day data.
+    
+    Returns `True` if `index` is a DatetimeIndex or PeriodIndex with a business frequency code ('B' or 'C'), or if all dates in the index fall on weekdays (Monday–Friday); returns `False` otherwise.
+    
+    Returns:
+        bool: `True` if the index represents business days, `False` otherwise.
+    """
     if not isinstance(index, (pd.DatetimeIndex, pd.PeriodIndex)):
         return False
     # Consider business day index if frequency is business day or dates are weekdays
@@ -23,13 +31,18 @@ def validate_prices(
     strict: bool = False,
 ) -> Tuple[bool, List[str]]:
     """
-    Validate OHLC/close price DataFrame.
-
-    Rules:
-    - Business-day index; gaps >5 business days -> error
-    - No non-positive prices
-    - Daily move absolute > 0.5 -> flag possible split/corporate action
-    - History length must be >= required_history
+    Validate an OHLC/close price DataFrame against business-day, continuity, positivity, volatility, and history-length rules.
+    
+    Parameters:
+        df (pd.DataFrame): Price data indexed by dates (OHLC or close columns).
+        required_history (int): Minimum number of rows required in `df`. Default is 252.
+        strict (bool): If True, raise DataValidationError when any validation fails; otherwise return error codes.
+    
+    Returns:
+        tuple: (ok, errors) where `ok` is `True` if all validations pass, `False` otherwise; `errors` is a list of error code strings describing detected issues.
+    
+    Raises:
+        DataValidationError: If `strict` is True and one or more validations fail.
     """
     errors: List[str] = []
 
@@ -78,8 +91,17 @@ def validate_prices(
 
 def detect_outliers(returns: pd.Series, method: str = "iqr") -> pd.Series:
     """
-    Returns a boolean Series where True indicates an outlier.
-    Supports 'iqr' and 'zscore'.
+    Identify outliers in a series of returns using IQR or z-score methods.
+    
+    Parameters:
+        returns (pd.Series): Series of numeric returns; NaN values are ignored for calculations but preserved in the returned index alignment.
+        method (str): Outlier detection method: "iqr" to flag values outside Q1 - 1.5*IQR and Q3 + 1.5*IQR, or "zscore" to flag values with absolute z-score greater than 3. Default is "iqr".
+    
+    Returns:
+        pd.Series: Boolean mask aligned to the input index where `True` indicates an outlier and `False` otherwise. Empty input yields an empty boolean Series.
+    
+    Raises:
+        ValueError: If `method` is not "iqr" or "zscore".
     """
     x = pd.Series(returns).dropna()
     if x.empty:
@@ -108,7 +130,15 @@ def check_liquidity(
     adv_threshold_usd: float = 5_000_000,
 ) -> bool:
     """
-    Check if average daily dollar volume exceeds threshold.
+    Determine whether the average daily dollar volume (ADV) meets or exceeds a USD threshold.
+    
+    Parameters:
+        volume (pd.Series): Daily traded volume (units) indexed by date or reindexable to `price.index`.
+        price (pd.Series): Daily price series indexed by date; used to compute dollar volume per day.
+        adv_threshold_usd (float): Minimum average daily dollar volume in USD required to pass.
+    
+    Returns:
+        bool: `True` if the mean of (volume * price) is greater than or equal to `adv_threshold_usd`, `False` otherwise.
     """
     v = pd.Series(volume).astype(float).reindex(price.index).fillna(0.0)
     p = pd.Series(price).astype(float)

@@ -16,11 +16,25 @@ def simulate_execution(
     portfolio_value: float = 0.0,
 ) -> dict:
     """
-    Simple execution simulator with spread slippage and ADV caps.
-    - Limit trade notional to adv_limit * ADV
-    - Slippage: half-spread per trade leg
-    - Commission: flat per name traded (if any trade occurs)
-    Returns dict with trades, total_cost, final_weights, final_value
+    Simulates execution of trades to move from current to target weights while accounting for spread slippage, per-trade commissions, and optional ADV-based trade caps.
+    
+    Parameters:
+        current_weights (pd.Series): Current portfolio weights aligned by asset index.
+        target_weights (pd.Series): Desired portfolio weights; assets not in current_weights are treated as zero.
+        prices (pd.Series): Asset prices by asset key; assets with missing or non-positive prices are skipped.
+        adv (pd.Series | None): Average daily volume per asset used to cap trade notional when provided.
+        spread_bps (dict[str, float] | None): Per-asset spread in basis points; defaults to 1.0 bps for missing entries.
+        commission_per_trade (float): Flat commission charged once for each asset with non-zero executed notional.
+        adv_limit (float): Fraction of ADV used as a cap for the absolute trade notional (e.g., 0.10 = 10% of ADV).
+        portfolio_value (float): Starting total portfolio notional value used to compute desired trade notionals.
+    
+    Returns:
+        dict: {
+            "trades": dict of asset -> executed notional (signed, positive means buy notional, negative means sell),
+            "total_cost": float total of slippage plus commissions deducted from portfolio value,
+            "final_weights": pd.Series of resulting weights clipped to [0,1] and renormalized to sum to 1 if non-zero,
+            "final_value": float portfolio value after subtracting total slippage and commissions
+        }
     """
     idx = target_weights.index
     cw = current_weights.reindex(idx).fillna(0.0)

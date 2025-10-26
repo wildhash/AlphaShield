@@ -24,6 +24,18 @@ class OptimizerConfig:
 
 
 def _project_to_simplex_box(w: np.ndarray, max_pos: float) -> np.ndarray:
+    """
+    Project a weight vector onto the probability simplex with per-asset upper bounds.
+    
+    Parameters:
+        w (np.ndarray): 1-D array of asset weights (can be any real values).
+        max_pos (float): Maximum allowed weight for any single asset (0 < max_pos <= 1).
+    
+    Returns:
+        np.ndarray: A 1-D array of the same length as `w` where each element is between 0 and `max_pos`
+        and the elements sum to 1. If all weights clip to zero, returns an equal-weight vector with
+        each element equal to min(1/n, max_pos).
+    """
     w = np.clip(w, 0.0, max_pos)
     s = w.sum()
     if s <= 0:
@@ -34,6 +46,23 @@ def _project_to_simplex_box(w: np.ndarray, max_pos: float) -> np.ndarray:
 
 
 def _estimate_covariance(returns: pd.DataFrame, method: str, ewma_lambda: float) -> np.ndarray:
+    """
+    Estimate the assets' covariance matrix from historical returns using the selected method.
+    
+    Parameters:
+        returns (pd.DataFrame): Historical asset returns with rows as observations (time) and columns as assets.
+        method (str): Covariance estimation method — either "ledoit_wolf" or "ewma".
+        ewma_lambda (float): Decay factor used when method is "ewma" (ignored for other methods).
+    
+    Returns:
+        np.ndarray: Estimated covariance matrix (shape: n_assets x n_assets).
+    
+    Notes:
+        - If fewer than two observations are present, returns a diagonal covariance matrix using per-asset variances (with small-value safeguards).
+        - For "ledoit_wolf", falls back to the sample covariance if the LedoitWolf estimator is unavailable.
+        - For "ewma", computes an exponentially weighted covariance using the provided decay factor.
+        - Raises ValueError if an unknown method string is passed.
+    """
     x = returns.dropna()
     if x.shape[0] < 2:
         # tiny sample; diagonal proxy
@@ -64,6 +93,13 @@ def _estimate_covariance(returns: pd.DataFrame, method: str, ewma_lambda: float)
 
 class PortfolioOptimizer:
     def __init__(self, cfg: OptimizerConfig):
+        """
+        Initialize the optimizer with the given configuration.
+        
+        Parameters:
+            cfg (OptimizerConfig): Configuration object specifying method, covariance estimation,
+                EWMA lambda, risk aversion, per-asset bounds, and minimum target return.
+        """
         self.cfg = cfg
 
     def optimize(
@@ -73,10 +109,15 @@ class PortfolioOptimizer:
         current_weights: pd.Series | None = None,
     ) -> Tuple[pd.Series, dict]:
         """
-        Closed-form mean-variance: argmin_w lambda w^T Σ w - w^T μ
-        subject to w>=0, sum w = 1, w<=max_pos. Projection handles constraints.
-        If target expected return not met, fallback to risk_off.
-        Returns weights Series and info dict.
+        Compute mean–variance optimal portfolio weights under nonnegative, sum-to-one, and per-asset maximum constraints.
+        
+        If no return history is available, returns an equal-weight allocation constrained by the configured max position. If the configured minimum portfolio return is positive and the optimized portfolio fails to meet it, returns a predefined "risk_off" allocation and an explanatory status.
+        
+        Parameters:
+            current_weights (pd.Series | None): Optional current portfolio weights; accepted for API compatibility and not used by this optimizer.
+        
+        Returns:
+            tuple: A pair (weights, info) where `weights` is a pandas Series of asset weights that sum to 1 and `info` is a dict containing a `status` key (e.g., `"ok"`, `"no_returns"`, `"fallback_risk_off"`) and, when applicable, a `reason`.
         """
         tickers = list(mu.index)
         x = returns[tickers].dropna()
