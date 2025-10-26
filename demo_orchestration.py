@@ -1,25 +1,30 @@
-"""Demo script for orchestration system."""
+"""Demo script for orchestration system.
+
+NOTE: This script uses synthetic/demo data for illustration purposes only.
+All user IDs, loan IDs, and trace IDs are non-sensitive test identifiers.
+"""
 import os
 os.environ['USE_RL'] = 'false'
 os.environ['QUANTUM'] = 'false'
 
-from alphashield.orchestrator.graph import execute
+from alphashield.orchestrator import execute
 from alphashield.agents.spending_guard.agent import SpendingGuardAgent
 
 
 def demo_orchestration():
-    """Demonstrate the orchestration system."""
+    """Demonstrate the orchestration system with synthetic data."""
     print("=" * 60)
     print("AlphaShield Orchestration Demo")
     print("=" * 60)
     print()
     
-    # Execute orchestrator without DB (using stub data)
+    # Execute orchestrator without DB (using synthetic stub data)
+    # NOTE: Using demo identifiers, not real user data
     print("1. Executing orchestrator DAG...")
     bundle = execute(
-        trace_id='demo_trace_001',
-        user_id='demo_user_123',
-        loan_app_id='demo_loan_456'
+        trace_id='demo_trace_001',  # Synthetic trace ID for demo
+        user_id='demo_user_123',  # Synthetic user ID for demo
+        loan_app_id='demo_loan_456'  # Synthetic loan ID for demo
     )
     
     print(f"   ✓ Trace ID: {bundle.trace_id}")
