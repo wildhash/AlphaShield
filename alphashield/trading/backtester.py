@@ -29,9 +29,24 @@ class Backtester:
     """Monthly backtester implementing the AlphaShield flow."""
 
     def __init__(self, config: Dict[str, Any]):
+        """
+        Initialize the Backtester with a configuration dictionary.
+        
+        Parameters:
+            config (Dict[str, Any]): Backtester configuration controlling optimizer, signals, execution, coverage, and other runtime settings. The provided dictionary is stored on the instance as `self.config`.
+        """
         self.config = config
 
     def _cagr(self, series: pd.Series) -> float:
+        """
+        Compute the compound annual growth rate (CAGR) from a time-ordered series of portfolio values.
+        
+        Parameters:
+            series (pd.Series): Time-ordered portfolio or NAV values indexed by date. The function treats the number of years as len(series) / 252 (252 trading days per year).
+        
+        Returns:
+            float: CAGR expressed as a decimal (for example, 0.10 for 10%). Returns 0.0 if the series is empty, the first value is less than or equal to 0, or the computed number of years is less than or equal to 0.
+        """
         if series.empty:
             return 0.0
         years = len(series) / 252.0
@@ -40,17 +55,43 @@ class Backtester:
         return float((series.iloc[-1] / series.iloc[0]) ** (1 / years) - 1.0)
 
     def _volatility(self, returns: pd.Series) -> float:
+        """
+        Calculate the annualized volatility of a returns series.
+        
+        Returns:
+            Annualized volatility (float): the sample standard deviation of `returns` multiplied by sqrt(252) to annualize; `0.0` if the returns series has zero standard deviation.
+        """
         if returns.std(ddof=0) == 0:
             return 0.0
         return float(returns.std(ddof=0) * np.sqrt(252))
 
     def _sharpe(self, returns: pd.Series) -> float:
+        """
+        Compute the annualized Sharpe ratio from a series of daily returns.
+        
+        Parameters:
+        	returns (pd.Series): Series of daily periodic returns.
+        
+        Returns:
+        	sharpe (float): Annualized Sharpe ratio computed as mean/std * sqrt(252); `0.0` if the returns' standard deviation is zero.
+        """
         std = returns.std(ddof=0)
         if std == 0:
             return 0.0
         return float(returns.mean() / std * np.sqrt(252))
 
     def _max_dd(self, series: pd.Series) -> float:
+        """
+        Compute the maximum drawdown of a time series of portfolio values.
+        
+        The maximum drawdown is the largest peak-to-trough decline measured from any previous running maximum and is returned as a positive fraction (for example, 0.25 represents a 25% drawdown). Returns 0.0 if the input series is empty.
+        
+        Parameters:
+            series (pd.Series): Time-indexed series of portfolio values.
+        
+        Returns:
+            float: Maximum drawdown as a positive fraction.
+        """
         if series.empty:
             return 0.0
         roll_max = series.cummax()
@@ -65,6 +106,26 @@ class Backtester:
         initial_capital: float = 100000.0,
     ) -> Dict[str, Any]:
         # 1) Validate once
+        """
+        Run a configuration-driven backtest over the provided price history and return NAV series and performance metrics.
+        
+        Parameters:
+            prices (pd.DataFrame): Historical prices with datetime index and asset columns; used to compute signals, returns, and mark-to-market.
+            loan_params (Dict[str, Any]): Loan details used to compute monthly payment and coverage (expects keys like "principal", "rate", "term_months").
+            rebalance_freq (str): Resampling frequency for rebalances (e.g., "M" for month-end).
+            initial_capital (float): Starting portfolio value.
+        
+        Returns:
+            result (Dict[str, Any]): Dictionary with:
+                - "nav" (pd.Series): Net asset value series indexed by rebalance dates.
+                - "metrics" (Dict[str, float]): Performance summary containing:
+                    - "cagr": compound annual growth rate of the NAV.
+                    - "volatility": annualized volatility of NAV returns.
+                    - "sharpe": annualized Sharpe-like ratio.
+                    - "max_drawdown": maximum drawdown of the NAV.
+                    - "turnover": average turnover per rebalance step.
+                    - "coverage_adherence_pct": fraction of steps meeting configured coverage targets.
+        """
         ok, errs = validate_prices(prices, required_history=252, strict=False)
         if not ok:
             # continue but note errors

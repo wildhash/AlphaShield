@@ -20,6 +20,24 @@ class TradingOrchestrator:
     """
 
     def __init__(self, config: Dict[str, Any]):
+        """
+        Initialize the TradingOrchestrator with the provided configuration, set up logging, and construct the portfolio optimizer.
+        
+        Parameters:
+            config (Dict[str, Any]): Configuration dictionary used to configure the orchestrator. Expected keys include an optional "optimizer" mapping that may contain:
+                - method: optimization method (default "closed_form")
+                - covariance: covariance estimator (default "ledoit_wolf")
+                - ewma_lambda: EWMA lambda as a float (default 0.94)
+                - risk_aversion: risk aversion coefficient as a float (default 1.0)
+                - max_position: maximum position size as a float (default 0.5)
+                - min_return: minimum expected return as a float (default 0.0)
+        
+        Attributes set:
+            config: The provided configuration dictionary.
+            logger: Logger named "alphashield.trading".
+            optimizer: PortfolioOptimizer instance configured from `config["optimizer"]` or sensible defaults.
+            current_weights: Initialized to None and used to track the latest executed portfolio weights.
+        """
         self.config = config
         self.logger = get_logger("alphashield.trading")
         opt_cfg = self.config.get("optimizer", {})
@@ -44,6 +62,25 @@ class TradingOrchestrator:
         loan_id: str = "demo",
     ) -> Dict[str, Any]:
         # Signals
+        """
+        Run a single trading decision step: compute signals, optimize portfolio weights, simulate execution, and assess coverage and risk.
+        
+        Parameters:
+            date (pd.Timestamp): Evaluation timestamp for the decision.
+            prices_window (pd.DataFrame): Historical price matrix with assets as columns and time increasing by row; used for signal calculation and execution pricing.
+            loan_params (Dict[str, Any]): Loan details required for coverage calculations (expects keys like "principal", "rate", "term_months").
+            portfolio_value (float): Current total portfolio market value used for sizing and execution.
+            loan_id (str): Identifier for the loan/context used in logging.
+        
+        Returns:
+            Dict[str, Any]: A dictionary with the following keys:
+                - "target_weights" (pd.Series): Optimizer-produced target portfolio weights indexed by asset.
+                - "execution_result" (Dict[str, Any]): Full result from simulate_execution (includes "final_weights", "final_value", "total_cost", etc.).
+                - "coverage_ratio" (float): Coverage ratio computed from portfolio_value, loan payment, and expected return assumption.
+                - "risk_metrics" (Dict[str, float]): Risk metrics including "realized_vol" (annualized) and "turnover".
+                - "rationale" (List[str]): Short textual reasons for the decision (template name, realized volatility, coverage ratio).
+                - "final_value" (float): Portfolio value after simulated execution (falls back to input portfolio_value if execution result missing).
+        """
         sig_cfg = self.config.get("signals", {})
         mom_w = int(sig_cfg.get("momentum_window", 252))
         tr_w = int(sig_cfg.get("trend_window", 200))

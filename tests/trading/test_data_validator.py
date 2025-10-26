@@ -28,6 +28,11 @@ def test_detect_outliers_methods():
 
 
 def test_check_liquidity_adv_threshold():
+    """
+    Verify that check_liquidity returns False when average daily dollar volume is below the specified ADV threshold and True when it is above.
+    
+    Creates a 30-business-day price series at $10 and two volume scenarios: low volume (1,000) which should fail the adv_threshold_usd=5_000_000 check, and high volume (100,000) which should pass.
+    """
     idx = pd.bdate_range("2020-01-01", periods=30)
     price = pd.Series(10.0, index=idx)
     volume_low = pd.Series(1_000, index=idx)

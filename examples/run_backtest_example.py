@@ -8,6 +8,11 @@ from tests.trading.fixtures.synthetic_prices import make_universe_csv
 
 
 def main():
+    """
+    Run an example backtest using configuration from config/trading.yaml or a built-in default and print the resulting metrics as JSON.
+    
+    Loads or falls back to default trading configuration, obtains price data from a synthetic universe CSV, instantiates a Backtester with the configuration, executes the backtest with the configured loan parameters, rebalance frequency, and initial capital, and prints the backtest metrics as a JSON-formatted string.
+    """
     cfg = yaml.safe_load(open("config/trading.yaml")) if os.path.exists("config/trading.yaml") else {
         "backtesting": {
             "rebalance_freq": "M",

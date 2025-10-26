@@ -172,12 +172,15 @@ class SignalAggregator:
         regime: Regime = "balanced",
     ) -> pd.Series:
         """
-        Aggregate signals with regime-dependent weights and volatility overlay.
-
-        Weighting schemes:
-        - low_vol:    60% momentum, 20% trend, 20% mean_rev
-        - balanced:   40% momentum, 30% trend, 30% mean_rev
-        - high_vol:   20% momentum, 20% trend, 60% mean_rev
+        Combine strategy signals using regime-specific weights and apply a volatility overlay.
+        
+        Parameters:
+            prices (pd.DataFrame): Price history with datetime index and asset columns used to generate component signals.
+            vix (pd.Series): VIX-like series passed to the volatility strategy to compute a volatility overlay.
+            regime (Regime): One of "low_vol", "balanced", or "high_vol". If an invalid value is provided, "balanced" is used.
+        
+        Returns:
+            pd.Series: Aggregated signal for each asset (indexed by asset name) with values clipped to the range [-1.0, 1.0]. If the volatility strategy's signal is less than -0.5, the aggregated signal is scaled by 0.5 before clipping.
         """
         weights: Dict[str, Dict[str, float]] = {
             "low_vol": {"momentum": 0.6, "trend_following": 0.2, "mean_reversion": 0.2},
@@ -215,9 +218,17 @@ import numpy as _np
 
 
 def momentum_signal(prices: _pd.DataFrame, window_6m: int = 126, window_12m: int = 252) -> _pd.Series:
-    """Rank-percentile momentum combining 6M and 12M returns.
-
-    Returns values in [0,1].
+    """
+    Compute rank-percentile momentum scores from 6- and 12-month returns.
+    
+    Parameters:
+        prices (_pd.DataFrame): Historical price series with rows ordered by time and columns as asset identifiers.
+        window_6m (int): Lookback window (in rows) used to compute the 6-month percentage change.
+        window_12m (int): Lookback window (in rows) used to compute the 12-month percentage change.
+    
+    Returns:
+        _pd.Series: Rank-percentile scores in the range [0, 1] for each asset, where larger values indicate stronger recent momentum.
+        If the input has fewer rows than max(window_6m, window_12m), returns 0.5 for every asset.
     """
     if prices.shape[0] < max(window_6m, window_12m):
         return _pd.Series(0.5, index=prices.columns)
@@ -229,7 +240,19 @@ def momentum_signal(prices: _pd.DataFrame, window_6m: int = 126, window_12m: int
 
 
 def trend_sma200_signal(prices: _pd.DataFrame, window: int = 200) -> _pd.Series:
-    """Binary 1/0 based on price above SMA200. Returns in [0,1]."""
+    """
+    Return a per-asset binary signal indicating whether the latest price is above its simple moving average over the given window.
+    
+    Parameters:
+        prices (_pd.DataFrame): Price history with rows as time-ordered observations and columns as asset identifiers.
+        window (int): Lookback period for the simple moving average (default 200).
+    
+    Returns:
+        _pd.Series: Series indexed by asset (columns of `prices`) with values in [0, 1]:
+            - `1.0` if the latest price is above the window-period SMA,
+            - `0.0` if the latest price is at or below the SMA,
+            - `0.5` for all assets if `prices` has fewer than `window` rows.
+    """
     if prices.shape[0] < window:
         return _pd.Series(0.5, index=prices.columns)
     sma = prices.rolling(window).mean().iloc[-1]
@@ -238,7 +261,18 @@ def trend_sma200_signal(prices: _pd.DataFrame, window: int = 200) -> _pd.Series:
 
 
 def mean_reversion_signal(prices: _pd.DataFrame, window: int = 20) -> _pd.Series:
-    """Inverted z-score vs rolling mean; higher means more oversold (buy dips). Returns scaled to [0,1]."""
+    """
+    Compute a mean-reversion score per asset where higher values indicate the asset is more oversold.
+    
+    Calculates the inverted z-score of the latest prices versus a rolling mean and standard deviation over `window` periods, then clips the inverted z to the range [-2, 2] and scales it to [0, 1] where 0 corresponds to strongly overbought and 1 corresponds to strongly oversold. If there are fewer than `window` rows in `prices`, returns 0.5 for every asset.
+    
+    Parameters:
+        prices (_pd.DataFrame): Historical price series with rows indexed by time and columns by asset.
+        window (int): Lookback window length (in rows) used to compute the rolling mean and standard deviation.
+    
+    Returns:
+        _pd.Series: Per-asset scores in [0, 1], where larger values indicate stronger mean-reversion buy signals.
+    """
     if prices.shape[0] < window:
         return _pd.Series(0.5, index=prices.columns)
     ma = prices.rolling(window).mean().iloc[-1]
@@ -252,7 +286,19 @@ def mean_reversion_signal(prices: _pd.DataFrame, window: int = 20) -> _pd.Series
 
 def combine_signals(components: dict, weights: dict | None = None) -> _pd.Series:
     """
-    Combine component Series in [0,1] into final [0,1]. Missing components default to 0.5.
+    Combine multiple normalized component signals into a single weighted signal in the range [0, 1].
+    
+    Each input Series is reindexed to a common index (taken from the first component), missing values are filled with 0.5, and inputs are clipped to [0, 1]. If weights is None, components receive equal weight; weights provided for missing component keys are treated as zero. The combined value is the weighted sum normalized by the sum of weights and then clipped to [0, 1].
+    
+    Parameters:
+        components (dict): Mapping from component name to pandas Series of signals (values expected in [0, 1]).
+        weights (dict | None): Optional mapping from component name to non-negative weight. If None, equal weights are used.
+    
+    Returns:
+        pandas.Series: Combined signal indexed by the common index, with values clipped to [0, 1].
+    
+    Raises:
+        ValueError: If `components` is empty or if the sum of resolved weights is not greater than zero.
     """
     if not components:
         raise ValueError("components must be non-empty")

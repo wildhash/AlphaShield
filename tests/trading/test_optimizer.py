@@ -22,6 +22,11 @@ def test_optimizer_handles_near_singular_and_box_constraints():
 
 
 def test_optimizer_min_return_fallback_to_risk_off():
+    """
+    Verifies the optimizer falls back to a risk-off solution when the configured minimum return cannot be met.
+    
+    Constructs low-expected-return asset series, configures the optimizer with high risk aversion and an unattainable `min_return`, runs optimization, and asserts that the solver either reports a "fallback_risk_off" status or succeeds ("ok") and that the resulting weights sum to 1 within numerical tolerance.
+    """
     idx = pd.bdate_range("2020-01-01", periods=260)
     rng = np.random.default_rng(1)
     r = pd.DataFrame({
