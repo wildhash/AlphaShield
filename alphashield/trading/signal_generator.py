@@ -207,3 +207,65 @@ class SignalAggregator:
             final_signal *= 0.5
 
         return final_signal.clip(-1.0, 1.0)
+
+
+# === Light-weight API for Phase 1 tests ===
+import pandas as _pd
+import numpy as _np
+
+
+def momentum_signal(prices: _pd.DataFrame, window_6m: int = 126, window_12m: int = 252) -> _pd.Series:
+    """Rank-percentile momentum combining 6M and 12M returns.
+
+    Returns values in [0,1].
+    """
+    if prices.shape[0] < max(window_6m, window_12m):
+        return _pd.Series(0.5, index=prices.columns)
+    r6 = prices.pct_change(window_6m).iloc[-1]
+    r12 = prices.pct_change(window_12m).iloc[-1]
+    score = 0.6 * r6 + 0.4 * r12
+    ranks = score.rank(pct=True).fillna(0.5)
+    return ranks.clip(0.0, 1.0)
+
+
+def trend_sma200_signal(prices: _pd.DataFrame, window: int = 200) -> _pd.Series:
+    """Binary 1/0 based on price above SMA200. Returns in [0,1]."""
+    if prices.shape[0] < window:
+        return _pd.Series(0.5, index=prices.columns)
+    sma = prices.rolling(window).mean().iloc[-1]
+    last = prices.iloc[-1]
+    return (last > sma).astype(float)
+
+
+def mean_reversion_signal(prices: _pd.DataFrame, window: int = 20) -> _pd.Series:
+    """Inverted z-score vs rolling mean; higher means more oversold (buy dips). Returns scaled to [0,1]."""
+    if prices.shape[0] < window:
+        return _pd.Series(0.5, index=prices.columns)
+    ma = prices.rolling(window).mean().iloc[-1]
+    std = prices.rolling(window).std().iloc[-1].replace(0.0, _np.nan)
+    z = (prices.iloc[-1] - ma) / std
+    inv = -z.replace([_np.inf, -_np.inf], _np.nan).fillna(0.0)
+    # scale inv z to [0,1] by clipping at +/-2 and mapping [-2,2] -> [0,1]
+    clipped = inv.clip(-2.0, 2.0)
+    return (clipped + 2.0) / 4.0
+
+
+def combine_signals(components: dict, weights: dict | None = None) -> _pd.Series:
+    """
+    Combine component Series in [0,1] into final [0,1]. Missing components default to 0.5.
+    """
+    if not components:
+        raise ValueError("components must be non-empty")
+    idx = next(iter(components.values())).index
+    total = _pd.Series(0.0, index=idx)
+    if weights is None:
+        weights = {k: 1.0 / len(components) for k in components}
+    wsum = sum(float(weights.get(k, 0.0)) for k in components)
+    if wsum <= 0:
+        raise ValueError("sum of weights must be positive")
+    for name, series in components.items():
+        w = float(weights.get(name, 0.0))
+        s = series.reindex(idx).fillna(0.5).clip(0.0, 1.0)
+        total = total.add(w * s, fill_value=0.0)
+    total = total / wsum
+    return total.clip(0.0, 1.0)

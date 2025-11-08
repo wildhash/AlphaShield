@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Dict, List, Any
 
 import numpy as np
 import pandas as pd
@@ -17,140 +17,182 @@ class BacktestResult:
     avg_monthly_return: float
 
 
+from .data_validator import validate_prices
+from .coverage_monitor import monthly_payment, coverage_ratio as compute_cr, is_coverage_ok
+from .portfolio_optimizer import PortfolioOptimizer, OptimizerConfig
+from .signal_generator import momentum_signal, trend_sma200_signal, mean_reversion_signal, combine_signals
+from .execution_simulator import simulate_execution
+from alphashield.utils.metrics import time_block
+
+
 class Backtester:
-    """Historical simulation of trading strategy."""
+    """Monthly backtester implementing the AlphaShield flow."""
 
-    # Optional RL wiring (behind config flags)
-    try:
-        from alphashield.rl.trainer import RLTrainer  # type: ignore
-        from alphashield.rl.reward import normalize_wealth_delta  # type: ignore
-    except Exception:  # pragma: no cover - RL optional
-        RLTrainer = None  # type: ignore
-        def normalize_wealth_delta(x: float, baseline: float = 0.0, window_min: float = -0.05, window_max: float = 0.15) -> float:  # type: ignore
-            return 0.0
+    def __init__(self, config: Dict[str, Any]):
+        self.config = config
 
-    def _calculate_cagr(self, portfolio_values: pd.Series) -> float:
-        if portfolio_values.empty:
+    def _cagr(self, series: pd.Series) -> float:
+        if series.empty:
             return 0.0
-        start_value = float(portfolio_values.iloc[0])
-        end_value = float(portfolio_values.iloc[-1])
-        num_days = len(portfolio_values)
-        years = num_days / 252.0
-        if start_value <= 0 or years <= 0:
+        years = len(series) / 252.0
+        if years <= 0 or series.iloc[0] <= 0:
             return 0.0
-        return (end_value / start_value) ** (1 / years) - 1.0
+        return float((series.iloc[-1] / series.iloc[0]) ** (1 / years) - 1.0)
 
-    def _calculate_max_drawdown(self, portfolio_values: pd.Series) -> float:
-        if portfolio_values.empty:
+    def _volatility(self, returns: pd.Series) -> float:
+        if returns.std(ddof=0) == 0:
             return 0.0
-        running_max = portfolio_values.cummax()
-        drawdowns = (running_max - portfolio_values) / running_max.replace(0, np.nan)
-        return float(drawdowns.max(skipna=True))
+        return float(returns.std(ddof=0) * np.sqrt(252))
 
-    def run_backtest(
+    def _sharpe(self, returns: pd.Series) -> float:
+        std = returns.std(ddof=0)
+        if std == 0:
+            return 0.0
+        return float(returns.mean() / std * np.sqrt(252))
+
+    def _max_dd(self, series: pd.Series) -> float:
+        if series.empty:
+            return 0.0
+        roll_max = series.cummax()
+        dd = (roll_max - series) / roll_max.replace(0, np.nan)
+        return float(dd.max(skipna=True))
+
+    def run(
         self,
-        strategy,
         prices: pd.DataFrame,
+        loan_params: Dict[str, Any],
+        rebalance_freq: str = "M",
         initial_capital: float = 100000.0,
-        rl: Optional[Dict] = None,
-    ) -> Dict:
-        portfolio_value = initial_capital
-        portfolio_values = []
-        positions: Dict[str, float] = {t: 0.0 for t in prices.columns}
+    ) -> Dict[str, Any]:
+        # 1) Validate once
+        ok, errs = validate_prices(prices, required_history=252, strict=False)
+        if not ok:
+            # continue but note errors
+            pass
 
-        # RL setup (optional)
-        rl_cfg = rl or {}
-        rl_enabled: bool = bool(rl_cfg.get("enabled", False)) and self.RLTrainer is not None  # type: ignore[attr-defined]
-        rl_trainer = None
-        if rl_enabled:
-            # Initialize trainer with mock mode by default for backtests unless provided
-            rl_trainer = self.RLTrainer(db_client=None, mock_mode=bool(rl_cfg.get("mock_mode", True)))  # type: ignore[call-arg]
-            rl_agent_name = str(rl_cfg.get("agent_name", "AlphaTrading"))
-            prev_value: Optional[float] = None
+        # 2) Precompute
+        returns = prices.pct_change().dropna()
 
-        last_month = None
-        for date, row in prices.iterrows():
-            # Rebalance monthly on first business day
-            if last_month != date.month:
-                signals = strategy.generate_signals(prices.loc[:date])
-                target_weights = strategy.optimize(signals)
+        sig_cfg = self.config.get("signals", {})
+        mom_w = int(sig_cfg.get("momentum_window", 252))
+        tr_w = int(sig_cfg.get("trend_window", 200))
+        mr_w = int(sig_cfg.get("meanrev_window", 20))
+        wts = sig_cfg.get("weights", {"momentum": 0.5, "trend": 0.3, "meanrev": 0.2})
 
-                # RL bandit can adjust target weights by risk profile action
-                if rl_enabled and rl_trainer is not None:
-                    wealth_delta = 0.0 if prev_value in (None, 0.0) else (portfolio_value - prev_value) / max(prev_value, 1e-9)
-                    recent_metrics = {
-                        "wealth_delta": self.normalize_wealth_delta(wealth_delta),  # type: ignore[attr-defined]
-                        "coverage_ratio": 1.4,  # heuristic; detailed CR not tracked in backtester
-                        "drawdown": 0.0,
-                        "anomaly": 0.0,
-                        "tax_risk": 0.0,
-                        "satisfaction": 0.5,
-                        "calibration": 1.0,
-                    }
-                    decision_input = {"date": str(date)}
-                    agent_output = {"fairness": 0.9, "compliant": True}
-                    rl_info = rl_trainer.train_step(
-                        agent_name=rl_agent_name,
-                        user_id="backtest",
-                        decision_input=decision_input,
-                        agent_output=agent_output,
-                        recent_metrics=recent_metrics,
-                        memory_hits=None,
-                    )
-                    rl_action = int(rl_info.get("action", 1))
-                    target_weights = self._apply_rl_action_to_weights(target_weights, rl_action)
+        opt_cfg = self.config.get("optimizer", {})
+        opt = PortfolioOptimizer(
+            OptimizerConfig(
+                method=opt_cfg.get("method", "closed_form"),
+                covariance=opt_cfg.get("covariance", "ledoit_wolf"),
+                ewma_lambda=float(opt_cfg.get("ewma_lambda", 0.94)),
+                risk_aversion=float(opt_cfg.get("risk_aversion", 1.0)),
+                max_position=float(opt_cfg.get("max_position", 0.5)),
+                min_return=float(opt_cfg.get("min_return", 0.0)),
+            )
+        )
 
-                # Convert weights to shares using today's close
-                total_value = portfolio_value + sum(positions[t] * row[t] for t in positions)
-                for t in positions:
-                    target_value = target_weights.get(t, 0.0) * total_value
-                    current_value = positions[t] * row[t]
-                    delta_value = target_value - current_value
-                    delta_shares = delta_value / max(row[t], 1e-6)
-                    positions[t] += delta_shares
-                last_month = date.month
+        exec_cfg = self.config.get("execution", {})
+        spread_bps = exec_cfg.get("spread_bps", {})
+        commission = float(exec_cfg.get("commission_per_trade", 0.0))
+        adv_limit = float(exec_cfg.get("adv_limit", 0.10))
 
-            # Mark-to-market
-            portfolio_value = sum(positions[t] * row[t] for t in positions)
-            portfolio_values.append(portfolio_value)
-            if rl_enabled:
-                prev_value = portfolio_value
+        cov_cfg = self.config.get("coverage", {})
+        exp_ret = float(cov_cfg.get("exp_return_assumption", 0.10))
+        target_ratio = float(cov_cfg.get("target_ratio", 1.3))
+        emergency_ratio = float(cov_cfg.get("emergency_ratio", 1.2))
 
-        series = pd.Series(portfolio_values, index=prices.index)
-        returns = series.pct_change().dropna()
-        sharpe = 0.0
-        if returns.std() > 0:
-            sharpe = float(returns.mean() / returns.std() * np.sqrt(252))
-        win_rate = float((returns > 0).sum() / len(returns)) if len(returns) > 0 else 0.0
-        avg_monthly = float(returns.resample("M").sum().mean()) if len(returns) > 0 else 0.0
+        # 3) Setup loop
+        portfolio_value = float(initial_capital)
+        current_weights = pd.Series(0.0, index=prices.columns)
+        nav_series: List[float] = []
+        dates = prices.resample(rebalance_freq).last().index
 
-        result = {
-            "total_return": float(series.iloc[-1] / series.iloc[0] - 1.0) if len(series) > 1 else 0.0,
-            "cagr": float(self._calculate_cagr(series)),
-            "sharpe_ratio": sharpe,
-            "max_drawdown": float(self._calculate_max_drawdown(series)),
-            "win_rate": win_rate,
-            "avg_monthly_return": avg_monthly,
+        mpay = monthly_payment(
+            float(loan_params.get("principal", 100000.0)),
+            float(loan_params.get("rate", 0.08)),
+            int(loan_params.get("term_months", 36)),
+        )
+        coverage_ok_count = 0
+        total_steps = 0
+        total_turnover = 0.0
+
+        for dt in dates:
+            if dt not in prices.index:
+                continue
+            window = prices.loc[:dt]
+            if window.shape[0] < 252:
+                # hold weights
+                nav_series.append(portfolio_value)
+                continue
+
+            # Signals in [0,1]
+            with time_block("signals"):
+                mom = momentum_signal(window, window_6m=mom_w//2, window_12m=mom_w)
+                tr = trend_sma200_signal(window, window=tr_w)
+                mr = mean_reversion_signal(window, window=mr_w)
+                combined = combine_signals({"momentum": mom, "trend": tr, "meanrev": mr}, wts)
+
+            # Expected returns proxy: map [0,1] -> [-0.05, +0.15] annualized
+            mu = (combined - 0.5) * 0.20
+
+            # Optimize
+            with time_block("optimize"):
+                w, _info = opt.optimize(mu, returns.loc[:dt])
+
+            # Risk/coverage guard simplified: enforce coverage target -> if fail, tilt defensive
+            cr = compute_cr(portfolio_value, mpay, exp_ret)
+            cov_ok = cr >= emergency_ratio
+            if not cov_ok:
+                from alphashield.utils.metrics import coverage_breach_inc
+                try:
+                    coverage_breach_inc()
+                except Exception:
+                    pass
+                # shift 20% from equities to bonds
+                if "VTI" in w.index and "BND" in w.index:
+                    shift = min(0.2, w.get("VTI", 0.0))
+                    w["VTI"] = max(0.0, w.get("VTI", 0.0) - shift)
+                    w["BND"] = min(1.0, w.get("BND", 0.0) + shift)
+                w = w / max(w.sum(), 1e-9)
+
+            # Execution simulation: no ADV data, so unlimited except adv_limit ignored
+            prices_row = prices.loc[dt]
+            with time_block("execution"):
+                exec_res = simulate_execution(
+                    current_weights=current_weights,
+                    target_weights=w,
+                    prices=prices_row,
+                    adv=None,
+                    spread_bps=spread_bps,
+                    commission_per_trade=commission,
+                    adv_limit=adv_limit,
+                    portfolio_value=portfolio_value,
+                )
+            new_weights = exec_res["final_weights"].reindex(prices.columns).fillna(0.0)
+            turnover = float(abs(new_weights - current_weights).sum())
+            total_turnover += turnover
+            current_weights = new_weights
+
+            # Mark to market to end of month using same day close (simplified)
+            portfolio_value = float((current_weights * prices_row).sum())
+            nav_series.append(portfolio_value)
+
+            total_steps += 1
+            if is_coverage_ok(cr, target_ratio, emergency_ratio):
+                coverage_ok_count += 1
+
+        nav = pd.Series(nav_series, index=dates[: len(nav_series)])
+        rets = nav.pct_change().dropna()
+        metrics = {
+            "cagr": self._cagr(nav),
+            "volatility": self._volatility(rets) if not rets.empty else 0.0,
+            "sharpe": self._sharpe(rets) if not rets.empty else 0.0,
+            "max_drawdown": self._max_dd(nav),
+            "turnover": float(total_turnover / max(total_steps, 1)),
+            "coverage_adherence_pct": float(coverage_ok_count / max(total_steps, 1)),
         }
-        return result
 
-    def _apply_rl_action_to_weights(self, target_weights: Dict[str, float], action: int) -> Dict[str, float]:
-        """Clamp and renormalize weights based on RL action profile.
-
-        Mirrors orchestrator's constraint mapping:
-          0: conservative -> cap 0.15
-          1: balanced    -> cap 0.20
-          2: growth      -> cap 0.35
-          3: defensive   -> cap 0.18
-          4: aggressive  -> cap 0.30
-        """
-        caps = {0: 0.15, 1: 0.20, 2: 0.35, 3: 0.18, 4: 0.30}
-        cap = caps.get(int(action), 0.20)
-        # Clip
-        clipped = {k: min(max(float(v), 0.0), cap) for k, v in target_weights.items()}
-        total = sum(clipped.values())
-        if total <= 0:
-            # fallback to equal weight
-            n = len(clipped)
-            return {k: 1.0 / n for k in clipped}
-        return {k: v / total for k, v in clipped.items()}
+        return {
+            "nav": nav,
+            "metrics": metrics,
+        }
