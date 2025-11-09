@@ -258,13 +258,26 @@ See [docs/AGENT_SCHEMAS.md](docs/AGENT_SCHEMAS.md) for detailed schema specifica
 
 ## 🌟 Future Enhancements
 
-- [ ] Real-time trading API integrations
-- [ ] Machine learning for risk prediction
-- [ ] Mobile app for borrowers
+**See [ROADMAP.md](ROADMAP.md) for the comprehensive 16-week implementation plan!**
+
+### Planned Features (In Development)
+
+- [ ] Real-time trading API integrations (Phase 1)
+- [ ] Vector database for semantic search (Phase 2)
+- [ ] Quantum portfolio optimization (Phase 3)
+- [ ] Reinforcement learning training pipeline (Phase 4)
 - [ ] Automated payment processing
 - [ ] Credit score improvement tracking
+- [ ] Mobile app for borrowers
 - [ ] Community lending pools
 - [ ] Financial education modules
+
+### Implementation Resources
+
+- **[ROADMAP.md](ROADMAP.md)** - Comprehensive 16-week implementation plan
+- **[BUILD_PLAN.md](BUILD_PLAN.md)** - Sprint 1-2 detailed tasks and sub-issues
+- **[QUICKSTART.md](QUICKSTART.md)** - Quick reference guide for developers
+- **[TESTING.md](TESTING.md)** - Testing strategy and guidelines
 
 ## 📄 License
 
