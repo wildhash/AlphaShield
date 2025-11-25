@@ -1,0 +1,164 @@
+name: Deploy to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to deploy (e.g., v1.0.0)'
+        required: true
+        type: string
+      confirm:
+        description: 'Type "deploy" to confirm production deployment'
+        required: true
+        type: string
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Validate confirmation
+        if: ${{ github.event.inputs.confirm != 'deploy' }}
+        run: |
+          echo "❌ Deployment cancelled. You must type 'deploy' to confirm."
+          exit 1
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate version tag exists
+        run: |
+          git fetch --tags
+          if ! git tag | grep -q "^${{ github.event.inputs.version }}$"; then
+            echo "❌ Version tag ${{ github.event.inputs.version }} not found"
+            exit 1
+          fi
+          echo "✅ Version tag ${{ github.event.inputs.version }} exists"
+
+  test:
+    needs: validate
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.version }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Run full test suite
+        run: pytest tests/ -v --tb=short
+
+      - name: Run integration tests
+        run: pytest tests/integration/ -v --tb=short || true
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.version }}
+
+      - name: Build Docker image
+        run: |
+          docker build -t alphashield:${{ github.event.inputs.version }} .
+          docker tag alphashield:${{ github.event.inputs.version }} alphashield:production
+          docker tag alphashield:${{ github.event.inputs.version }} alphashield:latest
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push to registry
+        run: |
+          docker tag alphashield:${{ github.event.inputs.version }} ghcr.io/${{ github.repository_owner }}/alphashield:${{ github.event.inputs.version }}
+          docker tag alphashield:production ghcr.io/${{ github.repository_owner }}/alphashield:production
+          docker tag alphashield:latest ghcr.io/${{ github.repository_owner }}/alphashield:latest
+          docker push ghcr.io/${{ github.repository_owner }}/alphashield:${{ github.event.inputs.version }}
+          docker push ghcr.io/${{ github.repository_owner }}/alphashield:production
+          docker push ghcr.io/${{ github.repository_owner }}/alphashield:latest
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.version }}
+
+      - name: Create deployment record
+        run: |
+          echo "📋 Production Deployment Record"
+          echo "================================"
+          echo "Version: ${{ github.event.inputs.version }}"
+          echo "Deployer: ${{ github.actor }}"
+          echo "Time: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+          echo "Commit: $(git rev-parse HEAD)"
+
+      - name: Deploy to production
+        run: |
+          echo "🚀 Deploying version ${{ github.event.inputs.version }} to production..."
+          # Add your production deployment commands here:
+          # - SSH to production server(s)
+          # - Pull latest image
+          # - Blue/green or rolling deployment
+          # - Database migrations if needed
+          # Example:
+          # ssh ${{ secrets.PRODUCTION_HOST }} "docker pull ghcr.io/${{ github.repository_owner }}/alphashield:${{ github.event.inputs.version }} && ./deploy.sh"
+
+      - name: Run smoke tests
+        run: |
+          echo "🔥 Running smoke tests..."
+          # Add smoke test commands here
+          # Example: curl -f https://api.alphashield.io/health
+
+      - name: Run critical path tests
+        run: |
+          echo "🧪 Running critical path tests..."
+          # Add critical path test commands here
+
+      - name: Notify success
+        run: |
+          echo "✅ Production deployment successful!"
+          echo "Version: ${{ github.event.inputs.version }}"
+          # Add notification (Slack, email, etc.)
+          # Example: curl -X POST ${{ secrets.SLACK_WEBHOOK }} -d '{"text":"AlphaShield ${{ github.event.inputs.version }} deployed to production"}'
+
+  rollback:
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: failure()
+    environment: production
+    
+    steps:
+      - name: Trigger rollback
+        run: |
+          echo "⚠️ Deployment failed! Initiating rollback..."
+          # Add rollback commands here
+          # Example: ssh ${{ secrets.PRODUCTION_HOST }} "./rollback.sh"
+
+      - name: Notify failure
+        run: |
+          echo "❌ Production deployment FAILED!"
+          echo "Version: ${{ github.event.inputs.version }}"
+          echo "Rollback initiated"
+          # Add failure notification

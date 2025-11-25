@@ -1,0 +1,38 @@
+# Development dependencies
+
+# Code formatting and linting
+black>=23.10.0
+ruff>=0.1.3
+isort>=5.12.0
+
+# Type checking
+mypy>=1.6.0
+types-PyYAML>=6.0.12
+types-requests>=2.31.0
+
+# Testing utilities
+pytest>=7.4
+pytest-cov>=4.1
+pytest-asyncio>=0.21
+pytest-mock>=3.12
+pytest-xdist>=3.3.0  # Parallel test execution
+coverage>=7.3.0
+
+# Load testing (Q3 Milestone 6)
+locust>=2.15.0
+
+# Documentation
+sphinx>=7.2.0
+sphinx-rtd-theme>=1.3.0
+sphinx-autodoc-typehints>=1.24.0
+
+# Debugging
+ipdb>=0.13.13
+ipython>=8.16.0
+
+# Pre-commit hooks
+pre-commit>=3.5.0
+
+# Performance profiling
+py-spy>=0.3.14
+memory-profiler>=0.61.0
