@@ -140,7 +140,7 @@ class Backtester:
                 w, _info = opt.optimize(mu, returns.loc[:dt])
 
             # Risk/coverage guard simplified: enforce coverage target -> if fail, tilt defensive
-            cr = compute_cr(portfolio_value, mpay, exp_return)
+            cr = compute_cr(portfolio_value, mpay, exp_ret)
             cov_ok = cr >= emergency_ratio
             if not cov_ok:
                 from alphashield.utils.metrics import coverage_breach_inc
