@@ -1,0 +1,180 @@
+version: '3.8'
+
+services:
+  # ==========================================================================
+  # AlphaShield Application
+  # ==========================================================================
+  alphashield:
+    build:
+      context: .
+      target: development
+    container_name: alphashield-app
+    volumes:
+      - .:/app
+      - pip-cache:/root/.cache/pip
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/alphashield
+      - VOYAGE_API_KEY=${VOYAGE_API_KEY}
+      - ALPACA_API_KEY=${ALPACA_API_KEY}
+      - ALPACA_SECRET_KEY=${ALPACA_SECRET_KEY}
+      - ALPACA_PAPER=true
+      - QUANTUM=false
+      - LOG_LEVEL=DEBUG
+      - ENVIRONMENT=development
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    networks:
+      - alphashield-network
+    command: ["python", "demo.py"]
+
+  # ==========================================================================
+  # MongoDB Database
+  # ==========================================================================
+  mongodb:
+    image: mongo:7.0
+    container_name: alphashield-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=alphashield
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.runCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - alphashield-network
+
+  # ==========================================================================
+  # MongoDB Express (Admin UI)
+  # ==========================================================================
+  mongo-express:
+    image: mongo-express:1.0
+    container_name: alphashield-mongo-express
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_URL=mongodb://mongodb:27017/alphashield
+      - ME_CONFIG_BASICAUTH_USERNAME=admin
+      - ME_CONFIG_BASICAUTH_PASSWORD=admin
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - alphashield-network
+    profiles:
+      - admin
+
+  # ==========================================================================
+  # Test Runner
+  # ==========================================================================
+  test:
+    build:
+      context: .
+      target: ci
+    container_name: alphashield-test
+    volumes:
+      - .:/app
+      - pip-cache:/root/.cache/pip
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/alphashield_test
+      - QUANTUM=false
+      - LOG_LEVEL=WARNING
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - alphashield-network
+    command: ["pytest", "tests/", "--cov=alphashield", "--cov-report=term-missing", "-v"]
+    profiles:
+      - test
+
+  # ==========================================================================
+  # Prometheus (Monitoring)
+  # ==========================================================================
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    container_name: alphashield-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    networks:
+      - alphashield-network
+    profiles:
+      - monitoring
+
+  # ==========================================================================
+  # Grafana (Dashboards)
+  # ==========================================================================
+  grafana:
+    image: grafana/grafana:10.1.0
+    container_name: alphashield-grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./dashboards/grafana:/etc/grafana/provisioning/dashboards:ro
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    depends_on:
+      - prometheus
+    networks:
+      - alphashield-network
+    profiles:
+      - monitoring
+
+  # ==========================================================================
+  # Streamlit Dashboard (RL Training)
+  # ==========================================================================
+  dashboard:
+    build:
+      context: .
+      target: development
+    container_name: alphashield-dashboard
+    ports:
+      - "8501:8501"
+    volumes:
+      - .:/app
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/alphashield
+      - STREAMLIT_SERVER_PORT=8501
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - alphashield-network
+    command: ["streamlit", "run", "dashboards/rl_training_dashboard.py", "--server.address=0.0.0.0"]
+    profiles:
+      - dashboard
+
+# ==========================================================================
+# Networks
+# ==========================================================================
+networks:
+  alphashield-network:
+    driver: bridge
+
+# ==========================================================================
+# Volumes
+# ==========================================================================
+volumes:
+  mongodb-data:
+  prometheus-data:
+  grafana-data:
+  pip-cache:

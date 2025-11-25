@@ -2,11 +2,11 @@
 from __future__ import annotations
 
 import os
-from typing import Dict, List, Optional, Any
+from typing import Dict, Any, List, Optional
 from datetime import datetime
-from pymongo import MongoClient
-from pymongo.collection import Collection
-from pymongo.database import Database
+
+from alphashield.utils.errors import ExecutionError
+from alphashield.database.schemas import DecisionDoc
 
 try:
     from alphashield.utils.errors import ExecutionError
@@ -23,7 +23,8 @@ except ImportError:
 
 
 class MongoDBClient:
-    """MongoDB Atlas client for storing and retrieving agent context."""
+    """
+    MongoDB client wrapper supporting both real MongoDB and in-memory stub.
     
     def __init__(self, connection_uri: Optional[str] = None):
         """Initialize MongoDB connection.
@@ -92,50 +93,82 @@ class MongoDBClient:
     def store_context(self, agent_name: str, context_type: str, 
                      data: Dict[str, Any], embedding: Optional[List[float]] = None) -> str:
         """Store agent context with optional embedding for semantic search.
-        
-        Args:
-            agent_name: Name of the agent storing context
-            context_type: Type of context (e.g., 'analysis', 'decision', 'alert')
-            data: Context data
-            embedding: Optional vector embedding for semantic search
-            
-        Returns:
-            Inserted context ID as string.
-        """
-        contexts = self.get_collection('agent_contexts')
-        context_doc = {
-            'agent_name': agent_name,
-            'context_type': context_type,
-            'data': data,
-            'timestamp': datetime.utcnow(),
-        }
-        if embedding:
-            context_doc['embedding'] = embedding
-            
-        result = contexts.insert_one(context_doc)
-        return str(result.inserted_id)
+    For backward compatibility, this class can be instantiated directly,
+    or use get_mongo_client() to get an appropriate client based on environment.
+    """
     
-    def get_contexts(self, agent_name: Optional[str] = None,
-                    context_type: Optional[str] = None,
-                    limit: int = 100) -> List[Dict[str, Any]]:
-        """Retrieve contexts with optional filtering.
+    def __init__(self, connection_uri: Optional[str] = None) -> None:
+        """
+        Initialize MongoDB client.
         
         Args:
-            agent_name: Filter by agent name
-            context_type: Filter by context type
-            limit: Maximum number of results
-            
-        Returns:
-            List of context documents.
+            connection_uri: MongoDB connection URI. If not provided, uses
+                           MONGO_URL or MONGODB_URI environment variable.
+                           If no URI available, uses in-memory stub.
         """
-        contexts = self.get_collection('agent_contexts')
-        query = {}
-        if agent_name:
-            query['agent_name'] = agent_name
-        if context_type:
-            query['context_type'] = context_type
+        self._uri = connection_uri or os.getenv("MONGO_URL") or os.getenv("MONGODB_URI")
+        self._client = None
+        self._db = None
+        self._use_stub = False
+        
+        if self._uri:
+            try:
+                from pymongo import MongoClient as PyMongoClient  # type: ignore
+                self._client = PyMongoClient(self._uri)
+                self._db = self._client.get_database()
+            except Exception:
+                self._use_stub = True
+        else:
+            self._use_stub = True
+        
+        # In-memory storage for stub mode
+        if self._use_stub:
+            self._loans: Dict[str, Dict[str, Any]] = {}
+            self._decisions: List[Dict[str, Any]] = []
+
+    def get_loan(self, loan_id: str) -> Optional[Dict[str, Any]]:
+        """Get loan by ID."""
+        if self._use_stub:
+            return self._loans.get(loan_id)
+        return self._db.loans.find_one({"loan_id": loan_id})
+
+    def set_loan(self, loan: Dict[str, Any]) -> None:
+        """Store or update a loan."""
+        if self._use_stub:
+            self._loans[loan["loan_id"]] = loan
+        else:
+            self._db.loans.update_one(
+                {"loan_id": loan["loan_id"]}, 
+                {"$set": loan}, 
+                upsert=True
+            )
+
+    def store_agent_decision(self, decision: Dict[str, Any]) -> None:
+        """Store an agent decision with validation."""
+        try:
+            if "timestamp" not in decision:
+                decision["timestamp"] = datetime.utcnow()
+            DecisionDoc(**decision)  # validation
             
-        return list(contexts.find(query).sort('timestamp', -1).limit(limit))
+            if self._use_stub:
+                # idempotency: unique (agent_id, loan_id, timestamp minute)
+                key = (decision["agent_id"], decision["loan_id"], str(decision["timestamp"])[:16])
+                if any((d.get("agent_id"), d.get("loan_id"), str(d.get("timestamp"))[:16]) == key 
+                       for d in self._decisions):
+                    return
+                self._decisions.append(dict(decision))
+            else:
+                self._db.decisions.update_one(
+                    {
+                        "agent_id": decision["agent_id"],
+                        "loan_id": decision["loan_id"],
+                        "timestamp": decision["timestamp"],
+                    },
+                    {"$setOnInsert": decision},
+                    upsert=True,
+                )
+        except Exception as e:
+            raise ExecutionError(f"decision validation/store failed: {e}")
     
     def store_agent_decision(self, decision: Dict[str, Any]) -> None:
         """Store agent decision with validation."""
@@ -163,19 +196,25 @@ class MongoDBClient:
         transaction_data['timestamp'] = datetime.utcnow()
         result = transactions.insert_one(transaction_data)
         return str(result.inserted_id)
+    def get_database(self):
+        """Get the underlying database object."""
+        if self._use_stub:
+            return self
+        return self._db
     
-    def get_transactions(self, loan_id: Optional[str] = None,
-                        transaction_type: Optional[str] = None,
-                        limit: int = 100) -> List[Dict[str, Any]]:
-        """Retrieve transactions with optional filtering."""
-        transactions = self.get_collection('transactions')
-        query = {}
-        if loan_id:
-            query['loan_id'] = loan_id
-        if transaction_type:
-            query['type'] = transaction_type
-            
-        return list(transactions.find(query).sort('timestamp', -1).limit(limit))
+    def close(self) -> None:
+        """Close the MongoDB connection."""
+        if self._client:
+            self._client.close()
+
+
+# Legacy alias for backward compatibility
+InMemoryMongoStub = MongoDBClient
+
+
+def get_mongo_client() -> MongoDBClient:
+    """
+    Factory function to get a MongoDB client.
     
     def close(self):
         """Close MongoDB connection."""
@@ -265,3 +304,7 @@ def get_mongo_client():
     except Exception:
         # Fallback to stub
         return InMemoryMongoStub()
+    Returns:
+        MongoDBClient instance configured based on environment.
+    """
+    return MongoDBClient()

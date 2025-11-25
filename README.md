@@ -1,6 +1,24 @@
 # AlphaShield
 
+[![CI Tests](https://github.com/your-org/AlphaShield/actions/workflows/test.yml/badge.svg)](https://github.com/your-org/AlphaShield/actions/workflows/test.yml)
+[![Staging Deploy](https://github.com/your-org/AlphaShield/actions/workflows/deploy-staging.yml/badge.svg)](https://github.com/your-org/AlphaShield/actions/workflows/deploy-staging.yml)
+[![Nightly Training](https://github.com/your-org/AlphaShield/actions/workflows/nightly-training.yml/badge.svg)](https://github.com/your-org/AlphaShield/actions/workflows/nightly-training.yml)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Self-funding loans that eliminate the poverty tax through AI agents managing investments, spending, and risk for both lenders and borrowers.
+
+## 📢 Important: Operationalization Roadmap Available!
+
+**NEW:** We've created a comprehensive 52-week roadmap to transform AlphaShield from prototype to production. See:
+- 📋 **[ROADMAP.md](ROADMAP.md)** - Complete implementation plan with 8 major milestones
+- 🚀 **[QUICKSTART.md](QUICKSTART.md)** - Developer onboarding guide
+- 📝 **[GITHUB_ISSUES.md](GITHUB_ISSUES.md)** - Issue tracking structure
+- 📊 **[IMPLEMENTATION_SUMMARY_OPERATIONALIZATION.md](IMPLEMENTATION_SUMMARY_OPERATIONALIZATION.md)** - Executive summary
+
+**Status:** Ready for implementation! All gaps identified and addressed.
+
+---
 
 ## 🎯 Mission
 
