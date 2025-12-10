@@ -53,6 +53,8 @@ jobs:
           MONGODB_URI: mongodb://localhost:27017/alphashield_test
           QUANTUM: false
           VOYAGE_API_KEY: ${{ secrets.VOYAGE_API_KEY }}
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_SECRET_KEY: ${{ secrets.ALPACA_SECRET_KEY }}
         run: |
           pytest tests/ \
             --cov=alphashield \
@@ -61,10 +63,18 @@ jobs:
             --cov=treasury \
             --cov=finance \
             --cov-report=xml \
+            --cov-report=html \
             --cov-report=term-missing \
-            --cov-fail-under=60 \
+            --cov-fail-under=70 \
             -v \
-            --tb=short
+            --tb=short \
+            -m "not slow"
+      
+      - name: Run integration tests
+        env:
+          MONGODB_URI: mongodb://localhost:27017/alphashield_test
+        run: |
+          pytest tests/integration/ -v --tb=short
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -78,7 +88,18 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: coverage.xml
+          path: |
+            coverage.xml
+            htmlcov/
+        if: always()
+      
+      - name: Comment coverage on PR
+        if: github.event_name == 'pull_request'
+        uses: py-cov-action/python-coverage-comment-action@v3
+        with:
+          GITHUB_TOKEN: ${{ github.token }}
+          MINIMUM_GREEN: 80
+          MINIMUM_ORANGE: 70
 
   lint:
     runs-on: ubuntu-latest
