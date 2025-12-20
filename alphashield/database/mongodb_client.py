@@ -18,6 +18,14 @@ except ImportError:
     # Fallback if schemas module doesn't exist yet
     DecisionDoc = None  # type: ignore
 
+try:
+    from bson import ObjectId
+    from bson.errors import InvalidId
+except ImportError:
+    # Fallback if pymongo not installed
+    ObjectId = None  # type: ignore
+    InvalidId = Exception  # type: ignore
+
 
 class MongoDBClient:
     """
@@ -69,11 +77,13 @@ class MongoDBClient:
         if self._use_stub:
             return self._loans.get(loan_id)
         
-        from bson import ObjectId
+        if ObjectId is None:
+            return self._db.loans.find_one({'loan_id': loan_id})
+        
         # Try ObjectId first
         try:
             return self._db.loans.find_one({'_id': ObjectId(loan_id)})
-        except Exception:
+        except (InvalidId, ValueError):
             # Fallback to loan_id field
             return self._db.loans.find_one({'loan_id': loan_id})
 
@@ -123,7 +133,8 @@ class MongoDBClient:
                 return True
             return False
         else:
-            from bson import ObjectId
+            if ObjectId is None:
+                raise NotImplementedError("pymongo not installed")
             updates['updated_at'] = datetime.utcnow()
             result = self._db.loans.update_one(
                 {'_id': ObjectId(loan_id)},
@@ -136,7 +147,7 @@ class MongoDBClient:
         try:
             if "timestamp" not in decision:
                 decision["timestamp"] = datetime.utcnow()
-            if DecisionDoc:
+            if DecisionDoc is not None:
                 DecisionDoc(**decision)  # validation
             
             if self._use_stub:
