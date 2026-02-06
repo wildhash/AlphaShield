@@ -1,4 +1,5 @@
-from finance.coverage import LoanTerms, monthly_payment, coverage_ratio
+from finance.coverage import LoanTerms, coverage_ratio, monthly_payment
+
 
 def test_monthly_payment_and_cr():
     terms = LoanTerms(principal=10000, annual_rate=0.12, months=36)

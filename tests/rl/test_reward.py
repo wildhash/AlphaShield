@@ -4,6 +4,7 @@ from math import isclose
 # If you named it differently, adjust import:
 from alphashield.rl.reward import compute_reward
 
+
 def test_reward_respects_fairness_and_compliance_gates():
     metrics_ok = {
         "wealth_delta": 0.6,
