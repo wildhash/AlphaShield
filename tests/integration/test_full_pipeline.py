@@ -1,7 +1,7 @@
 import pandas as pd
-from tests.trading.fixtures.synthetic_prices import make_universe_csv
+
 from alphashield.trading.orchestrator import TradingOrchestrator
-import yaml
+from tests.trading.fixtures.synthetic_prices import make_universe_csv
 
 
 def test_full_pipeline_step(tmp_path):

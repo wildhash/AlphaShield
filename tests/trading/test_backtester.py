@@ -1,7 +1,7 @@
 import pandas as pd
-import numpy as np
-from tests.trading.fixtures.synthetic_prices import make_universe_csv
+
 from alphashield.trading.backtester import Backtester
+from tests.trading.fixtures.synthetic_prices import make_universe_csv
 
 
 def test_backtester_metrics_shape_and_ranges(tmp_path):
@@ -21,7 +21,7 @@ def test_backtester_metrics_shape_and_ranges(tmp_path):
         "execution": {"spread_bps": {"VTI":1, "BND":2, "VTIP":3}, "commission_per_trade": 0, "adv_limit": 0.10},
     }
     bt = Backtester(cfg)
-    res = bt.run(prices, cfg["backtesting"]["loan_params"], cfg["backtesting"]["rebalance_freq"], cfg["backtesting"]["initial_capital"]) 
+    res = bt.run(prices, cfg["backtesting"]["loan_params"], cfg["backtesting"]["rebalance_freq"], cfg["backtesting"]["initial_capital"])
     metrics = res["metrics"]
     for k in ["cagr","volatility","sharpe","max_drawdown","coverage_adherence_pct","turnover"]:
         assert k in metrics

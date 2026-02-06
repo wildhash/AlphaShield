@@ -1,7 +1,6 @@
 # tests/rl/test_bandit_update.py
-import math
-import random
 import numpy as np
+
 
 # ---- Helper: Simulated linear environment with noise -------------------------
 class LinearNoisyEnv:
@@ -43,7 +42,6 @@ class LinearNoisyEnv:
 
 # ---- Minimal import path for LinUCB (Copilot will fill the implementation) ---
 from alphashield.rl.bandit import LinUCB  # type: ignore
-
 
 # ---- Tests -------------------------------------------------------------------
 
