@@ -1,7 +1,12 @@
-import pandas as pd
 import numpy as np
-from tests.trading.fixtures.synthetic_prices import gbm_prices
-from alphashield.trading.signal_generator import momentum_signal, trend_sma200_signal, mean_reversion_signal, combine_signals
+import pandas as pd
+
+from alphashield.trading.signal_generator import (
+    combine_signals,
+    mean_reversion_signal,
+    momentum_signal,
+    trend_sma200_signal,
+)
 
 
 def test_momentum_and_trend_rank_uptrend_highest():

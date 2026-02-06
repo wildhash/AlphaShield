@@ -1,5 +1,7 @@
 import numpy as np
-from trading_core.risk.guardrails import RiskLimits, enforce_caps, check_risk_limits
+
+from trading_core.risk.guardrails import RiskLimits, check_risk_limits, enforce_caps
+
 
 def test_enforce_caps_and_limits():
     limits = RiskLimits(pos_cap=0.25, cr_floor=1.3, min_cash=0.05)

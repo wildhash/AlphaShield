@@ -1,6 +1,7 @@
-import pandas as pd
 import numpy as np
-from alphashield.trading.data_validator import validate_prices, detect_outliers, check_liquidity
+import pandas as pd
+
+from alphashield.trading.data_validator import check_liquidity, detect_outliers, validate_prices
 
 
 def test_validate_prices_flags_issues():
