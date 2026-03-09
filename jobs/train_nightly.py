@@ -31,6 +31,9 @@ from alphashield.rl.policy import Policy, PolicyManager
 from alphashield.rl.bandit import LinUCB
 from alphashield.database.mongodb_client import get_mongo_client
 
+# Ensure logs directory exists before configuring the file handler
+os.makedirs('logs', exist_ok=True)
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
