@@ -105,6 +105,7 @@ module = [
     "dimod.*",
     "dwave.*",
     "cvxpy.*",
+    "lumibot.*",
 ]
 ignore_missing_imports = true
 
