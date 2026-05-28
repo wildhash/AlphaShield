@@ -1,7 +1,7 @@
 """Custom Lumibot strategy classes for AlphaShield.
 
 AlphaShieldYieldStrategy implements a volatility-managed, yield-generation
-portfolio that mirrors the 40 % collateral-pool allocation used when a
+portfolio that mirrors the 40% collateral-pool allocation used when a
 self-funding loan is originated.  The strategy accepts dynamic asset
 weights and a risk tolerance so that the Gemini agent can parameterise it
 at run-time.
@@ -19,13 +19,13 @@ class AlphaShieldYieldStrategy(Strategy):
 
     Parameters (passed via ``parameters`` dict to ``run_backtest``):
         assets (list[str]): Ticker symbols to trade, e.g. ``["SPY", "GLD", "BTC-USD"]``.
-        allocation (float): Dollar amount available to deploy (the 40 % pool).
+        allocation (float): Dollar amount available to deploy (the 40% pool).
         risk_tolerance (str): ``"conservative"``, ``"balanced"`` (default), or
             ``"aggressive"``.  Controls position-sizing and rebalance frequency.
 
     The strategy rebalances monthly.  Target weights are derived from the
     equal-risk-contribution (ERC) heuristic scaled by the requested risk
-    tolerance, keeping each position below a hard 40 % cap.
+    tolerance, keeping each position below a hard 40% cap.
     """
 
     # ------------------------------------------------------------------

@@ -54,7 +54,7 @@ def run_agent_backtest(
     Args:
         target_assets: Ticker symbols for the collateral pool, e.g.
             ``["SPY", "GLD", "BTC-USD"]``.
-        allocation_amount: Dollar amount to deploy — typically 40 % of the
+        allocation_amount: Dollar amount to deploy — typically 40% of the
             loan principal.
         start_date: Backtest start in ``YYYY-MM-DD`` format.
         end_date: Backtest end in ``YYYY-MM-DD`` format.

@@ -108,8 +108,6 @@ class TestRunAgentBacktest:
             risk_tolerance="aggressive",
         )
 
-        _, kwargs = mock_run_backtest.call_args
-        params = kwargs.get("parameters") or mock_run_backtest.call_args[0][4] if len(mock_run_backtest.call_args[0]) > 4 else mock_run_backtest.call_args[1].get("parameters")
         # Ensure lumibot run_backtest was invoked at all
         mock_run_backtest.assert_called_once()
 
