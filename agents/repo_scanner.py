@@ -6,7 +6,6 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
-
 IGNORED_PARTS = {".git", ".pytest_cache", "__pycache__", "venv", ".venv", "env", "ENV"}
 
 

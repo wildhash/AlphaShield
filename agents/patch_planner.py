@@ -8,7 +8,6 @@ from pathlib import Path
 from agents.repo_scanner import RepoState
 from agents.task_selector import SelectedTask
 
-
 REPORT_FILES = {
     "daily_status.md": "# Daily Status\n\nNo assembly run recorded yet.\n",
     "decisions.md": "# Decisions\n\n- Nucleus: Botspot + AlphaShield autonomous agent marketplace.\n",

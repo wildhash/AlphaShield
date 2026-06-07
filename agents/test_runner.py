@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import shlex
+import shutil
 import subprocess
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -26,6 +28,8 @@ def run_test_command(repo: str | Path, command: str) -> TestResult:
     """Run a shell-free test command and capture output."""
 
     args = shlex.split(command)
+    if args and args[0] == "pytest" and shutil.which("pytest") is None:
+        args = [sys.executable, "-m", "pytest", *args[1:]]
     completed = subprocess.run(
         args,
         cwd=Path(repo).resolve(),

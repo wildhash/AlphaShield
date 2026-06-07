@@ -16,7 +16,6 @@ from agents.risk_gate import Action, alpha_shield_gate  # noqa: E402
 from agents.task_selector import SelectedTask, select_highest_leverage_task  # noqa: E402
 from agents.test_runner import TestResult, run_test_command  # noqa: E402
 
-
 GOAL = (
     "Turn scattered ideas, tools, repos, agents, and income paths into one operating "
     "system that compounds daily."
