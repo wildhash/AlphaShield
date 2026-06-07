@@ -75,6 +75,7 @@ def apply_report_patch(repo: str | Path, task: SelectedTask) -> tuple[str, ...]:
 
 
 def _default_content_for(relative_path: str, task_title: str) -> str:
+    """Generate minimal placeholder content for newly created task files."""
     path = Path(relative_path)
     if path.suffix == ".py":
         return f"# Placeholder created for {task_title}.\n"

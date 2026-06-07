@@ -167,7 +167,7 @@ class OrchestrationGraph:
                     queue.append(dependent)
 
         if len(ordered) != len(incoming):
-            raise ValueError("Cyclic agent dependencies are not supported")
+            raise ValueError("Cyclic dependency detected in agent graph")
         return ordered
 
 

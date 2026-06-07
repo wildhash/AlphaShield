@@ -38,7 +38,7 @@ class ContextCapsule:
     def __post_init__(self) -> None:
         """Keep legacy borrower_id and user_id accessors aligned."""
         if self.user_id is None and self.borrower_id is None:
-            raise ValueError("user_id or borrower_id is required")
+            raise ValueError("Either user_id or borrower_id must be provided")
         if self.user_id is None:
             self.user_id = self.borrower_id
         if self.borrower_id is None:

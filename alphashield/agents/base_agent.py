@@ -14,7 +14,7 @@ except ImportError:
     SCHEMAS_AVAILABLE = False
 
 
-class _AgentDBStub:
+class _InMemoryDBStub:
     """Minimal in-memory store for tests that do not provide a database."""
 
     def __init__(self) -> None:
@@ -96,7 +96,7 @@ class BaseAgent(ABC):
             embeddings_client: Optional embeddings client for semantic search
         """
         self.name = name
-        self.db = db_client or _AgentDBStub()
+        self.db = db_client or _InMemoryDBStub()
         self.embeddings = embeddings_client
         self.llm = llm
 

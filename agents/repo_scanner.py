@@ -90,6 +90,7 @@ def _walk_files(repo_path: Path) -> tuple[str, ...]:
 
 
 def _is_test_file(path: str) -> bool:
+    """Return True for files under the top-level tests tree with a test_ filename."""
     parts = Path(path).parts
     return bool(parts) and parts[0] == "tests" and os.path.basename(path).startswith("test_")
 
