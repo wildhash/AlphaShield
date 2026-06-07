@@ -1,6 +1,6 @@
 """Base agent class for AlphaShield multi-agent system."""
 from abc import ABC, abstractmethod
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from alphashield.database.embeddings import EmbeddingsClient
@@ -112,7 +112,7 @@ class BaseAgent(ABC):
         log_data = {
             'action': action,
             'details': details,
-            'timestamp': datetime.utcnow(),
+            'timestamp': datetime.now(UTC),
         }
         self.store_context('action_log', log_data)
 

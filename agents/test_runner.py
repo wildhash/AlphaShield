@@ -58,7 +58,7 @@ def run_test_command(repo: str | Path, command: str) -> TestResult:
             command=command,
             returncode=124,
             stdout=(exc.stdout or "").strip(),
-            stderr=((exc.stderr or "") or "Test command timed out").strip(),
+            stderr=(exc.stderr or "Test command timed out").strip(),
         )
     return TestResult(
         command=command,

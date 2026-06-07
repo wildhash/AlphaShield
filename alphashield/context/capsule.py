@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 
@@ -31,7 +31,7 @@ class ContextCapsule:
     similar_case_ids: list[str] = field(default_factory=list)
 
     # Metadata
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))
     borrower_id: str | None = None
     packets: list[ContextPacket] = field(default_factory=list)
 
@@ -64,7 +64,7 @@ class ContextPacket:
 
     agent: str
     data: dict[str, Any]
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     def to_dict(self) -> dict[str, Any]:
         """Convert packet to dictionary."""
