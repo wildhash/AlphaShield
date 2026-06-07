@@ -45,7 +45,7 @@ def scan_repo(repo: str | Path) -> RepoState:
     test_files = tuple(
         path
         for path in tracked_files
-        if "tests" in Path(path).parts and os.path.basename(path).startswith("test_")
+        if Path(path).parts[:1] == ("tests",) and os.path.basename(path).startswith("test_")
     )
     report_files = tuple(path for path in tracked_files if path.startswith("reports/"))
 
