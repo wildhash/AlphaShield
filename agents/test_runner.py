@@ -27,20 +27,42 @@ class TestResult:
 def run_test_command(repo: str | Path, command: str) -> TestResult:
     """Run a shell-free test command and capture output."""
 
-    args = shlex.split(command)
+    try:
+        args = shlex.split(command)
+    except ValueError as exc:
+        return TestResult(command=command, returncode=2, stdout="", stderr=str(exc))
+    if not args:
+        return TestResult(command=command, returncode=2, stdout="", stderr="Empty test command")
     if args and args[0] == "pytest" and shutil.which("pytest") is None:
         args = [sys.executable, "-m", "pytest", *args[1:]]
-    completed = subprocess.run(
-        args,
-        cwd=Path(repo).resolve(),
-        check=False,
-        capture_output=True,
-        text=True,
-    )
+    elif shutil.which(args[0]) is None and not Path(args[0]).exists():
+        return TestResult(
+            command=command,
+            returncode=127,
+            stdout="",
+            stderr=f"Command not found: {args[0]}",
+        )
+    try:
+        completed = subprocess.run(
+            args,
+            cwd=Path(repo).resolve(),
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=900,
+        )
+    except FileNotFoundError as exc:
+        return TestResult(command=command, returncode=127, stdout="", stderr=str(exc))
+    except subprocess.TimeoutExpired as exc:
+        return TestResult(
+            command=command,
+            returncode=124,
+            stdout=(exc.stdout or "").strip(),
+            stderr=((exc.stderr or "") or "Test command timed out").strip(),
+        )
     return TestResult(
         command=command,
         returncode=completed.returncode,
         stdout=completed.stdout.strip(),
         stderr=completed.stderr.strip(),
     )
-

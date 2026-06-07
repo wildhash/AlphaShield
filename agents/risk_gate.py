@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 
 
@@ -28,7 +29,8 @@ def alpha_shield_gate(action: Action) -> str:
         return "BLOCK"
     if action.modifies_prod and not action.has_tests:
         return "BLOCK"
+    if not math.isfinite(action.confidence) or not 0.0 <= action.confidence <= 1.0:
+        return "REVIEW"
     if action.confidence < 0.75:
         return "REVIEW"
     return "ALLOW"
-

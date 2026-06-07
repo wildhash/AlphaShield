@@ -129,8 +129,27 @@ def _run_patch(repo: Path, state: RepoState, task: SelectedTask, plan: PatchPlan
 
 
 def _run_test(repo: Path, state: RepoState, task: SelectedTask, plan: PatchPlan) -> int:
-    result = run_test_command(repo, state.test_command)
     gate_result = alpha_shield_gate(Action(name="run_tests", has_tests=True, confidence=0.9))
+    if gate_result != "ALLOW":
+        path = _write_blocked_reflection(
+            repo,
+            action="test",
+            gate_result=gate_result,
+            tests=f"Skipped: {state.test_command}",
+            next_best_action="Lower risk or add safeguards before running tests.",
+        )
+        print(
+            render_report(
+                state,
+                task,
+                plan,
+                risk_result=gate_result,
+                extra=f"- Reflection: `{path}`\n- Result: Test run skipped.",
+            )
+        )
+        return 1
+
+    result = run_test_command(repo, state.test_command)
     entry = build_reflection_entry(
         goal=GOAL,
         action="test",
@@ -147,6 +166,25 @@ def _run_test(repo: Path, state: RepoState, task: SelectedTask, plan: PatchPlan)
 
 def _run_reflect(repo: Path, state: RepoState, task: SelectedTask, plan: PatchPlan) -> int:
     gate_result = alpha_shield_gate(Action(name="write_reflection", has_tests=state.has_tests))
+    if gate_result != "ALLOW":
+        path = _write_blocked_reflection(
+            repo,
+            action="reflect",
+            gate_result=gate_result,
+            tests=f"Recommended: {state.test_command}",
+            next_best_action="Review the AlphaShield decision before writing reflection memory.",
+        )
+        print(
+            render_report(
+                state,
+                task,
+                plan,
+                risk_result=gate_result,
+                extra=f"- Reflection: `{path}`\n- Result: Reflection write skipped.",
+            )
+        )
+        return 1
+
     entry = build_reflection_entry(
         goal=GOAL,
         action="reflect",
@@ -179,6 +217,25 @@ def _format_test(result: TestResult, reflection_path: Path) -> str:
     )
 
 
+def _write_blocked_reflection(
+    repo: Path,
+    *,
+    action: str,
+    gate_result: str,
+    tests: str,
+    next_best_action: str,
+) -> Path:
+    entry = build_reflection_entry(
+        goal=GOAL,
+        action=action,
+        result="blocked before execution",
+        tests=tests,
+        risk=gate_result,
+        lesson="AlphaShield gate decisions must be enforced before side effects occur.",
+        next_best_action=next_best_action,
+    )
+    return write_reflection(repo, entry)
+
+
 if __name__ == "__main__":
     raise SystemExit(main())
-

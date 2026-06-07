@@ -43,17 +43,26 @@ def plan_minimal_patch(state: RepoState, task: SelectedTask) -> PatchPlan:
 
 
 def apply_report_patch(repo: str | Path, task: SelectedTask) -> tuple[str, ...]:
-    """Create/update only report files for patch mode."""
+    """Create missing task files and keep the operating reports in sync."""
 
-    reports_dir = Path(repo).resolve() / "reports"
+    repo_path = Path(repo).resolve()
+    reports_dir = repo_path / "reports"
     reports_dir.mkdir(exist_ok=True)
 
     touched: list[str] = []
+    for relative_path in task.suggested_files:
+        path = repo_path / relative_path
+        if path.exists():
+            continue
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(_default_content_for(relative_path, task.title), encoding="utf-8")
+        touched.append(relative_path)
+
     for filename, content in REPORT_FILES.items():
         path = reports_dir / filename
         if not path.exists():
             path.write_text(content, encoding="utf-8")
-            touched.append(path.relative_to(Path(repo).resolve()).as_posix())
+            touched.append(path.relative_to(repo_path).as_posix())
 
     next_actions = reports_dir / "next_actions.md"
     marker = f"- Queued by AssemblerAgent: {task.title}"
@@ -64,3 +73,14 @@ def apply_report_patch(repo: str | Path, task: SelectedTask) -> tuple[str, ...]:
 
     return tuple(touched)
 
+
+def _default_content_for(relative_path: str, task_title: str) -> str:
+    path = Path(relative_path)
+    if path.suffix == ".py":
+        return f'"""Placeholder created for {task_title}.\"\"\"\n'
+    if path.suffix == ".md":
+        heading = path.stem.replace("_", " ").title()
+        return f"# {heading}\n\nCreated for {task_title}.\n"
+    if path.suffix == ".jsonl":
+        return ""
+    return ""

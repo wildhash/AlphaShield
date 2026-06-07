@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import os
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
 IGNORED_PARTS = {".git", ".pytest_cache", "__pycache__", "venv", ".venv", "env", "ENV"}
+GIT_TIMEOUT_SECONDS = 15
 
 
 @dataclass(frozen=True)
@@ -40,7 +42,11 @@ def scan_repo(repo: str | Path) -> RepoState:
         tracked_files = _walk_files(repo_path)
 
     python_files = tuple(path for path in tracked_files if path.endswith(".py"))
-    test_files = tuple(path for path in tracked_files if path.startswith("tests/test_"))
+    test_files = tuple(
+        path
+        for path in tracked_files
+        if "tests/" in path and os.path.basename(path).startswith("test_")
+    )
     report_files = tuple(path for path in tracked_files if path.startswith("reports/"))
 
     return RepoState(
@@ -68,8 +74,9 @@ def _git_stdout(repo_path: Path, args: list[str]) -> str:
             check=False,
             capture_output=True,
             text=True,
+            timeout=GIT_TIMEOUT_SECONDS,
         )
-    except FileNotFoundError:
+    except (FileNotFoundError, subprocess.TimeoutExpired):
         return ""
 
     if completed.returncode != 0:
@@ -92,4 +99,3 @@ def _detect_test_command(repo_path: Path, tracked_files: tuple[str, ...]) -> str
     if (repo_path / "pyproject.toml").exists() or any(path.startswith("tests/") for path in tracked_files):
         return "pytest -q"
     return "python -m compileall agents"
-
