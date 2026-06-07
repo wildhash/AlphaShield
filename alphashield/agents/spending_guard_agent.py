@@ -1,6 +1,6 @@
 """Spending Guard agent for detecting spending anomalies."""
 import statistics
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from alphashield.agents.base_agent import BaseAgent
@@ -93,9 +93,10 @@ class SpendingGuardAgent(BaseAgent):
         analysis['loan_id'] = loan_id
 
         # Check for rapid spending after loan disbursement
+        now = datetime.now(UTC)
         recent_transactions = [
             t for t in transactions
-            if (datetime.utcnow() - t.get('timestamp', datetime.utcnow())).days <= 7
+            if (now - t.get('timestamp', now)).days <= 7
         ]
 
         if recent_transactions:
