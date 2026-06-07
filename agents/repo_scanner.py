@@ -42,11 +42,7 @@ def scan_repo(repo: str | Path) -> RepoState:
         tracked_files = _walk_files(repo_path)
 
     python_files = tuple(path for path in tracked_files if path.endswith(".py"))
-    test_files = tuple(
-        path
-        for path in tracked_files
-        if Path(path).parts[:1] == ("tests",) and os.path.basename(path).startswith("test_")
-    )
+    test_files = tuple(path for path in tracked_files if _is_test_file(path))
     report_files = tuple(path for path in tracked_files if path.startswith("reports/"))
 
     return RepoState(
@@ -91,6 +87,11 @@ def _walk_files(repo_path: Path) -> tuple[str, ...]:
             continue
         files.append(path.relative_to(repo_path).as_posix())
     return tuple(sorted(files))
+
+
+def _is_test_file(path: str) -> bool:
+    parts = Path(path).parts
+    return bool(parts) and parts[0] == "tests" and os.path.basename(path).startswith("test_")
 
 
 def _detect_test_command(repo_path: Path, tracked_files: tuple[str, ...]) -> str:
