@@ -42,6 +42,7 @@ htmlcov/
 
 # Logs
 *.log
+reports/reflection_log.jsonl
 
 # OS
 .DS_Store
