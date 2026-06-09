@@ -147,8 +147,9 @@ def _extract_metrics(backtest_result: Any) -> dict[str, Any]:
             metrics["sharpe_ratio"] = float(row.get("Sharpe", 0.0) or 0.0)
             metrics["max_drawdown"] = float(row.get("Max Drawdown", 0.0) or 0.0)
             metrics["total_return"] = float(row.get("Total Return", 0.0) or 0.0)
-    except Exception:  # noqa: BLE001
-        # If stats layout changes in a future lumibot release, return safe defaults
-        pass
+    except (ImportError, KeyError, AttributeError) as exc:
+        import logging  # noqa: PLC0415
+
+        logging.getLogger(__name__).warning("Metric extraction failed: %s", exc)
 
     return metrics

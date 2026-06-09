@@ -90,7 +90,12 @@ class AlphaShieldYieldStrategy(Strategy):
                     vols[ticker] = float(daily_rets.std()) or 1.0
                 else:
                     vols[ticker] = 1.0
-            except Exception:  # noqa: BLE001
+            except (ValueError, KeyError, AttributeError) as exc:
+                import logging  # noqa: PLC0415
+
+                logging.getLogger(__name__).warning(
+                    "Volatility estimation failed for %s: %s", ticker, exc
+                )
                 vols[ticker] = 1.0
 
         inv_vol = {t: 1.0 / v for t, v in vols.items()}
