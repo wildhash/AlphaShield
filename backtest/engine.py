@@ -1,11 +1,13 @@
+
 import numpy as np
 import pandas as pd
-from typing import Dict, List, Callable
-from trading_core.signals.trend import trend_signals
-from trading_core.signals.meanrev import meanrev_signals
-from trading_core.portfolio.optimizer_qp import optimize_classical
-from trading_core.risk.guardrails import RiskLimits, enforce_caps, check_risk_limits
+
 from finance.coverage import LoanTerms, coverage_ratio
+from trading_core.portfolio.optimizer_qp import optimize_classical
+from trading_core.risk.guardrails import RiskLimits, check_risk_limits, enforce_caps
+from trading_core.signals.meanrev import meanrev_signals
+from trading_core.signals.trend import trend_signals
+
 
 class BacktestEngine:
     """
@@ -27,7 +29,7 @@ class BacktestEngine:
         turnover_budget: float = 0.20
     ):
         self.data = data.dropna(how="all")
-        self.symbols: List[str] = list(self.data.columns)
+        self.symbols: list[str] = list(self.data.columns)
         self.loan_terms = loan_terms
         self.nav = initial_nav
         self.w = np.zeros(len(self.symbols))
@@ -37,10 +39,10 @@ class BacktestEngine:
         self.spread = spread_bps / 1e4
         self.turnover_budget = turnover_budget
 
-        self.nav_history: List[float] = []
-        self.cr_history: List[float] = []
+        self.nav_history: list[float] = []
+        self.cr_history: list[float] = []
 
-    def _combine_signals(self, prices: pd.DataFrame) -> Dict[str, float]:
+    def _combine_signals(self, prices: pd.DataFrame) -> dict[str, float]:
         tr = trend_signals(prices)
         mr = meanrev_signals(prices)
         # Simple vol-aware mix: more mean-rev in high vol
@@ -50,7 +52,7 @@ class BacktestEngine:
         w_tr, w_mr = (0.7, 0.3) if recent_vol <= long_vol else (0.4, 0.6)
         return {s: w_tr * tr.get(s, 0.0) + w_mr * mr.get(s, 0.0) for s in self.symbols}
 
-    def _forecasts(self, prices: pd.DataFrame, signals: Dict[str, float]) -> np.ndarray:
+    def _forecasts(self, prices: pd.DataFrame, signals: dict[str, float]) -> np.ndarray:
         rets = prices.pct_change().dropna()
         ann_vol = (rets.std() * np.sqrt(252)).replace(0, np.nan)
         z = pd.Series(signals).reindex(self.symbols).fillna(0.0)
@@ -63,7 +65,7 @@ class BacktestEngine:
         rets = prices.pct_change().dropna()
         return (rets.cov().values * 252.0).astype(float)
 
-    def step(self, t: int) -> Dict:
+    def step(self, t: int) -> dict:
         """Run one rebalance at index t (use trailing window)."""
         if t < 252:  # need a year for stats
             self.nav_history.append(self.nav)
@@ -125,7 +127,7 @@ class BacktestEngine:
             "violations": violations if not is_ok else []
         }
 
-    def run(self) -> Dict:
+    def run(self) -> dict:
         logs = []
         for t in range(len(self.data)):
             logs.append(self.step(t))

@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
-from alphashield.trading.portfolio_optimizer import PortfolioOptimizer, OptimizerConfig
+
+from alphashield.trading.portfolio_optimizer import OptimizerConfig, PortfolioOptimizer
 
 
 def test_optimizer_handles_near_singular_and_box_constraints():

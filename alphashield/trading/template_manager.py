@@ -1,9 +1,5 @@
 from __future__ import annotations
 
-from typing import Dict
-import pandas as pd
-
-
 TEMPLATES: dict[str, dict[str, float]] = {
     "risk_on": {"VTI": 0.70, "BND": 0.20, "VTIP": 0.10},
     "balanced": {"VTI": 0.50, "BND": 0.35, "VTIP": 0.15},

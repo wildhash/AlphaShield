@@ -1,31 +1,30 @@
 """Tests for agent output schemas."""
 import unittest
-from datetime import datetime
 
 from alphashield.schemas.agent_schemas import (
-    LenderAgentOutput,
     AlphaTradingAgentOutput,
-    SpendingGuardAgentOutput,
     BudgetAnalyzerAgentOutput,
-    TaxOptimizerAgentOutput,
     ContractReviewAgentOutput,
+    LenderAgentOutput,
+    SpendingGuardAgentOutput,
+    TaxOptimizerAgentOutput,
     validate_schema,
 )
 
 
 class TestLenderAgentOutput(unittest.TestCase):
     """Test LenderAgent output schema."""
-    
+
     def test_minimal_schema(self):
         """Test minimal required fields."""
         output = LenderAgentOutput(
             borrower_id="borrower_123"
         )
-        
+
         self.assertEqual(output.borrower_id, "borrower_123")
         self.assertFalse(output.approved)
         self.assertEqual(len(output.approval_conditions), 0)
-    
+
     def test_complete_schema(self):
         """Test complete schema with all fields."""
         output = LenderAgentOutput(
@@ -45,18 +44,18 @@ class TestLenderAgentOutput(unittest.TestCase):
             approved_loan_amount_max=15000,
             approved=True
         )
-        
+
         self.assertTrue(output.approved)
         self.assertEqual(output.credit_score, 720)
         self.assertEqual(output.default_risk_score, 0.15)
-    
+
     def test_to_dict(self):
         """Test conversion to dictionary."""
         output = LenderAgentOutput(
             borrower_id="borrower_123",
             credit_score=720
         )
-        
+
         data = output.to_dict()
         self.assertIsInstance(data, dict)
         self.assertEqual(data['borrower_id'], "borrower_123")
@@ -65,17 +64,17 @@ class TestLenderAgentOutput(unittest.TestCase):
 
 class TestAlphaTradingAgentOutput(unittest.TestCase):
     """Test AlphaTradingAgent output schema."""
-    
+
     def test_minimal_schema(self):
         """Test minimal required fields."""
         output = AlphaTradingAgentOutput(
             loan_id="loan_123"
         )
-        
+
         self.assertEqual(output.loan_id, "loan_123")
         self.assertEqual(output.cash_balance, 0.0)
         self.assertEqual(output.risk_level, "medium")
-    
+
     def test_portfolio_positions(self):
         """Test with portfolio positions."""
         positions = [
@@ -90,7 +89,7 @@ class TestAlphaTradingAgentOutput(unittest.TestCase):
                 'tax_status': 'long_term_gains'
             }
         ]
-        
+
         output = AlphaTradingAgentOutput(
             loan_id="loan_123",
             portfolio_positions=positions,
@@ -99,7 +98,7 @@ class TestAlphaTradingAgentOutput(unittest.TestCase):
             asset_allocation={'stocks_pct': 64.3, 'cash_pct': 35.7},
             tax_bracket="22%"
         )
-        
+
         self.assertEqual(len(output.portfolio_positions), 1)
         self.assertEqual(output.portfolio_positions[0]['symbol'], 'AAPL')
         self.assertEqual(output.tax_bracket, "22%")
@@ -107,17 +106,17 @@ class TestAlphaTradingAgentOutput(unittest.TestCase):
 
 class TestSpendingGuardAgentOutput(unittest.TestCase):
     """Test SpendingGuardAgent output schema."""
-    
+
     def test_minimal_schema(self):
         """Test minimal required fields."""
         output = SpendingGuardAgentOutput(
             borrower_id="borrower_123"
         )
-        
+
         self.assertEqual(output.borrower_id, "borrower_123")
         self.assertEqual(output.alert_level, "normal")
         self.assertFalse(output.rapid_depletion_risk)
-    
+
     def test_with_anomalies(self):
         """Test with detected anomalies."""
         anomalies = [
@@ -129,7 +128,7 @@ class TestSpendingGuardAgentOutput(unittest.TestCase):
                 'threshold_exceeded_by': 4500.00
             }
         ]
-        
+
         output = SpendingGuardAgentOutput(
             borrower_id="borrower_123",
             loan_id="loan_456",
@@ -140,7 +139,7 @@ class TestSpendingGuardAgentOutput(unittest.TestCase):
             alert_level="high",
             alert_reasons=["Unusual luxury spending detected"]
         )
-        
+
         self.assertEqual(output.anomaly_count, 1)
         self.assertEqual(output.alert_level, "high")
         self.assertEqual(len(output.anomalies_detected), 1)
@@ -148,16 +147,16 @@ class TestSpendingGuardAgentOutput(unittest.TestCase):
 
 class TestBudgetAnalyzerAgentOutput(unittest.TestCase):
     """Test BudgetAnalyzerAgent output schema."""
-    
+
     def test_minimal_schema(self):
         """Test minimal required fields."""
         output = BudgetAnalyzerAgentOutput(
             borrower_id="borrower_123"
         )
-        
+
         self.assertEqual(output.borrower_id, "borrower_123")
         self.assertEqual(output.budget_health_status, "unknown")
-    
+
     def test_complete_budget_analysis(self):
         """Test complete budget analysis."""
         output = BudgetAnalyzerAgentOutput(
@@ -184,7 +183,7 @@ class TestBudgetAnalyzerAgentOutput(unittest.TestCase):
             payment_affordable=True,
             affordability_score=0.85
         )
-        
+
         self.assertEqual(output.budget_health_status, "healthy")
         self.assertTrue(output.payment_affordable)
         self.assertEqual(output.affordability_score, 0.85)
@@ -192,16 +191,16 @@ class TestBudgetAnalyzerAgentOutput(unittest.TestCase):
 
 class TestTaxOptimizerAgentOutput(unittest.TestCase):
     """Test TaxOptimizerAgent output schema."""
-    
+
     def test_minimal_schema(self):
         """Test minimal required fields."""
         output = TaxOptimizerAgentOutput(
             borrower_id="borrower_123"
         )
-        
+
         self.assertEqual(output.borrower_id, "borrower_123")
         self.assertEqual(output.estimated_tax_savings, 0.0)
-    
+
     def test_with_optimization_opportunities(self):
         """Test with tax optimization strategies."""
         short_term = [
@@ -212,7 +211,7 @@ class TestTaxOptimizerAgentOutput(unittest.TestCase):
                 'timeline': '1 month'
             }
         ]
-        
+
         long_term = [
             {
                 'strategy': 'increase_401k',
@@ -221,7 +220,7 @@ class TestTaxOptimizerAgentOutput(unittest.TestCase):
                 'timeline': '12 months'
             }
         ]
-        
+
         output = TaxOptimizerAgentOutput(
             borrower_id="borrower_123",
             loan_id="loan_456",
@@ -233,7 +232,7 @@ class TestTaxOptimizerAgentOutput(unittest.TestCase):
             long_term_strategies=long_term,
             total_potential_savings=5390.00
         )
-        
+
         self.assertEqual(output.marginal_tax_bracket, "22%")
         self.assertEqual(len(output.short_term_strategies), 1)
         self.assertEqual(len(output.long_term_strategies), 1)
@@ -242,17 +241,17 @@ class TestTaxOptimizerAgentOutput(unittest.TestCase):
 
 class TestContractReviewAgentOutput(unittest.TestCase):
     """Test ContractReviewAgent output schema."""
-    
+
     def test_minimal_schema(self):
         """Test minimal required fields."""
         output = ContractReviewAgentOutput(
             loan_id="loan_123"
         )
-        
+
         self.assertEqual(output.loan_id, "loan_123")
         self.assertFalse(output.approved)
         self.assertEqual(output.risk_score, 0.5)
-    
+
     def test_favorable_contract(self):
         """Test favorable contract review."""
         output = ContractReviewAgentOutput(
@@ -277,12 +276,12 @@ class TestContractReviewAgentOutput(unittest.TestCase):
             approved=True,
             overall_rating="excellent"
         )
-        
+
         self.assertTrue(output.approved)
         self.assertEqual(output.overall_rating, "excellent")
         self.assertEqual(output.competitive_position, "excellent")
         self.assertTrue(output.truth_in_lending_compliant)
-    
+
     def test_predatory_contract(self):
         """Test predatory contract detection."""
         output = ContractReviewAgentOutput(
@@ -299,7 +298,7 @@ class TestContractReviewAgentOutput(unittest.TestCase):
             overall_rating="poor",
             risk_score=0.9
         )
-        
+
         self.assertFalse(output.approved)
         self.assertEqual(output.overall_rating, "poor")
         self.assertEqual(output.competitive_position, "predatory")
@@ -308,22 +307,22 @@ class TestContractReviewAgentOutput(unittest.TestCase):
 
 class TestSchemaValidation(unittest.TestCase):
     """Test schema validation function."""
-    
+
     def test_valid_schema(self):
         """Test validation of valid schema."""
         data = {
             'borrower_id': 'borrower_123',
             'credit_score': 720
         }
-        
+
         self.assertTrue(validate_schema(data, LenderAgentOutput))
-    
+
     def test_invalid_schema(self):
         """Test validation of invalid schema."""
         data = {
             'invalid_field': 'value'
         }
-        
+
         with self.assertRaises(ValueError):
             validate_schema(data, LenderAgentOutput)
 

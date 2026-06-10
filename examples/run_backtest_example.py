@@ -1,5 +1,6 @@
-import os
 import json
+import os
+
 import pandas as pd
 import yaml
 
@@ -23,7 +24,7 @@ def main():
     csv_path = make_universe_csv()
     prices = pd.read_csv(csv_path, index_col="date", parse_dates=True)
     bt = Backtester(cfg)
-    res = bt.run(prices, cfg["backtesting"]["loan_params"], cfg["backtesting"]["rebalance_freq"], cfg["backtesting"]["initial_capital"]) 
+    res = bt.run(prices, cfg["backtesting"]["loan_params"], cfg["backtesting"]["rebalance_freq"], cfg["backtesting"]["initial_capital"])
     print("=== AlphaShield Backtest Results ===")
     print(json.dumps(res["metrics"], indent=2))
 

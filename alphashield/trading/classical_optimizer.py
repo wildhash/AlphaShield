@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-from typing import Dict, Optional
-
-import numpy as np
 import cvxpy as cp
+import numpy as np
 
 try:
     from sklearn.covariance import LedoitWolf
@@ -20,8 +18,8 @@ class ClassicalPortfolioOptimizer:
         self,
         expected_returns: np.ndarray,
         covariance_matrix: np.ndarray,
-        initial_weights: Optional[np.ndarray] = None,
-        constraints: Optional[Dict] = None,
+        initial_weights: np.ndarray | None = None,
+        constraints: dict | None = None,
     ) -> np.ndarray:
         if constraints is None:
             constraints = {}

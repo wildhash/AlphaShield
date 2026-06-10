@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Tuple
 
 import numpy as np
 import pandas as pd
+
 try:
     from sklearn.covariance import LedoitWolf  # type: ignore
 except Exception:
@@ -71,7 +71,7 @@ class PortfolioOptimizer:
         mu: pd.Series,
         returns: pd.DataFrame,
         current_weights: pd.Series | None = None,
-    ) -> Tuple[pd.Series, dict]:
+    ) -> tuple[pd.Series, dict]:
         """
         Closed-form mean-variance: argmin_w lambda w^T Σ w - w^T μ
         subject to w>=0, sum w = 1, w<=max_pos. Projection handles constraints.

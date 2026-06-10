@@ -1,12 +1,13 @@
-import pandas as pd
-import numpy as np
-from typing import Dict
 
-def meanrev_signals(prices: pd.DataFrame, window: int = 20) -> Dict[str, float]:
+import numpy as np
+import pandas as pd
+
+
+def meanrev_signals(prices: pd.DataFrame, window: int = 20) -> dict[str, float]:
     """
     Bollinger-style mean reversion in [-1, 1]: negative near upper band, positive near lower band.
     """
-    out: Dict[str, float] = {}
+    out: dict[str, float] = {}
     for symbol in prices.columns:
         s = prices[symbol].dropna()
         if len(s) < window + 1:

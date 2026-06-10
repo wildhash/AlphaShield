@@ -14,14 +14,15 @@ Where:
 - A: Anomaly penalty (0-1)
 - T: Tax risk penalty (0-1)
 """
-from typing import Dict, Any, Optional
+from typing import Any
+
 import numpy as np
 
 
-def compute_reward(metrics: Dict[str, Any], config: Dict[str, float], 
+def compute_reward(metrics: dict[str, Any], config: dict[str, float],
                   min_fairness_threshold: float = 0.50) -> float:
     """Compute shaped reward from metrics.
-    
+
     Parameters
     ----------
     metrics : dict
@@ -46,7 +47,7 @@ def compute_reward(metrics: Dict[str, Any], config: Dict[str, float],
         - lambda3: tax risk penalty weight
     min_fairness_threshold : float
         Minimum fairness score to avoid gate zeroing (default 0.50)
-    
+
     Returns
     -------
     float
@@ -62,14 +63,14 @@ def compute_reward(metrics: Dict[str, Any], config: Dict[str, float],
     T = float(metrics.get('tax_risk', 0.0))
     Q = float(metrics.get('calibration', 1.0))
     compliance_ok = bool(metrics.get('compliance_ok', True))
-    
+
     # Normalize coverage ratio: C' = min(1, max(0, (C - 1.2) / 0.6))
     # This maps 1.2 -> 0, 1.8 -> 1, with linear scaling
     C = min(1.0, max(0.0, (coverage_raw - 1.2) / 0.6))
-    
+
     # Clamp calibration to [0.8, 1.2]
     Q = min(1.2, max(0.8, Q))
-    
+
     # Extract weights from config
     alpha = config.get('alpha', 0.40)
     beta = config.get('beta', 0.15)
@@ -78,28 +79,28 @@ def compute_reward(metrics: Dict[str, Any], config: Dict[str, float],
     lambda1 = config.get('lambda1', 0.10)
     lambda2 = config.get('lambda2', 0.05)
     lambda3 = config.get('lambda3', 0.05)
-    
+
     # Compliance/Ethics gate: zero reward if violations
-    G = 0.0 if (not compliance_ok or F < min_fairness_threshold) else 1.0
-    
+    G = 0.0 if (not compliance_ok or min_fairness_threshold > F) else 1.0
+
     # Compute shaped reward
     reward_core = (
-        alpha * W + 
-        beta * C + 
-        gamma * F + 
-        delta * S - 
+        alpha * W +
+        beta * C +
+        gamma * F +
+        delta * S -
         (lambda1 * D + lambda2 * A + lambda3 * T)
     )
-    
+
     reward = G * Q * reward_core
-    
+
     return reward
 
 
-def normalize_wealth_delta(wealth_change: float, baseline: float = 0.0, 
+def normalize_wealth_delta(wealth_change: float, baseline: float = 0.0,
                           window_min: float = -0.05, window_max: float = 0.15) -> float:
     """Normalize wealth delta to [0, 1] using min-max scaling.
-    
+
     Parameters
     ----------
     wealth_change : float
@@ -110,7 +111,7 @@ def normalize_wealth_delta(wealth_change: float, baseline: float = 0.0,
         Minimum expected wealth change (default -5%)
     window_max : float
         Maximum expected wealth change (default 15%)
-    
+
     Returns
     -------
     float
@@ -123,14 +124,14 @@ def normalize_wealth_delta(wealth_change: float, baseline: float = 0.0,
 
 def normalize_drawdown(drawdown_pct: float, max_drawdown: float = 0.20) -> float:
     """Normalize drawdown penalty to [0, 1].
-    
+
     Parameters
     ----------
     drawdown_pct : float
         Peak-to-trough drawdown as percentage (e.g., 0.10 for 10%)
     max_drawdown : float
         Maximum expected drawdown (default 20%)
-    
+
     Returns
     -------
     float
@@ -142,8 +143,8 @@ def normalize_drawdown(drawdown_pct: float, max_drawdown: float = 0.20) -> float
 
 class RewardConfig:
     """Configuration for reward computation."""
-    
-    def __init__(self, 
+
+    def __init__(self,
                  alpha: float = 0.40,
                  beta: float = 0.15,
                  gamma: float = 0.15,
@@ -153,7 +154,7 @@ class RewardConfig:
                  lambda3: float = 0.05,
                  min_fairness_threshold: float = 0.50):
         """Initialize reward configuration.
-        
+
         Parameters
         ----------
         alpha : float
@@ -181,8 +182,8 @@ class RewardConfig:
         self.lambda2 = lambda2
         self.lambda3 = lambda3
         self.min_fairness_threshold = min_fairness_threshold
-    
-    def to_dict(self) -> Dict[str, float]:
+
+    def to_dict(self) -> dict[str, float]:
         """Convert to dictionary for compute_reward."""
         return {
             'alpha': self.alpha,

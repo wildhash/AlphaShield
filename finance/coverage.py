@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+
 @dataclass
 class LoanTerms:
     principal: float

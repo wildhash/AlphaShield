@@ -1,15 +1,16 @@
-import pandas as pd
+
 import numpy as np
-from typing import Dict
+import pandas as pd
+
 
 def ema(series: pd.Series, span: int) -> pd.Series:
     return series.ewm(span=span, adjust=False).mean()
 
-def trend_signals(prices: pd.DataFrame) -> Dict[str, float]:
+def trend_signals(prices: pd.DataFrame) -> dict[str, float]:
     """
     Multi-timeframe EMA trend strength in [-1, 1], scaled by 10 then clipped.
     """
-    out: Dict[str, float] = {}
+    out: dict[str, float] = {}
     for symbol in prices.columns:
         s = prices[symbol].dropna()
         if s.empty:

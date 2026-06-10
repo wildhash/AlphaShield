@@ -4,19 +4,15 @@ This example shows how agents should use output schemas before storing
 data in MongoDB, ensuring consistent data structures across the system.
 """
 from alphashield.schemas import (
-    LenderAgentOutput,
     AlphaTradingAgentOutput,
-    SpendingGuardAgentOutput,
-    BudgetAnalyzerAgentOutput,
-    TaxOptimizerAgentOutput,
-    ContractReviewAgentOutput,
+    LenderAgentOutput,
 )
 
 
 def example_lender_agent():
     """Example: Lender Agent using output schema."""
     print("\n=== Lender Agent Output Schema Example ===")
-    
+
     # Create structured output
     output = LenderAgentOutput(
         borrower_id="borrower_12345",
@@ -32,19 +28,19 @@ def example_lender_agent():
         default_risk_score=0.15,
         approved=True
     )
-    
+
     print(f"Borrower ID: {output.borrower_id}")
     print(f"Credit Score: {output.credit_score}")
     print(f"Approved: {output.approved}")
     print(f"Risk Score: {output.default_risk_score}")
-    
+
     return output.to_dict()
 
 
 def example_trading_agent():
     """Example: Alpha Trading Agent using output schema."""
     print("\n=== Alpha Trading Agent Output Schema Example ===")
-    
+
     output = AlphaTradingAgentOutput(
         loan_id="loan_67890",
         cash_balance=1000.0,
@@ -52,10 +48,10 @@ def example_trading_agent():
         months_of_coverage=3.2,
         coverage_adequate=True
     )
-    
+
     print(f"Portfolio Value: ${output.total_portfolio_value:,.2f}")
     print(f"Months of Coverage: {output.months_of_coverage:.1f}")
-    
+
     return output.to_dict()
 
 
@@ -64,11 +60,11 @@ def main():
     print("=" * 60)
     print("Agent Output Schema Usage Examples")
     print("=" * 60)
-    
+
     lender_data = example_lender_agent()
     trading_data = example_trading_agent()
-    
-    print(f"\n✓ All schemas ready for MongoDB storage")
+
+    print("\n✓ All schemas ready for MongoDB storage")
     print(f"✓ Lender schema: {len(lender_data)} fields")
     print(f"✓ Trading schema: {len(trading_data)} fields")
 

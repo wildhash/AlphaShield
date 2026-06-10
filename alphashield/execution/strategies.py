@@ -9,8 +9,6 @@ at run-time.
 
 from __future__ import annotations
 
-from typing import Any
-
 from lumibot.strategies import Strategy
 
 
@@ -84,7 +82,6 @@ class AlphaShieldYieldStrategy(Strategy):
             try:
                 bars = self.get_historical_prices(ticker, 30, "day")
                 if bars is not None and len(bars.df) >= 10:
-                    import numpy as np  # noqa: PLC0415
 
                     daily_rets = bars.df["close"].pct_change().dropna()
                     vols[ticker] = float(daily_rets.std()) or 1.0

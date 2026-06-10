@@ -1,8 +1,9 @@
 # alphashield/rl/bandit.py
 from __future__ import annotations
+
 from dataclasses import dataclass
+
 import numpy as np
-from typing import Optional, Tuple
 
 Array = np.ndarray
 
@@ -21,11 +22,11 @@ class LinUCB:
     Keeps per-action A (dxd) and b (dx1) for linear reward model.
     UCB score: x^T theta_a + alpha * sqrt(x^T A_a^{-1} x)
     """
-    def __init__(self, n_actions: int = None, d: int = None, alpha: float = 1.5, 
-                 reg: float = 1e-2, cfg: Optional[LinUCBConfig] = None, 
-                 rng: Optional[np.random.Generator] = None) -> None:
+    def __init__(self, n_actions: int = None, d: int = None, alpha: float = 1.5,
+                 reg: float = 1e-2, cfg: LinUCBConfig | None = None,
+                 rng: np.random.Generator | None = None) -> None:
         """Initialize LinUCB bandit.
-        
+
         Parameters
         ----------
         n_actions: Number of actions (required if cfg not provided)
@@ -41,13 +42,13 @@ class LinUCB:
             if n_actions is None or d is None:
                 raise ValueError("Either cfg or both n_actions and d must be provided")
             self.cfg = LinUCBConfig(n_actions=n_actions, d=d, alpha=alpha, reg=reg)
-        
+
         self.rng = rng or np.random.default_rng()
         d, k = self.cfg.d, self.cfg.n_actions
         self.A: Array = np.stack([np.eye(d) * self.cfg.reg for _ in range(k)])   # (k, d, d)
         self.b: Array = np.zeros((k, d))                                    # (k, d)
         # cached inverses (lazy)
-        self._A_inv: Optional[Array] = None
+        self._A_inv: Array | None = None
 
     # ---------- utilities ----------
     def _ensure_inv(self) -> Array:
@@ -109,7 +110,7 @@ class LinUCB:
         self._invalidate_inv()
 
     # convenience (used by tests)
-    def parameters(self, action: int) -> Tuple[Array, Array]:
+    def parameters(self, action: int) -> tuple[Array, Array]:
         """Return (A_a, theta_a) for inspection."""
         theta = self._theta()
         return self.A[action], theta[action]

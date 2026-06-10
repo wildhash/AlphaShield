@@ -1,17 +1,23 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import numpy as np
 import pandas as pd
 
-from alphashield.utils.logging_config import get_logger
-from alphashield.utils.metrics import time_block, decisions_inc
-from alphashield.trading.coverage_monitor import monthly_payment, coverage_ratio as compute_cr, is_coverage_ok
-from alphashield.trading.portfolio_optimizer import PortfolioOptimizer, OptimizerConfig
-from alphashield.trading.signal_generator import momentum_signal, trend_sma200_signal, mean_reversion_signal, combine_signals
+from alphashield.trading.coverage_monitor import coverage_ratio as compute_cr
+from alphashield.trading.coverage_monitor import is_coverage_ok, monthly_payment
 from alphashield.trading.execution_simulator import simulate_execution
+from alphashield.trading.portfolio_optimizer import OptimizerConfig, PortfolioOptimizer
+from alphashield.trading.signal_generator import (
+    combine_signals,
+    mean_reversion_signal,
+    momentum_signal,
+    trend_sma200_signal,
+)
+from alphashield.utils.logging_config import get_logger
+from alphashield.utils.metrics import decisions_inc, time_block
 
 
 class TradingOrchestrator:
@@ -19,7 +25,7 @@ class TradingOrchestrator:
     One-step decision orchestrator for AlphaShield.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         self.config = config
         self.logger = get_logger("alphashield.trading")
         opt_cfg = self.config.get("optimizer", {})
@@ -33,16 +39,16 @@ class TradingOrchestrator:
                 min_return=float(opt_cfg.get("min_return", 0.0)),
             )
         )
-        self.current_weights: Optional[pd.Series] = None
+        self.current_weights: pd.Series | None = None
 
     def step(
         self,
         date: pd.Timestamp,
         prices_window: pd.DataFrame,
-        loan_params: Dict[str, Any],
+        loan_params: dict[str, Any],
         portfolio_value: float,
         loan_id: str = "demo",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         # Signals
         sig_cfg = self.config.get("signals", {})
         mom_w = int(sig_cfg.get("momentum_window", 252))
@@ -73,7 +79,7 @@ class TradingOrchestrator:
         emergency_ratio = float(cov_cfg.get("emergency_ratio", 1.2))
         mpay = monthly_payment(float(loan_params.get("principal", 100000.0)), float(loan_params.get("rate", 0.08)), int(loan_params.get("term_months", 36)))
         cr = compute_cr(portfolio_value, mpay, exp_ret)
-        coverage_ok = is_coverage_ok(cr, target_ratio, emergency_ratio)
+        is_coverage_ok(cr, target_ratio, emergency_ratio)
 
         # Execution
         exec_cfg = self.config.get("execution", {})
@@ -102,7 +108,7 @@ class TradingOrchestrator:
             "turnover": float(abs(self.current_weights - current_weights).sum()),
         }
 
-        rationale: List[str] = []
+        rationale: list[str] = []
         rationale.append(f"template={template_name}")
         rationale.append(f"realized_vol={realized_vol:.2f}")
         rationale.append(f"coverage_ratio={cr:.2f}")

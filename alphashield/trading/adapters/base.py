@@ -6,11 +6,11 @@ consistent behavior across different trading platforms.
 """
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 
 class OrderStatus(Enum):
@@ -63,7 +63,7 @@ class Position:
     side: str  # "long" or "short"
     asset_class: str = "equity"
     exchange: str = ""
-    
+
     @property
     def is_profitable(self) -> bool:
         """Check if position is currently profitable."""
@@ -80,19 +80,19 @@ class Order:
     order_type: OrderType
     quantity: Decimal
     filled_quantity: Decimal = Decimal("0")
-    limit_price: Optional[Decimal] = None
-    stop_price: Optional[Decimal] = None
+    limit_price: Decimal | None = None
+    stop_price: Decimal | None = None
     status: OrderStatus = OrderStatus.PENDING
     time_in_force: TimeInForce = TimeInForce.DAY
-    submitted_at: Optional[datetime] = None
-    filled_at: Optional[datetime] = None
-    filled_avg_price: Optional[Decimal] = None
-    
+    submitted_at: datetime | None = None
+    filled_at: datetime | None = None
+    filled_avg_price: Decimal | None = None
+
     @property
     def is_filled(self) -> bool:
         """Check if order is completely filled."""
         return self.status == OrderStatus.FILLED
-    
+
     @property
     def is_active(self) -> bool:
         """Check if order is still active."""
@@ -131,8 +131,8 @@ class Bar:
     low: Decimal
     close: Decimal
     volume: int
-    vwap: Optional[Decimal] = None
-    trade_count: Optional[int] = None
+    vwap: Decimal | None = None
+    trade_count: int | None = None
 
 
 @dataclass
@@ -144,12 +144,12 @@ class Quote:
     bid_size: int
     ask: Decimal
     ask_size: int
-    
+
     @property
     def spread(self) -> Decimal:
         """Calculate bid-ask spread."""
         return self.ask - self.bid
-    
+
     @property
     def mid_price(self) -> Decimal:
         """Calculate mid-point price."""
@@ -159,63 +159,63 @@ class Quote:
 class BrokerAdapter(ABC):
     """
     Abstract base class for broker adapters.
-    
+
     All broker implementations must inherit from this class and
     implement all abstract methods to ensure consistent behavior.
     """
-    
+
     @abstractmethod
     async def connect(self) -> bool:
         """
         Establish connection to the broker.
-        
+
         Returns:
             True if connection successful, False otherwise.
         """
         pass
-    
+
     @abstractmethod
     async def disconnect(self) -> None:
         """Disconnect from the broker."""
         pass
-    
+
     @abstractmethod
     async def is_connected(self) -> bool:
         """Check if currently connected to the broker."""
         pass
-    
+
     # Account Methods
     @abstractmethod
     async def get_account(self) -> AccountInfo:
         """Get account information and balances."""
         pass
-    
+
     @abstractmethod
     async def get_buying_power(self) -> Decimal:
         """Get current buying power."""
         pass
-    
+
     # Position Methods
     @abstractmethod
     async def get_positions(self) -> list[Position]:
         """Get all current positions."""
         pass
-    
+
     @abstractmethod
-    async def get_position(self, symbol: str) -> Optional[Position]:
+    async def get_position(self, symbol: str) -> Position | None:
         """Get position for a specific symbol."""
         pass
-    
+
     @abstractmethod
     async def close_position(self, symbol: str) -> Order:
         """Close entire position for a symbol."""
         pass
-    
+
     @abstractmethod
     async def close_all_positions(self) -> list[Order]:
         """Close all positions."""
         pass
-    
+
     # Order Methods
     @abstractmethod
     async def submit_order(
@@ -224,14 +224,14 @@ class BrokerAdapter(ABC):
         quantity: Decimal,
         side: OrderSide,
         order_type: OrderType = OrderType.MARKET,
-        limit_price: Optional[Decimal] = None,
-        stop_price: Optional[Decimal] = None,
+        limit_price: Decimal | None = None,
+        stop_price: Decimal | None = None,
         time_in_force: TimeInForce = TimeInForce.DAY,
-        client_order_id: Optional[str] = None,
+        client_order_id: str | None = None,
     ) -> Order:
         """
         Submit a new order.
-        
+
         Args:
             symbol: Trading symbol
             quantity: Number of shares/units
@@ -241,48 +241,48 @@ class BrokerAdapter(ABC):
             stop_price: Stop price (required for stop orders)
             time_in_force: Order duration
             client_order_id: Optional custom order ID
-            
+
         Returns:
             Order object with submitted order details.
         """
         pass
-    
+
     @abstractmethod
-    async def get_order(self, order_id: str) -> Optional[Order]:
+    async def get_order(self, order_id: str) -> Order | None:
         """Get order by ID."""
         pass
-    
+
     @abstractmethod
     async def get_orders(
         self,
-        status: Optional[str] = None,
+        status: str | None = None,
         limit: int = 100,
-        after: Optional[datetime] = None,
-        until: Optional[datetime] = None,
+        after: datetime | None = None,
+        until: datetime | None = None,
     ) -> list[Order]:
         """Get list of orders with optional filters."""
         pass
-    
+
     @abstractmethod
     async def cancel_order(self, order_id: str) -> bool:
         """
         Cancel an order.
-        
+
         Returns:
             True if cancellation request accepted.
         """
         pass
-    
+
     @abstractmethod
     async def cancel_all_orders(self) -> int:
         """
         Cancel all open orders.
-        
+
         Returns:
             Number of orders cancelled.
         """
         pass
-    
+
     # Market Data Methods
     @abstractmethod
     async def get_bars(
@@ -290,45 +290,45 @@ class BrokerAdapter(ABC):
         symbol: str,
         timeframe: str,
         start: datetime,
-        end: Optional[datetime] = None,
+        end: datetime | None = None,
         limit: int = 1000,
     ) -> list[Bar]:
         """
         Get historical price bars.
-        
+
         Args:
             symbol: Trading symbol
             timeframe: Bar timeframe (e.g., "1Min", "1Hour", "1Day")
             start: Start datetime
             end: End datetime (defaults to now)
             limit: Maximum number of bars
-            
+
         Returns:
             List of Bar objects.
         """
         pass
-    
+
     @abstractmethod
-    async def get_latest_bar(self, symbol: str) -> Optional[Bar]:
+    async def get_latest_bar(self, symbol: str) -> Bar | None:
         """Get the latest price bar for a symbol."""
         pass
-    
+
     @abstractmethod
-    async def get_latest_quote(self, symbol: str) -> Optional[Quote]:
+    async def get_latest_quote(self, symbol: str) -> Quote | None:
         """Get the latest quote for a symbol."""
         pass
-    
+
     @abstractmethod
     async def get_latest_quotes(self, symbols: list[str]) -> dict[str, Quote]:
         """Get latest quotes for multiple symbols."""
         pass
-    
+
     # Utility Methods
     @abstractmethod
     async def is_market_open(self) -> bool:
         """Check if the market is currently open."""
         pass
-    
+
     @abstractmethod
     async def get_clock(self) -> dict[str, Any]:
         """Get market clock information."""

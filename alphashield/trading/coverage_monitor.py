@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import math
-
 
 def monthly_payment(principal: float, rate: float, term_months: int) -> float:
     if term_months <= 0:

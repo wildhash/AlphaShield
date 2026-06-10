@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import logging
 import os
-from datetime import datetime
-from typing import Dict, List, Optional
 
 from .base import (
     Account,
@@ -22,24 +20,24 @@ logger = logging.getLogger(__name__)
 
 class AlpacaAdapter(BrokerAdapter):
     """Alpaca Markets API adapter.
-    
+
     Supports both paper trading and live trading environments.
-    
+
     Environment Variables:
         ALPACA_API_KEY: Alpaca API key
         ALPACA_SECRET_KEY: Alpaca secret key
         ALPACA_BASE_URL: Base URL (paper or live)
     """
-    
+
     def __init__(
         self,
-        api_key: Optional[str] = None,
-        secret_key: Optional[str] = None,
-        base_url: Optional[str] = None,
+        api_key: str | None = None,
+        secret_key: str | None = None,
+        base_url: str | None = None,
         paper: bool = True,
     ):
         """Initialize Alpaca adapter.
-        
+
         Args:
             api_key: Alpaca API key (or from ALPACA_API_KEY env var).
             secret_key: Alpaca secret key (or from ALPACA_SECRET_KEY env var).
@@ -48,21 +46,25 @@ class AlpacaAdapter(BrokerAdapter):
         """
         # Import alpaca-py library
         try:
+            from alpaca.data.historical import StockHistoricalDataClient
+            from alpaca.data.requests import StockLatestQuoteRequest
             from alpaca.trading.client import TradingClient
+            from alpaca.trading.enums import (
+                OrderSide as AlpacaOrderSide,
+            )
+            from alpaca.trading.enums import (
+                OrderStatus as AlpacaOrderStatus,
+            )
+            from alpaca.trading.enums import (
+                TimeInForce,
+            )
             from alpaca.trading.requests import (
                 LimitOrderRequest,
                 MarketOrderRequest,
                 StopLimitOrderRequest,
                 StopOrderRequest,
             )
-            from alpaca.trading.enums import (
-                OrderSide as AlpacaOrderSide,
-                TimeInForce,
-                OrderStatus as AlpacaOrderStatus,
-            )
-            from alpaca.data.historical import StockHistoricalDataClient
-            from alpaca.data.requests import StockLatestQuoteRequest
-            
+
             self._trading_client_class = TradingClient
             self._market_order_class = MarketOrderRequest
             self._limit_order_class = LimitOrderRequest
@@ -73,23 +75,23 @@ class AlpacaAdapter(BrokerAdapter):
             self._alpaca_order_status = AlpacaOrderStatus
             self._stock_client_class = StockHistoricalDataClient
             self._quote_request_class = StockLatestQuoteRequest
-            
+
         except ImportError as e:
             raise ImportError(
                 "alpaca-py is required for AlpacaAdapter. "
                 "Install with: pip install alpaca-py"
             ) from e
-        
+
         # Get credentials
         self.api_key = api_key or os.getenv("ALPACA_API_KEY")
         self.secret_key = secret_key or os.getenv("ALPACA_SECRET_KEY")
-        
+
         if not self.api_key or not self.secret_key:
             raise ValueError(
                 "Alpaca API credentials required. "
                 "Set ALPACA_API_KEY and ALPACA_SECRET_KEY env vars."
             )
-        
+
         # Determine base URL
         if base_url:
             self.base_url = base_url
@@ -102,30 +104,30 @@ class AlpacaAdapter(BrokerAdapter):
                 if paper
                 else "https://api.alpaca.markets"
             )
-        
+
         self.paper = paper
-        
+
         # Initialize clients
         self.trading_client = self._trading_client_class(
             api_key=self.api_key,
             secret_key=self.secret_key,
             paper=paper,
         )
-        
+
         self.data_client = self._stock_client_class(
             api_key=self.api_key,
             secret_key=self.secret_key,
         )
-        
+
         logger.info(
             f"Initialized Alpaca adapter (paper={paper}, base_url={self.base_url})"
         )
-    
+
     def get_account(self) -> Account:
         """Get account information."""
         try:
             acc = self.trading_client.get_account()
-            
+
             return Account(
                 id=acc.id,
                 cash=float(acc.cash),
@@ -139,12 +141,12 @@ class AlpacaAdapter(BrokerAdapter):
         except Exception as e:
             logger.error(f"Failed to get account: {e}")
             raise
-    
-    def get_positions(self) -> List[Position]:
+
+    def get_positions(self) -> list[Position]:
         """Get all current positions."""
         try:
             positions = self.trading_client.get_all_positions()
-            
+
             return [
                 Position(
                     ticker=pos.symbol,
@@ -160,12 +162,12 @@ class AlpacaAdapter(BrokerAdapter):
         except Exception as e:
             logger.error(f"Failed to get positions: {e}")
             raise
-    
-    def get_position(self, ticker: str) -> Optional[Position]:
+
+    def get_position(self, ticker: str) -> Position | None:
         """Get position for specific ticker."""
         try:
             pos = self.trading_client.get_open_position(ticker)
-            
+
             return Position(
                 ticker=pos.symbol,
                 quantity=float(pos.qty),
@@ -180,15 +182,15 @@ class AlpacaAdapter(BrokerAdapter):
                 return None
             logger.error(f"Failed to get position for {ticker}: {e}")
             raise
-    
+
     def submit_order(
         self,
         ticker: str,
         qty: float,
         side: OrderSide,
         type: OrderType = OrderType.MARKET,
-        limit_price: Optional[float] = None,
-        stop_price: Optional[float] = None,
+        limit_price: float | None = None,
+        stop_price: float | None = None,
         time_in_force: str = "day",
     ) -> Order:
         """Submit an order."""
@@ -199,7 +201,7 @@ class AlpacaAdapter(BrokerAdapter):
                 if side == OrderSide.BUY
                 else self._alpaca_order_side.SELL
             )
-            
+
             # Map time_in_force
             tif_map = {
                 "day": self._alpaca_time_in_force.DAY,
@@ -208,7 +210,7 @@ class AlpacaAdapter(BrokerAdapter):
                 "fok": self._alpaca_time_in_force.FOK,
             }
             alpaca_tif = tif_map.get(time_in_force.lower(), self._alpaca_time_in_force.DAY)
-            
+
             # Create order request based on type
             if type == OrderType.MARKET:
                 order_request = self._market_order_class(
@@ -250,12 +252,12 @@ class AlpacaAdapter(BrokerAdapter):
                 )
             else:
                 raise ValueError(f"Unsupported order type: {type}")
-            
+
             # Submit order
             alpaca_order = self.trading_client.submit_order(order_request)
-            
+
             return self._convert_order(alpaca_order)
-            
+
         except Exception as e:
             logger.error(f"Failed to submit order for {ticker}: {e}")
             # Return rejected order
@@ -270,7 +272,7 @@ class AlpacaAdapter(BrokerAdapter):
                 stop_price=stop_price,
                 error_message=str(e),
             )
-    
+
     def get_order(self, order_id: str) -> Order:
         """Get order status."""
         try:
@@ -279,7 +281,7 @@ class AlpacaAdapter(BrokerAdapter):
         except Exception as e:
             logger.error(f"Failed to get order {order_id}: {e}")
             raise
-    
+
     def cancel_order(self, order_id: str) -> bool:
         """Cancel an order."""
         try:
@@ -289,16 +291,16 @@ class AlpacaAdapter(BrokerAdapter):
         except Exception as e:
             logger.error(f"Failed to cancel order {order_id}: {e}")
             return False
-    
+
     def get_orders(
-        self, 
-        status: Optional[OrderStatus] = None,
+        self,
+        status: OrderStatus | None = None,
         limit: int = 100
-    ) -> List[Order]:
+    ) -> list[Order]:
         """Get orders, optionally filtered by status."""
         try:
             from alpaca.trading.requests import GetOrdersRequest
-            
+
             # Map our status to Alpaca status
             alpaca_status = None
             if status:
@@ -313,27 +315,27 @@ class AlpacaAdapter(BrokerAdapter):
                     OrderStatus.EXPIRED: self._alpaca_order_status.EXPIRED,
                 }
                 alpaca_status = status_map.get(status)
-            
+
             request = GetOrdersRequest(
                 status=alpaca_status,
                 limit=limit,
             )
-            
+
             alpaca_orders = self.trading_client.get_orders(request)
-            
+
             return [self._convert_order(order) for order in alpaca_orders]
-            
+
         except Exception as e:
             logger.error(f"Failed to get orders: {e}")
             raise
-    
-    def get_quote(self, ticker: str) -> Dict[str, float]:
+
+    def get_quote(self, ticker: str) -> dict[str, float]:
         """Get real-time quote for ticker."""
         try:
             request = self._quote_request_class(symbol_or_symbols=ticker)
             quotes = self.data_client.get_stock_latest_quote(request)
             quote = quotes[ticker]
-            
+
             return {
                 "bid": float(quote.bid_price),
                 "ask": float(quote.ask_price),
@@ -344,7 +346,7 @@ class AlpacaAdapter(BrokerAdapter):
         except Exception as e:
             logger.error(f"Failed to get quote for {ticker}: {e}")
             raise
-    
+
     def close_position(self, ticker: str) -> Order:
         """Close entire position for ticker."""
         try:
@@ -352,10 +354,10 @@ class AlpacaAdapter(BrokerAdapter):
             position = self.get_position(ticker)
             if not position:
                 raise ValueError(f"No position exists for {ticker}")
-            
+
             # Submit market order to close
             side = OrderSide.SELL if position.quantity > 0 else OrderSide.BUY
-            
+
             return self.submit_order(
                 ticker=ticker,
                 qty=abs(position.quantity),
@@ -365,25 +367,25 @@ class AlpacaAdapter(BrokerAdapter):
         except Exception as e:
             logger.error(f"Failed to close position for {ticker}: {e}")
             raise
-    
-    def close_all_positions(self) -> List[Order]:
+
+    def close_all_positions(self) -> list[Order]:
         """Close all positions."""
         try:
             positions = self.get_positions()
             orders = []
-            
+
             for position in positions:
                 try:
                     order = self.close_position(position.ticker)
                     orders.append(order)
                 except Exception as e:
                     logger.error(f"Failed to close position {position.ticker}: {e}")
-            
+
             return orders
         except Exception as e:
             logger.error(f"Failed to close all positions: {e}")
             raise
-    
+
     def _convert_order(self, alpaca_order) -> Order:
         """Convert Alpaca order to our Order type."""
         # Map Alpaca status to our status
@@ -397,16 +399,16 @@ class AlpacaAdapter(BrokerAdapter):
             self._alpaca_order_status.REJECTED: OrderStatus.REJECTED,
             self._alpaca_order_status.EXPIRED: OrderStatus.EXPIRED,
         }
-        
+
         status = status_map.get(alpaca_order.status, OrderStatus.PENDING)
-        
+
         # Map side
         side = (
             OrderSide.BUY
             if alpaca_order.side == self._alpaca_order_side.BUY
             else OrderSide.SELL
         )
-        
+
         # Map order type
         type_str = str(alpaca_order.order_type).lower()
         if "market" in type_str:
@@ -417,7 +419,7 @@ class AlpacaAdapter(BrokerAdapter):
             order_type = OrderType.STOP
         else:
             order_type = OrderType.LIMIT
-        
+
         return Order(
             id=alpaca_order.id,
             ticker=alpaca_order.symbol,

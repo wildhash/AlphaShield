@@ -1,7 +1,6 @@
 # tests/rl/test_bandit_update.py
-import math
-import random
 import numpy as np
+
 
 # ---- Helper: Simulated linear environment with noise -------------------------
 class LinearNoisyEnv:
@@ -44,7 +43,6 @@ class LinearNoisyEnv:
 # ---- Minimal import path for LinUCB (Copilot will fill the implementation) ---
 from alphashield.rl.bandit import LinUCB  # type: ignore
 
-
 # ---- Tests -------------------------------------------------------------------
 
 def test_linucb_beats_random_policy():
@@ -62,7 +60,7 @@ def test_linucb_beats_random_policy():
     cum_linucb = 0.0
     cum_random = 0.0
 
-    for t in range(T):
+    for _t in range(T):
         x = env.sample_context()
 
         # LinUCB choose/update
@@ -92,7 +90,7 @@ def test_linucb_converges_toward_best_action_short_horizon():
 
     T = 600
     best_hits = 0
-    for t in range(T):
+    for _t in range(T):
         x = env.sample_context()
         a = linucb.suggest_action(x)
         r = env.reward(a, x)

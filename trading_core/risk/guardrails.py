@@ -1,6 +1,7 @@
 from dataclasses import dataclass
+
 import numpy as np
-from typing import Tuple, List
+
 
 @dataclass
 class RiskLimits:
@@ -32,7 +33,7 @@ def check_risk_limits(
     proposed_weights: np.ndarray,
     coverage_ratio_value: float,
     limits: RiskLimits
-) -> Tuple[bool, List[str]]:
+) -> tuple[bool, list[str]]:
     violations = []
     if coverage_ratio_value < limits.cr_floor:
         violations.append(f"CR {coverage_ratio_value:.2f} < floor {limits.cr_floor:.2f}")

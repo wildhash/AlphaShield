@@ -1,38 +1,38 @@
 """Orchestrator graph for deterministic DAG execution."""
-from dataclasses import dataclass, field
-from typing import Dict, Any, Optional, List
-from datetime import datetime
 import uuid
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Any
 
-from alphashield.context.packet import ContextPacket, make_packet
 from alphashield.context.capsule import build_financial_capsule
+from alphashield.context.packet import make_packet
 
 
 @dataclass
 class OriginationBundle:
     """Bundle containing all origination artifacts.
-    
+
     Persisted to storage after orchestration completes.
     """
     trace_id: str
     loan_app_id: str
     user_id: str
-    
+
     # Agent outputs
-    loan_app: Dict[str, Any] = field(default_factory=dict)
-    underwriting: Dict[str, Any] = field(default_factory=dict)
-    coverage: Dict[str, Any] = field(default_factory=dict)
-    offer: Dict[str, Any] = field(default_factory=dict)
-    compliance: Dict[str, Any] = field(default_factory=dict)
-    contract_review: Optional[Dict[str, Any]] = None
-    
+    loan_app: dict[str, Any] = field(default_factory=dict)
+    underwriting: dict[str, Any] = field(default_factory=dict)
+    coverage: dict[str, Any] = field(default_factory=dict)
+    offer: dict[str, Any] = field(default_factory=dict)
+    compliance: dict[str, Any] = field(default_factory=dict)
+    contract_review: dict[str, Any] | None = None
+
     # Audit trail
-    audit_trail: List[Dict[str, Any]] = field(default_factory=list)
-    
+    audit_trail: list[dict[str, Any]] = field(default_factory=list)
+
     # Metadata
     timestamp: datetime = field(default_factory=datetime.utcnow)
-    
-    def to_dict(self) -> Dict[str, Any]:
+
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for storage."""
         return {
             'trace_id': self.trace_id,
@@ -51,27 +51,27 @@ class OriginationBundle:
 
 class StorageClient:
     """Client for persisting origination bundles."""
-    
+
     def __init__(self, db_client=None):
         """Initialize storage client.
-        
+
         Args:
             db_client: MongoDB client for persistence
         """
         self.db = db_client
-    
+
     def store_bundle(self, bundle: OriginationBundle) -> str:
         """Store origination bundle.
-        
+
         Args:
             bundle: OriginationBundle to persist
-            
+
         Returns:
             Bundle ID
         """
         if not self.db:
             return bundle.trace_id
-        
+
         bundles = self.db.get_collection('origination_bundles')
         result = bundles.insert_one(bundle.to_dict())
         return str(result.inserted_id)
@@ -85,7 +85,7 @@ def _emit_audit_event(
     status: str = "success"
 ) -> None:
     """Emit an audit trail event.
-    
+
     Args:
         bundle: Origination bundle to add event to
         node_name: Name of the DAG node
@@ -109,15 +109,15 @@ def execute(
     loan_app_id: str,
     db_client=None,
     embeddings_client=None,
-    agents: Optional[Dict[str, Any]] = None,
+    agents: dict[str, Any] | None = None,
     short_term_relief: bool = False
 ) -> OriginationBundle:
     """Execute the orchestration DAG.
-    
+
     DAG structure:
-    intake_doc & identity_fraud (parallel) → underwriting → 
+    intake_doc & identity_fraud (parallel) → underwriting →
     optional contract_review → risk_bridge → offer → compliance
-    
+
     Args:
         trace_id: Unique trace identifier
         user_id: User identifier
@@ -126,32 +126,32 @@ def execute(
         embeddings_client: Embeddings client for vector search
         agents: Dictionary of agent instances (optional)
         short_term_relief: Flag for micro-refi short-term relief mode
-        
+
     Returns:
         OriginationBundle with all agent outputs and audit trail
     """
     # Generate trace_id if not provided
     if not trace_id:
         trace_id = str(uuid.uuid4())
-    
+
     # Build financial capsule for shared context
     capsule = build_financial_capsule(
         user_id=user_id,
         db_client=db_client,
         embeddings_client=embeddings_client
     )
-    
+
     # Create context packet
     ctx = make_packet(trace_id, user_id, loan_app_id)
     ctx.add_context('capsule', capsule.to_dict())
-    
+
     # Initialize origination bundle
     bundle = OriginationBundle(
         trace_id=trace_id,
         user_id=user_id,
         loan_app_id=loan_app_id
     )
-    
+
     # Phase 1: Parallel execution of intake_doc and identity_fraud
     # For now, these are stubs since we don't have these agents yet
     intake_result = {
@@ -160,17 +160,17 @@ def execute(
         'extracted_data': {},
     }
     _emit_audit_event(bundle, 'intake_doc', 'intake_1', ctx._hash_data(intake_result))
-    
+
     identity_result = {
         'status': 'verified',
         'fraud_score': 0.05,
         'checks_passed': ['id_verification', 'address_verification'],
     }
     _emit_audit_event(bundle, 'identity_fraud', 'identity_1', ctx._hash_data(identity_result))
-    
+
     ctx.add_context('intake_doc', intake_result)
     ctx.add_context('identity_fraud', identity_result)
-    
+
     # Phase 2: Underwriting
     underwriting_result = {
         'approved': True,
@@ -182,7 +182,7 @@ def execute(
     bundle.underwriting = underwriting_result
     _emit_audit_event(bundle, 'underwriting', 'uw_1', ctx._hash_data(underwriting_result))
     ctx.add_context('underwriting', underwriting_result)
-    
+
     # Phase 3: Optional contract review (if high-risk or requested)
     if underwriting_result.get('credit_score', 700) < 650 or short_term_relief:
         contract_review_result = {
@@ -194,7 +194,7 @@ def execute(
         bundle.contract_review = contract_review_result
         _emit_audit_event(bundle, 'contract_review', 'cr_1', ctx._hash_data(contract_review_result))
         ctx.add_context('contract_review', contract_review_result)
-    
+
     # Phase 4: Risk bridge (portfolio optimization)
     risk_bridge_result = {
         'coverage_ratio': 1.35,
@@ -209,7 +209,7 @@ def execute(
     bundle.coverage = risk_bridge_result
     _emit_audit_event(bundle, 'risk_bridge', 'rb_1', ctx._hash_data(risk_bridge_result))
     ctx.add_context('risk_bridge', risk_bridge_result)
-    
+
     # Phase 5: Offer generation
     offer_result = {
         'principal': underwriting_result['max_loan_amount'],
@@ -221,7 +221,7 @@ def execute(
     bundle.offer = offer_result
     _emit_audit_event(bundle, 'offer', 'offer_1', ctx._hash_data(offer_result))
     ctx.add_context('offer', offer_result)
-    
+
     # Phase 6: Compliance check
     compliance_result = {
         'compliant': True,
@@ -236,7 +236,7 @@ def execute(
     bundle.compliance = compliance_result
     _emit_audit_event(bundle, 'compliance', 'comp_1', ctx._hash_data(compliance_result))
     ctx.add_context('compliance', compliance_result)
-    
+
     # Store loan application data in bundle
     bundle.loan_app = {
         'loan_app_id': loan_app_id,
@@ -244,9 +244,9 @@ def execute(
         'status': 'approved' if compliance_result['compliant'] else 'rejected',
         'short_term_relief': short_term_relief,
     }
-    
+
     # Persist bundle
     storage = StorageClient(db_client)
     storage.store_bundle(bundle)
-    
+
     return bundle

@@ -11,10 +11,10 @@ from alphashield.database.mongodb_client import MongoDBClient
 
 def populate_sample_data():
     """Populate MongoDB with sample financial documents."""
-    
+
     # Initialize MongoDB client
     mongo_client = MongoDBClient()
-    
+
     # Sample Brokerage Account Statement
     brokerage_statement = {
         "document_type": "Brokerage_Account_Statement",
@@ -84,7 +84,7 @@ def populate_sample_data():
         "created_at": datetime.utcnow(),
         "updated_at": datetime.utcnow()
     }
-    
+
     # Sample Credit Card Statement
     credit_card_statement = {
         "document_type": "Credit_Card_Statement",
@@ -155,7 +155,7 @@ def populate_sample_data():
         "created_at": datetime.utcnow(),
         "updated_at": datetime.utcnow()
     }
-    
+
     # Sample Experian Credit Report
     credit_report = {
         "document_type": "Credit_Report",
@@ -230,31 +230,31 @@ def populate_sample_data():
         "created_at": datetime.utcnow(),
         "updated_at": datetime.utcnow()
     }
-    
+
     # Insert documents into respective collections
     print("Populating MongoDB with sample data...")
-    
+
     # Store brokerage statement
     brokerage_collection = mongo_client.get_collection('brokerage_statements')
     brokerage_id = brokerage_collection.insert_one(brokerage_statement).inserted_id
     print(f"✓ Inserted brokerage statement: {brokerage_id}")
-    
+
     # Store credit card statement
     credit_card_collection = mongo_client.get_collection('credit_card_statements')
     credit_card_id = credit_card_collection.insert_one(credit_card_statement).inserted_id
     print(f"✓ Inserted credit card statement: {credit_card_id}")
-    
+
     # Store credit report
     credit_report_collection = mongo_client.get_collection('credit_reports')
     credit_report_id = credit_report_collection.insert_one(credit_report).inserted_id
     print(f"✓ Inserted credit report: {credit_report_id}")
-    
+
     print("\n✅ Sample data population complete!")
-    print(f"\nCollections created:")
-    print(f"  - brokerage_statements (1 document)")
-    print(f"  - credit_card_statements (1 document)")
-    print(f"  - credit_reports (1 document)")
-    
+    print("\nCollections created:")
+    print("  - brokerage_statements (1 document)")
+    print("  - credit_card_statements (1 document)")
+    print("  - credit_reports (1 document)")
+
     return {
         'brokerage_id': str(brokerage_id),
         'credit_card_id': str(credit_card_id),

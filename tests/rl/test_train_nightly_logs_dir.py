@@ -1,12 +1,7 @@
 # tests/rl/test_train_nightly_logs_dir.py
 """Tests that the nightly training job creates the logs directory before logging."""
-import importlib
-import logging
-import os
 import sys
-import tempfile
 import unittest.mock as mock
-from pathlib import Path
 
 
 def test_logs_directory_created_before_filehandler(tmp_path, monkeypatch):

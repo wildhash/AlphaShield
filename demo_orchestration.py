@@ -4,11 +4,12 @@ NOTE: This script uses synthetic/demo data for illustration purposes only.
 All user IDs, loan IDs, and trace IDs are non-sensitive test identifiers.
 """
 import os
+
 os.environ['USE_RL'] = 'false'
 os.environ['QUANTUM'] = 'false'
 
-from alphashield.orchestrator import execute
 from alphashield.agents.spending_guard.agent import SpendingGuardAgent
+from alphashield.orchestrator import execute
 
 
 def demo_orchestration():
@@ -17,7 +18,7 @@ def demo_orchestration():
     print("AlphaShield Orchestration Demo")
     print("=" * 60)
     print()
-    
+
     # Execute orchestrator without DB (using synthetic stub data)
     # NOTE: Using demo identifiers, not real user data
     print("1. Executing orchestrator DAG...")
@@ -26,25 +27,25 @@ def demo_orchestration():
         user_id='demo_user_123',  # Synthetic user ID for demo
         loan_app_id='demo_loan_456'  # Synthetic loan ID for demo
     )
-    
+
     print(f"   ✓ Trace ID: {bundle.trace_id}")
     print(f"   ✓ User ID: {bundle.user_id}")
     print(f"   ✓ Loan App ID: {bundle.loan_app_id}")
     print()
-    
+
     # Show audit trail
     print("2. Audit Trail:")
     for i, event in enumerate(bundle.audit_trail, 1):
         print(f"   {i}. {event['node']:20s} - {event['status']:8s} - Hash: {event['input_hash']}")
     print()
-    
+
     # Show underwriting results
     print("3. Underwriting Results:")
     print(f"   Approved: {bundle.underwriting.get('approved')}")
     print(f"   Credit Score: {bundle.underwriting.get('credit_score')}")
     print(f"   Max Loan Amount: ${bundle.underwriting.get('max_loan_amount'):,.2f}")
     print()
-    
+
     # Show coverage ratio
     print("4. Risk Bridge (Portfolio):")
     print(f"   Coverage Ratio: {bundle.coverage.get('coverage_ratio'):.2f}")
@@ -53,7 +54,7 @@ def demo_orchestration():
     for asset, weight in bundle.coverage.get('allocation', {}).items():
         print(f"      {asset:20s}: {weight*100:5.1f}%")
     print()
-    
+
     # Show offer
     print("5. Offer:")
     print(f"   Principal: ${bundle.offer.get('principal'):,.2f}")
@@ -61,7 +62,7 @@ def demo_orchestration():
     print(f"   Term: {bundle.offer.get('term_months')} months")
     print(f"   Monthly Payment: ${bundle.offer.get('monthly_payment'):,.2f}")
     print()
-    
+
     # Show compliance
     print("6. Compliance:")
     print(f"   Compliant: {bundle.compliance.get('compliant')}")
@@ -77,9 +78,9 @@ def demo_spending_guard():
     print("Spending Guard Demo")
     print("=" * 60)
     print()
-    
+
     agent = SpendingGuardAgent()
-    
+
     # Simulate transactions with an anomaly
     transactions = [
         {'category': 'groceries', 'amount': 150.0, 'date': '2024-01-01'},
@@ -91,13 +92,13 @@ def demo_spending_guard():
         {'category': 'dining', 'amount': 45.0, 'date': '2024-01-12'},
         {'category': 'gambling', 'amount': 200.0, 'date': '2024-01-20'},  # High risk
     ]
-    
+
     print("Analyzing transactions...")
     events = agent.analyze_transactions(transactions)
-    
+
     print(f"Found {len(events)} events:")
     print()
-    
+
     for i, event in enumerate(events, 1):
         print(f"{i}. {event.event_type.upper()}")
         print(f"   Severity: {event.severity}")

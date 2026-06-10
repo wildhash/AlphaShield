@@ -1,8 +1,8 @@
 """Loan models for AlphaShield system."""
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional, Dict, Any
 from enum import Enum
+from typing import Any
 
 
 class LoanStatus(Enum):
@@ -19,14 +19,14 @@ class LoanSplit:
     total_amount: float
     investment_amount: float  # 60%
     borrower_amount: float    # 40%
-    
+
     @classmethod
     def from_total(cls, total: float) -> 'LoanSplit':
         """Create loan split from total amount.
-        
+
         Args:
             total: Total loan amount
-            
+
         Returns:
             LoanSplit with 60% to investment, 40% to borrower.
         """
@@ -45,13 +45,13 @@ class Loan:
     interest_rate: float
     term_months: int
     status: LoanStatus = LoanStatus.PENDING
-    loan_id: Optional[str] = None
-    created_at: Optional[datetime] = None
-    split: Optional[LoanSplit] = None
+    loan_id: str | None = None
+    created_at: datetime | None = None
+    split: LoanSplit | None = None
     investment_balance: float = 0.0
     outstanding_balance: float = 0.0
     monthly_payment: float = 0.0
-    
+
     def __post_init__(self):
         """Initialize computed fields."""
         if self.split is None:
@@ -62,22 +62,22 @@ class Loan:
             self.monthly_payment = self.calculate_monthly_payment()
         if self.investment_balance == 0.0:
             self.investment_balance = self.split.investment_amount
-            
+
     def calculate_monthly_payment(self) -> float:
         """Calculate monthly payment using standard amortization formula.
-        
+
         Returns:
             Monthly payment amount.
         """
         if self.interest_rate == 0:
             return self.principal / self.term_months
-        
+
         monthly_rate = self.interest_rate / 12 / 100
         numerator = self.principal * monthly_rate * (1 + monthly_rate) ** self.term_months
         denominator = (1 + monthly_rate) ** self.term_months - 1
         return numerator / denominator
-    
-    def to_dict(self) -> Dict[str, Any]:
+
+    def to_dict(self) -> dict[str, Any]:
         """Convert loan to dictionary for storage."""
         return {
             'borrower_id': self.borrower_id,
@@ -94,13 +94,13 @@ class Loan:
             'outstanding_balance': self.outstanding_balance,
             'monthly_payment': self.monthly_payment,
         }
-    
+
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Loan':
+    def from_dict(cls, data: dict[str, Any]) -> 'Loan':
         """Create loan from dictionary."""
         split = LoanSplit(**data['split']) if 'split' in data else None
         status = LoanStatus(data.get('status', 'pending'))
-        
+
         return cls(
             loan_id=str(data.get('_id', '')),
             borrower_id=data['borrower_id'],

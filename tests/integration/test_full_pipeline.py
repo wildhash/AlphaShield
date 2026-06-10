@@ -1,7 +1,7 @@
 import pandas as pd
-from tests.trading.fixtures.synthetic_prices import make_universe_csv
+
 from alphashield.trading.orchestrator import TradingOrchestrator
-import yaml
+from tests.trading.fixtures.synthetic_prices import make_universe_csv
 
 
 def test_full_pipeline_step(tmp_path):
@@ -17,5 +17,5 @@ def test_full_pipeline_step(tmp_path):
     date = prices.index[260]
     window = prices.loc[:date]
     res = orch.step(date, window, {"principal":100000,"rate":0.08,"term_months":36}, portfolio_value=60000, loan_id="demo")
-    assert set(["target_weights","execution_result","coverage_ratio","risk_metrics","rationale"]).issubset(res.keys())
+    assert {"target_weights","execution_result","coverage_ratio","risk_metrics","rationale"}.issubset(res.keys())
     assert isinstance(res["rationale"], list) and len(res["rationale"]) >= 1
