@@ -1,4 +1,5 @@
 """Spending Guard Agent with MAD/STL-based anomaly detection."""
+
 import os
 from dataclasses import dataclass
 from datetime import datetime
@@ -13,8 +14,9 @@ class GuardEvent:
 
     Represents a detected anomaly or alert in spending behavior.
     """
+
     event_type: str  # 'anomaly', 'velocity_spike', 'high_risk_category'
-    severity: str    # 'low', 'medium', 'high', 'critical'
+    severity: str  # 'low', 'medium', 'high', 'critical'
     suggested_action: str  # 'monitor', 'alert', 'freeze', 'micro_refi'
 
     # Event details
@@ -43,7 +45,7 @@ class SpendingGuardAgent:
         self,
         mad_threshold: float | None = None,
         high_severity_multiplier: float | None = None,
-        critical_severity_multiplier: float | None = None
+        critical_severity_multiplier: float | None = None,
     ):
         """Initialize spending guard agent.
 
@@ -52,14 +54,16 @@ class SpendingGuardAgent:
             high_severity_multiplier: Multiplier for high severity (default 5.0)
             critical_severity_multiplier: Multiplier for critical severity (default 7.0)
         """
-        self.mad_threshold = mad_threshold or float(os.getenv('GUARD_MAD_THRESHOLD', '3.0'))
-        self.high_multiplier = high_severity_multiplier or float(os.getenv('GUARD_HIGH_MULTIPLIER', '5.0'))
-        self.critical_multiplier = critical_severity_multiplier or float(os.getenv('GUARD_CRITICAL_MULTIPLIER', '7.0'))
+        self.mad_threshold = mad_threshold or float(os.getenv("GUARD_MAD_THRESHOLD", "3.0"))
+        self.high_multiplier = high_severity_multiplier or float(
+            os.getenv("GUARD_HIGH_MULTIPLIER", "5.0")
+        )
+        self.critical_multiplier = critical_severity_multiplier or float(
+            os.getenv("GUARD_CRITICAL_MULTIPLIER", "7.0")
+        )
 
     def analyze_transactions(
-        self,
-        transactions: list[dict[str, Any]],
-        user_baseline: dict[str, float] | None = None
+        self, transactions: list[dict[str, Any]], user_baseline: dict[str, float] | None = None
     ) -> list[GuardEvent]:
         """Analyze transactions for anomalies.
 
@@ -78,8 +82,8 @@ class SpendingGuardAgent:
         # Group transactions by category
         category_amounts = {}
         for txn in transactions:
-            category = txn.get('category', 'other')
-            amount = txn.get('amount', 0.0)
+            category = txn.get("category", "other")
+            amount = txn.get("amount", 0.0)
 
             if category not in category_amounts:
                 category_amounts[category] = []
@@ -133,21 +137,21 @@ class SpendingGuardAgent:
 
             # Determine severity based on deviation
             severity = None
-            suggested_action = 'monitor'
+            suggested_action = "monitor"
 
             if deviation > self.critical_multiplier:
-                severity = 'critical'
-                suggested_action = 'micro_refi'
+                severity = "critical"
+                suggested_action = "micro_refi"
             elif deviation > self.high_multiplier:
-                severity = 'high'
-                suggested_action = 'alert'
+                severity = "high"
+                suggested_action = "alert"
             elif deviation > self.mad_threshold:
-                severity = 'medium'
-                suggested_action = 'monitor'
+                severity = "medium"
+                suggested_action = "monitor"
 
             if severity:
                 event = GuardEvent(
-                    event_type='anomaly',
+                    event_type="anomaly",
                     severity=severity,
                     suggested_action=suggested_action,
                     category=category,
@@ -160,9 +164,7 @@ class SpendingGuardAgent:
         return events
 
     def _detect_velocity_spikes(
-        self,
-        transactions: list[dict[str, Any]],
-        user_baseline: dict[str, float] | None
+        self, transactions: list[dict[str, Any]], user_baseline: dict[str, float] | None
     ) -> list[GuardEvent]:
         """Detect spending velocity spikes.
 
@@ -179,19 +181,19 @@ class SpendingGuardAgent:
             return events
 
         # Calculate recent spending (last 7 days)
-        recent_amounts = [txn.get('amount', 0.0) for txn in transactions[-7:]]
+        recent_amounts = [txn.get("amount", 0.0) for txn in transactions[-7:]]
         recent_total = sum(recent_amounts)
 
-        baseline_weekly = user_baseline.get('avg_weekly_spending', 0.0)
+        baseline_weekly = user_baseline.get("avg_weekly_spending", 0.0)
 
         if baseline_weekly > 0:
             velocity_ratio = recent_total / baseline_weekly
 
             if velocity_ratio > 3.0:
                 event = GuardEvent(
-                    event_type='velocity_spike',
-                    severity='critical',
-                    suggested_action='micro_refi',
+                    event_type="velocity_spike",
+                    severity="critical",
+                    suggested_action="micro_refi",
                     amount=recent_total,
                     threshold=baseline_weekly * 3.0,
                     deviation=velocity_ratio,
@@ -199,9 +201,9 @@ class SpendingGuardAgent:
                 events.append(event)
             elif velocity_ratio > 2.0:
                 event = GuardEvent(
-                    event_type='velocity_spike',
-                    severity='high',
-                    suggested_action='alert',
+                    event_type="velocity_spike",
+                    severity="high",
+                    suggested_action="alert",
                     amount=recent_total,
                     threshold=baseline_weekly * 2.0,
                     deviation=velocity_ratio,
@@ -210,7 +212,9 @@ class SpendingGuardAgent:
 
         return events
 
-    def _check_high_risk_categories(self, category_amounts: dict[str, list[float]]) -> list[GuardEvent]:
+    def _check_high_risk_categories(
+        self, category_amounts: dict[str, list[float]]
+    ) -> list[GuardEvent]:
         """Check for spending in high-risk categories.
 
         Args:
@@ -221,16 +225,16 @@ class SpendingGuardAgent:
         """
         events = []
 
-        high_risk_categories = ['gambling', 'casino', 'crypto', 'lottery', 'betting']
+        high_risk_categories = ["gambling", "casino", "crypto", "lottery", "betting"]
 
         for category, amounts in category_amounts.items():
             if any(risk in category.lower() for risk in high_risk_categories):
                 total = sum(amounts)
                 if total > 100:  # Threshold for concern
                     event = GuardEvent(
-                        event_type='high_risk_category',
-                        severity='high',
-                        suggested_action='alert',
+                        event_type="high_risk_category",
+                        severity="high",
+                        suggested_action="alert",
                         category=category,
                         amount=total,
                     )

@@ -3,6 +3,7 @@
 This example shows how agents should use output schemas before storing
 data in MongoDB, ensuring consistent data structures across the system.
 """
+
 from alphashield.schemas import (
     AlphaTradingAgentOutput,
     LenderAgentOutput,
@@ -19,14 +20,10 @@ def example_lender_agent():
         loan_id="loan_67890",
         credit_score=720,
         credit_history_length_years=5.5,
-        verified_income={
-            'annual_gross': 60000.0,
-            'monthly_gross': 5000.0,
-            'monthly_net': 3800.0
-        },
+        verified_income={"annual_gross": 60000.0, "monthly_gross": 5000.0, "monthly_net": 3800.0},
         debt_to_income_ratio=0.35,
         default_risk_score=0.15,
-        approved=True
+        approved=True,
     )
 
     print(f"Borrower ID: {output.borrower_id}")
@@ -46,7 +43,7 @@ def example_trading_agent():
         cash_balance=1000.0,
         total_portfolio_value=7200.0,
         months_of_coverage=3.2,
-        coverage_adequate=True
+        coverage_adequate=True,
     )
 
     print(f"Portfolio Value: ${output.total_portfolio_value:,.2f}")
@@ -69,5 +66,5 @@ def main():
     print(f"✓ Trading schema: {len(trading_data)} fields")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

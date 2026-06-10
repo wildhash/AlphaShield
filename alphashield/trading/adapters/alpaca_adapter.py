@@ -179,8 +179,7 @@ class AlpacaAdapter(BrokerAdapter):
 
         except ImportError as e:
             raise ImportError(
-                "alpaca-py package not installed. "
-                "Install with: pip install alpaca-py"
+                "alpaca-py package not installed. " "Install with: pip install alpaca-py"
             ) from e
 
     async def _rate_limit(self) -> None:
@@ -202,7 +201,7 @@ class AlpacaAdapter(BrokerAdapter):
                 last_error = e
                 logger.warning(f"Request failed (attempt {attempt + 1}/{self.max_retries}): {e}")
                 if attempt < self.max_retries - 1:
-                    await asyncio.sleep(2 ** attempt)  # Exponential backoff
+                    await asyncio.sleep(2**attempt)  # Exponential backoff
         raise last_error
 
     # Connection Methods
@@ -275,7 +274,11 @@ class AlpacaAdapter(BrokerAdapter):
             account = await self._execute_with_retry(self._client.get_account)
             return AccountInfo(
                 account_id=str(account.id),
-                status=account.status.value if hasattr(account.status, 'value') else str(account.status),
+                status=(
+                    account.status.value
+                    if hasattr(account.status, "value")
+                    else str(account.status)
+                ),
                 currency=account.currency or "USD",
                 buying_power=Decimal(str(account.buying_power)),
                 cash=Decimal(str(account.cash)),
@@ -319,8 +322,7 @@ class AlpacaAdapter(BrokerAdapter):
 
         try:
             position = await self._execute_with_retry(
-                self._client.get_open_position,
-                symbol.upper()
+                self._client.get_open_position, symbol.upper()
             )
             return self._convert_position(position)
         except Exception as e:
@@ -334,10 +336,7 @@ class AlpacaAdapter(BrokerAdapter):
             raise ConnectionError("Not connected to Alpaca")
 
         try:
-            order = await self._execute_with_retry(
-                self._client.close_position,
-                symbol.upper()
-            )
+            order = await self._execute_with_retry(self._client.close_position, symbol.upper())
             return self._convert_order(order)
         except Exception as e:
             raise PositionError(f"Failed to close position for {symbol}: {e}") from e
@@ -397,9 +396,7 @@ class AlpacaAdapter(BrokerAdapter):
         try:
             # Map to Alpaca types
             alpaca_side = (
-                self._AlpacaOrderSide.BUY
-                if side == OrderSide.BUY
-                else self._AlpacaOrderSide.SELL
+                self._AlpacaOrderSide.BUY if side == OrderSide.BUY else self._AlpacaOrderSide.SELL
             )
             alpaca_tif = self._map_time_in_force(time_in_force)
 
@@ -472,10 +469,7 @@ class AlpacaAdapter(BrokerAdapter):
             raise ConnectionError("Not connected to Alpaca")
 
         try:
-            order = await self._execute_with_retry(
-                self._client.get_order_by_id,
-                order_id
-            )
+            order = await self._execute_with_retry(self._client.get_order_by_id, order_id)
             return self._convert_order(order)
         except Exception as e:
             if "order not found" in str(e).lower():
@@ -506,10 +500,7 @@ class AlpacaAdapter(BrokerAdapter):
                 request_params["until"] = until
 
             request = self._GetOrdersRequest(**request_params)
-            orders = await self._execute_with_retry(
-                self._client.get_orders,
-                request
-            )
+            orders = await self._execute_with_retry(self._client.get_orders, request)
             return [self._convert_order(o) for o in orders]
         except Exception as e:
             raise OrderError(f"Failed to get orders: {e}") from e
@@ -574,25 +565,24 @@ class AlpacaAdapter(BrokerAdapter):
                 limit=limit,
             )
 
-            bars_data = await self._execute_with_retry(
-                self._data_client.get_stock_bars,
-                request
-            )
+            bars_data = await self._execute_with_retry(self._data_client.get_stock_bars, request)
 
             bars = []
             if symbol.upper() in bars_data:
                 for bar in bars_data[symbol.upper()]:
-                    bars.append(Bar(
-                        symbol=symbol.upper(),
-                        timestamp=bar.timestamp,
-                        open=Decimal(str(bar.open)),
-                        high=Decimal(str(bar.high)),
-                        low=Decimal(str(bar.low)),
-                        close=Decimal(str(bar.close)),
-                        volume=bar.volume,
-                        vwap=Decimal(str(bar.vwap)) if bar.vwap else None,
-                        trade_count=bar.trade_count,
-                    ))
+                    bars.append(
+                        Bar(
+                            symbol=symbol.upper(),
+                            timestamp=bar.timestamp,
+                            open=Decimal(str(bar.open)),
+                            high=Decimal(str(bar.high)),
+                            low=Decimal(str(bar.low)),
+                            close=Decimal(str(bar.close)),
+                            volume=bar.volume,
+                            vwap=Decimal(str(bar.vwap)) if bar.vwap else None,
+                            trade_count=bar.trade_count,
+                        )
+                    )
 
             return bars
 
@@ -605,13 +595,10 @@ class AlpacaAdapter(BrokerAdapter):
             raise ConnectionError("Not connected to Alpaca")
 
         try:
-            request = self._StockLatestBarRequest(
-                symbol_or_symbols=symbol.upper()
-            )
+            request = self._StockLatestBarRequest(symbol_or_symbols=symbol.upper())
 
             bars_data = await self._execute_with_retry(
-                self._data_client.get_stock_latest_bar,
-                request
+                self._data_client.get_stock_latest_bar, request
             )
 
             if symbol.upper() in bars_data:
@@ -638,13 +625,10 @@ class AlpacaAdapter(BrokerAdapter):
             raise ConnectionError("Not connected to Alpaca")
 
         try:
-            request = self._StockLatestQuoteRequest(
-                symbol_or_symbols=symbol.upper()
-            )
+            request = self._StockLatestQuoteRequest(symbol_or_symbols=symbol.upper())
 
             quotes_data = await self._execute_with_retry(
-                self._data_client.get_stock_latest_quote,
-                request
+                self._data_client.get_stock_latest_quote, request
             )
 
             if symbol.upper() in quotes_data:
@@ -669,13 +653,10 @@ class AlpacaAdapter(BrokerAdapter):
 
         try:
             symbols_upper = [s.upper() for s in symbols]
-            request = self._StockLatestQuoteRequest(
-                symbol_or_symbols=symbols_upper
-            )
+            request = self._StockLatestQuoteRequest(symbol_or_symbols=symbols_upper)
 
             quotes_data = await self._execute_with_retry(
-                self._data_client.get_stock_latest_quote,
-                request
+                self._data_client.get_stock_latest_quote, request
             )
 
             result = {}
@@ -734,8 +715,10 @@ class AlpacaAdapter(BrokerAdapter):
             unrealized_pnl_pct=Decimal(str(pos.unrealized_plpc)) * 100,
             current_price=Decimal(str(pos.current_price)),
             cost_basis=Decimal(str(pos.cost_basis)),
-            side=pos.side.value if hasattr(pos.side, 'value') else str(pos.side),
-            asset_class=pos.asset_class.value if hasattr(pos.asset_class, 'value') else str(pos.asset_class),
+            side=pos.side.value if hasattr(pos.side, "value") else str(pos.side),
+            asset_class=(
+                pos.asset_class.value if hasattr(pos.asset_class, "value") else str(pos.asset_class)
+            ),
             exchange=pos.exchange or "",
         )
 
@@ -755,7 +738,9 @@ class AlpacaAdapter(BrokerAdapter):
             time_in_force=self._map_tif_from_alpaca(order.time_in_force),
             submitted_at=order.submitted_at,
             filled_at=order.filled_at,
-            filled_avg_price=Decimal(str(order.filled_avg_price)) if order.filled_avg_price else None,
+            filled_avg_price=(
+                Decimal(str(order.filled_avg_price)) if order.filled_avg_price else None
+            ),
         )
 
     def _map_order_status(self, status) -> OrderStatus:

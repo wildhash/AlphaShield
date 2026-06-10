@@ -3,6 +3,7 @@
 These schemas ensure consistent data structures before uploading to MongoDB.
 Based on the Agent Document Requirements & Processing Strategy specification.
 """
+
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from typing import Any
@@ -16,6 +17,7 @@ class LenderAgentOutput:
 
     Purpose: Comprehensive underwriting and risk assessment for loan approval decisions.
     """
+
     # Borrower identification
     borrower_id: str
     loan_id: str | None = None
@@ -67,6 +69,7 @@ class AlphaTradingAgentOutput:
 
     Purpose: Investment performance tracking and tax-efficient portfolio management.
     """
+
     # Loan and portfolio identification
     loan_id: str
     borrower_id: str | None = None
@@ -81,7 +84,9 @@ class AlphaTradingAgentOutput:
     total_portfolio_value: float = 0.0
 
     # Asset allocation
-    asset_allocation: dict[str, float] = field(default_factory=dict)  # {stocks_pct, bonds_pct, cash_pct}
+    asset_allocation: dict[str, float] = field(
+        default_factory=dict
+    )  # {stocks_pct, bonds_pct, cash_pct}
 
     # Performance metrics
     performance: dict[str, Any] = field(default_factory=dict)
@@ -119,6 +124,7 @@ class SpendingGuardAgentOutput:
 
     Purpose: Transaction-level analysis and anomaly detection for spending behavior.
     """
+
     # Borrower and loan identification
     borrower_id: str
     loan_id: str | None = None
@@ -174,6 +180,7 @@ class BudgetAnalyzerAgentOutput:
 
     Purpose: Income/expense analysis and affordability assessment using 50/30/20 rule.
     """
+
     # Borrower and loan identification
     borrower_id: str
     loan_id: str | None = None
@@ -235,6 +242,7 @@ class TaxOptimizerAgentOutput:
 
     Purpose: Comprehensive tax analysis and optimization strategy generation.
     """
+
     # Borrower and loan identification
     borrower_id: str
     loan_id: str | None = None
@@ -296,6 +304,7 @@ class ContractReviewAgentOutput:
 
     Purpose: Contract fairness assessment, compliance checking, and final approval gating.
     """
+
     # Loan and contract identification
     loan_id: str
     borrower_id: str | None = None
@@ -379,4 +388,4 @@ def validate_schema(data: dict[str, Any], schema_class) -> bool:
         schema_class(**data)
         return True
     except TypeError as e:
-        raise ValueError(f"Schema validation failed: {str(e)}")
+        raise ValueError(f"Schema validation failed: {str(e)}") from e

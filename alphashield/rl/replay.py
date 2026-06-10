@@ -2,6 +2,7 @@
 
 Stores experiences in MongoDB with efficient sampling and retrieval.
 """
+
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -38,9 +39,16 @@ class ReplayBuffer:
         self.retention_days = retention_days
         self._buffer: list[dict[str, Any]] = []  # In-memory buffer
 
-    def append(self, user_id: str, agent: str, context: np.ndarray,
-              action: int, metrics: dict[str, Any], reward: float,
-              policy_version: int) -> str:
+    def append(
+        self,
+        user_id: str,
+        agent: str,
+        context: np.ndarray,
+        action: int,
+        metrics: dict[str, Any],
+        reward: float,
+        policy_version: int,
+    ) -> str:
         """Add an experience to the replay buffer.
 
         Parameters
@@ -66,14 +74,14 @@ class ReplayBuffer:
             Experience ID
         """
         experience = {
-            'ts': datetime.utcnow(),
-            'user_id': user_id,
-            'agent': agent,
-            'context': context.tolist(),
-            'action': int(action),
-            'metrics': metrics,
-            'reward': float(reward),
-            'policy_version': int(policy_version)
+            "ts": datetime.utcnow(),
+            "user_id": user_id,
+            "agent": agent,
+            "context": context.tolist(),
+            "action": int(action),
+            "metrics": metrics,
+            "reward": float(reward),
+            "policy_version": int(policy_version),
         }
 
         # Add to in-memory buffer
@@ -81,14 +89,19 @@ class ReplayBuffer:
 
         # Persist to database if available
         if self.db:
-            collection = self.db.get_collection('rl_experiences')
+            collection = self.db.get_collection("rl_experiences")
             result = collection.insert_one(experience)
             return str(result.inserted_id)
 
         return f"mem_{len(self._buffer)}"
 
-    def sample(self, agent: str | None = None, user_id: str | None = None,
-              n: int = 100, recent_days: int | None = None) -> list[dict[str, Any]]:
+    def sample(
+        self,
+        agent: str | None = None,
+        user_id: str | None = None,
+        n: int = 100,
+        recent_days: int | None = None,
+    ) -> list[dict[str, Any]]:
         """Sample experiences from the replay buffer.
 
         Parameters
@@ -111,12 +124,12 @@ class ReplayBuffer:
             # Sample from in-memory buffer
             filtered = self._buffer
             if agent:
-                filtered = [e for e in filtered if e['agent'] == agent]
+                filtered = [e for e in filtered if e["agent"] == agent]
             if user_id:
-                filtered = [e for e in filtered if e['user_id'] == user_id]
+                filtered = [e for e in filtered if e["user_id"] == user_id]
             if recent_days:
                 cutoff = datetime.utcnow() - timedelta(days=recent_days)
-                filtered = [e for e in filtered if e['ts'] >= cutoff]
+                filtered = [e for e in filtered if e["ts"] >= cutoff]
 
             if len(filtered) <= n:
                 return filtered
@@ -126,16 +139,16 @@ class ReplayBuffer:
             return [filtered[i] for i in indices]
 
         # Sample from database
-        collection = self.db.get_collection('rl_experiences')
+        collection = self.db.get_collection("rl_experiences")
         query = {}
 
         if agent:
-            query['agent'] = agent
+            query["agent"] = agent
         if user_id:
-            query['user_id'] = user_id
+            query["user_id"] = user_id
         if recent_days:
             cutoff = datetime.utcnow() - timedelta(days=recent_days)
-            query['ts'] = {'$gte': cutoff}
+            query["ts"] = {"$gte": cutoff}
 
         # MongoDB sampling (limited aggregation)
         cursor = collection.find(query).limit(n * 2)
@@ -148,8 +161,9 @@ class ReplayBuffer:
 
         return experiences
 
-    def get_recent(self, agent: str, user_id: str | None = None,
-                  n: int = 50, days: int = 30) -> list[dict[str, Any]]:
+    def get_recent(
+        self, agent: str, user_id: str | None = None, n: int = 50, days: int = 30
+    ) -> list[dict[str, Any]]:
         """Get most recent experiences for an agent/user.
 
         Parameters
@@ -170,27 +184,21 @@ class ReplayBuffer:
         """
         if not self.db:
             cutoff = datetime.utcnow() - timedelta(days=days)
-            filtered = [
-                e for e in self._buffer
-                if e['agent'] == agent and e['ts'] >= cutoff
-            ]
+            filtered = [e for e in self._buffer if e["agent"] == agent and e["ts"] >= cutoff]
             if user_id:
-                filtered = [e for e in filtered if e['user_id'] == user_id]
+                filtered = [e for e in filtered if e["user_id"] == user_id]
 
             # Sort by timestamp descending
-            filtered.sort(key=lambda e: e['ts'], reverse=True)
+            filtered.sort(key=lambda e: e["ts"], reverse=True)
             return filtered[:n]
 
         # Query database
-        collection = self.db.get_collection('rl_experiences')
-        query = {
-            'agent': agent,
-            'ts': {'$gte': datetime.utcnow() - timedelta(days=days)}
-        }
+        collection = self.db.get_collection("rl_experiences")
+        query = {"agent": agent, "ts": {"$gte": datetime.utcnow() - timedelta(days=days)}}
         if user_id:
-            query['user_id'] = user_id
+            query["user_id"] = user_id
 
-        cursor = collection.find(query).sort('ts', -1).limit(n)
+        cursor = collection.find(query).sort("ts", -1).limit(n)
         return list(cursor)
 
     def cleanup_old_experiences(self) -> int:
@@ -205,19 +213,18 @@ class ReplayBuffer:
 
         # Clean in-memory buffer
         original_len = len(self._buffer)
-        self._buffer = [e for e in self._buffer if e['ts'] >= cutoff]
+        self._buffer = [e for e in self._buffer if e["ts"] >= cutoff]
         removed = original_len - len(self._buffer)
 
         # Clean database
         if self.db:
-            collection = self.db.get_collection('rl_experiences')
-            result = collection.delete_many({'ts': {'$lt': cutoff}})
+            collection = self.db.get_collection("rl_experiences")
+            result = collection.delete_many({"ts": {"$lt": cutoff}})
             removed = result.deleted_count
 
         return removed
 
-    def get_statistics(self, agent: str | None = None,
-                      days: int = 30) -> dict[str, Any]:
+    def get_statistics(self, agent: str | None = None, days: int = 30) -> dict[str, Any]:
         """Get buffer statistics.
 
         Parameters
@@ -235,37 +242,37 @@ class ReplayBuffer:
         cutoff = datetime.utcnow() - timedelta(days=days)
 
         if not self.db:
-            filtered = [e for e in self._buffer if e['ts'] >= cutoff]
+            filtered = [e for e in self._buffer if e["ts"] >= cutoff]
             if agent:
-                filtered = [e for e in filtered if e['agent'] == agent]
+                filtered = [e for e in filtered if e["agent"] == agent]
 
             if not filtered:
-                return {'count': 0, 'avg_reward': 0.0}
+                return {"count": 0, "avg_reward": 0.0}
 
-            rewards = [e['reward'] for e in filtered]
+            rewards = [e["reward"] for e in filtered]
             return {
-                'count': len(filtered),
-                'avg_reward': np.mean(rewards),
-                'std_reward': np.std(rewards),
-                'min_reward': np.min(rewards),
-                'max_reward': np.max(rewards)
+                "count": len(filtered),
+                "avg_reward": np.mean(rewards),
+                "std_reward": np.std(rewards),
+                "min_reward": np.min(rewards),
+                "max_reward": np.max(rewards),
             }
 
         # Query database for statistics
-        collection = self.db.get_collection('rl_experiences')
-        query = {'ts': {'$gte': cutoff}}
+        collection = self.db.get_collection("rl_experiences")
+        query = {"ts": {"$gte": cutoff}}
         if agent:
-            query['agent'] = agent
+            query["agent"] = agent
 
         experiences = list(collection.find(query))
         if not experiences:
-            return {'count': 0, 'avg_reward': 0.0}
+            return {"count": 0, "avg_reward": 0.0}
 
-        rewards = [e['reward'] for e in experiences]
+        rewards = [e["reward"] for e in experiences]
         return {
-            'count': len(experiences),
-            'avg_reward': np.mean(rewards),
-            'std_reward': np.std(rewards),
-            'min_reward': np.min(rewards),
-            'max_reward': np.max(rewards)
+            "count": len(experiences),
+            "avg_reward": np.mean(rewards),
+            "std_reward": np.std(rewards),
+            "min_reward": np.min(rewards),
+            "max_reward": np.max(rewards),
         }

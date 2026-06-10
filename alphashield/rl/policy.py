@@ -2,6 +2,7 @@
 
 Handles policy versioning, serialization, and persistence.
 """
+
 import json
 from dataclasses import asdict, dataclass
 from datetime import datetime
@@ -27,6 +28,7 @@ class Policy:
     metadata : dict
         Additional metadata (fitness, performance metrics, etc.)
     """
+
     agent: str
     algo: str
     version: int
@@ -39,7 +41,7 @@ class Policy:
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> 'Policy':
+    def from_dict(cls, data: dict[str, Any]) -> "Policy":
         """Load policy from dictionary."""
         return cls(**data)
 
@@ -48,7 +50,7 @@ class Policy:
         return json.dumps(self.to_dict(), default=str)
 
     @classmethod
-    def from_json(cls, json_str: str) -> 'Policy':
+    def from_json(cls, json_str: str) -> "Policy":
         """Deserialize policy from JSON string."""
         data = json.loads(json_str)
         return cls.from_dict(data)
@@ -87,10 +89,10 @@ class PolicyManager:
 
         # Persist to database if available
         if self.db:
-            collection = self.db.get_collection('rl_policies')
+            collection = self.db.get_collection("rl_policies")
             doc = policy.to_dict()
-            doc['_id'] = key
-            collection.replace_one({'_id': key}, doc, upsert=True)
+            doc["_id"] = key
+            collection.replace_one({"_id": key}, doc, upsert=True)
 
         return key
 
@@ -120,22 +122,22 @@ class PolicyManager:
                 return max(agent_policies, key=lambda p: p.version)
             return None
 
-        collection = self.db.get_collection('rl_policies')
+        collection = self.db.get_collection("rl_policies")
 
         if version is not None:
             # Load specific version
             key = f"{agent}_{version}"
-            doc = collection.find_one({'_id': key})
+            doc = collection.find_one({"_id": key})
             if doc:
-                doc.pop('_id', None)
+                doc.pop("_id", None)
                 return Policy.from_dict(doc)
         else:
             # Load latest version
-            cursor = collection.find({'agent': agent}).sort('version', -1).limit(1)
+            cursor = collection.find({"agent": agent}).sort("version", -1).limit(1)
             docs = list(cursor)
             if docs:
                 doc = docs[0]
-                doc.pop('_id', None)
+                doc.pop("_id", None)
                 return Policy.from_dict(doc)
 
         return None
@@ -156,8 +158,9 @@ class PolicyManager:
         policy = self.load_policy(agent)
         return policy.version if policy else 0
 
-    def bump_version(self, agent: str, algo: str, params: dict[str, Any],
-                    metadata: dict[str, Any] | None = None) -> Policy:
+    def bump_version(
+        self, agent: str, algo: str, params: dict[str, Any], metadata: dict[str, Any] | None = None
+    ) -> Policy:
         """Create a new policy version.
 
         Parameters
@@ -185,7 +188,7 @@ class PolicyManager:
             version=new_version,
             created_at=datetime.utcnow().isoformat(),
             params=params,
-            metadata=metadata
+            metadata=metadata,
         )
 
         self.save_policy(policy)
@@ -212,12 +215,12 @@ class PolicyManager:
             agent_policies.sort(key=lambda p: p.version, reverse=True)
             return agent_policies[:limit]
 
-        collection = self.db.get_collection('rl_policies')
-        cursor = collection.find({'agent': agent}).sort('version', -1).limit(limit)
+        collection = self.db.get_collection("rl_policies")
+        cursor = collection.find({"agent": agent}).sort("version", -1).limit(limit)
 
         policies = []
         for doc in cursor:
-            doc.pop('_id', None)
+            doc.pop("_id", None)
             policies.append(Policy.from_dict(doc))
 
         return policies

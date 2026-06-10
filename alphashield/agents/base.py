@@ -1,5 +1,6 @@
 """Base agent protocol and classes for AlphaShield multi-agent system."""
-from abc import ABC
+
+from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any, Generic, Protocol, TypeVar
 
@@ -10,14 +11,15 @@ from alphashield.database.mongodb_client import MongoDBClient
 # Import schema validation utilities
 try:
     from alphashield.schemas.validation import validate_and_prepare_for_mongo
+
     SCHEMAS_AVAILABLE = True
 except ImportError:
     SCHEMAS_AVAILABLE = False
 
 
 # Generic type variables for Agent protocol
-T_in = TypeVar('T_in')
-T_out = TypeVar('T_out')
+T_in = TypeVar("T_in")
+T_out = TypeVar("T_out")
 
 
 class Agent(Protocol, Generic[T_in, T_out]):
@@ -43,8 +45,13 @@ class Agent(Protocol, Generic[T_in, T_out]):
 class BaseAgent(ABC):
     """Abstract base class for all AlphaShield agents."""
 
-    def __init__(self, name: str, db_client: MongoDBClient,
-                 embeddings_client: EmbeddingsClient | None = None):
+    @abstractmethod
+    def run(self, input: Any, ctx: ContextPacket) -> Any:
+        """Execute agent logic with input and context."""
+
+    def __init__(
+        self, name: str, db_client: MongoDBClient, embeddings_client: EmbeddingsClient | None = None
+    ):
         """Initialize base agent.
 
         Args:
@@ -56,8 +63,9 @@ class BaseAgent(ABC):
         self.db = db_client
         self.embeddings = embeddings_client
 
-    def store_context(self, context_type: str, data: dict[str, Any],
-                     generate_embedding: bool = False) -> str:
+    def store_context(
+        self, context_type: str, data: dict[str, Any], generate_embedding: bool = False
+    ) -> str:
         """Store agent context with optional semantic embedding.
 
         Args:
@@ -69,7 +77,7 @@ class BaseAgent(ABC):
             Context ID as string.
         """
         # Convert schema instance to dict if needed
-        if SCHEMAS_AVAILABLE and hasattr(data, 'to_dict'):
+        if SCHEMAS_AVAILABLE and hasattr(data, "to_dict"):
             # This is a schema instance, validate and convert
             data = validate_and_prepare_for_mongo(data)
 
@@ -80,15 +88,12 @@ class BaseAgent(ABC):
             embedding = self.embeddings.embed_text(text)
 
         return self.db.store_context(
-            agent_name=self.name,
-            context_type=context_type,
-            data=data,
-            embedding=embedding
+            agent_name=self.name, context_type=context_type, data=data, embedding=embedding
         )
 
-    def get_shared_context(self, agent_name: str | None = None,
-                          context_type: str | None = None,
-                          limit: int = 50) -> list[dict[str, Any]]:
+    def get_shared_context(
+        self, agent_name: str | None = None, context_type: str | None = None, limit: int = 50
+    ) -> list[dict[str, Any]]:
         """Retrieve shared context from other agents.
 
         Args:
@@ -99,14 +104,11 @@ class BaseAgent(ABC):
         Returns:
             List of context documents.
         """
-        return self.db.get_contexts(
-            agent_name=agent_name,
-            context_type=context_type,
-            limit=limit
-        )
+        return self.db.get_contexts(agent_name=agent_name, context_type=context_type, limit=limit)
 
-    def store_structured_output(self, context_type: str, output_schema,
-                               generate_embedding: bool = False) -> str:
+    def store_structured_output(
+        self, context_type: str, output_schema, generate_embedding: bool = False
+    ) -> str:
         """Store structured output using a schema.
 
         This is the recommended method for storing agent outputs with
@@ -130,11 +132,11 @@ class BaseAgent(ABC):
     def log_action(self, action: str, details: dict[str, Any]):
         """Log agent action for audit trail."""
         log_data = {
-            'action': action,
-            'details': details,
-            'timestamp': datetime.utcnow(),
+            "action": action,
+            "details": details,
+            "timestamp": datetime.utcnow(),
         }
-        self.store_context('action_log', log_data)
+        self.store_context("action_log", log_data)
 
     def get_loan(self, loan_id: str):
         """Helper to retrieve loan data."""

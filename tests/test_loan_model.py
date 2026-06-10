@@ -1,4 +1,5 @@
 """Tests for loan model and 60/40 split logic."""
+
 import unittest
 
 from alphashield.models.loan import Loan, LoanSplit, LoanStatus
@@ -13,7 +14,7 @@ class TestLoanSplit(unittest.TestCase):
 
         self.assertEqual(split.total_amount, 10000)
         self.assertEqual(split.investment_amount, 6000)  # 60%
-        self.assertEqual(split.borrower_amount, 4000)    # 40%
+        self.assertEqual(split.borrower_amount, 4000)  # 40%
 
     def test_split_with_different_amounts(self):
         """Test split with various loan amounts."""
@@ -23,10 +24,7 @@ class TestLoanSplit(unittest.TestCase):
             split = LoanSplit.from_total(amount)
             self.assertEqual(split.investment_amount, amount * 0.6)
             self.assertEqual(split.borrower_amount, amount * 0.4)
-            self.assertEqual(
-                split.investment_amount + split.borrower_amount,
-                split.total_amount
-            )
+            self.assertEqual(split.investment_amount + split.borrower_amount, split.total_amount)
 
 
 class TestLoan(unittest.TestCase):
@@ -34,12 +32,7 @@ class TestLoan(unittest.TestCase):
 
     def test_loan_initialization(self):
         """Test basic loan initialization."""
-        loan = Loan(
-            borrower_id="test_123",
-            principal=10000,
-            interest_rate=8.0,
-            term_months=36
-        )
+        loan = Loan(borrower_id="test_123", principal=10000, interest_rate=8.0, term_months=36)
 
         self.assertEqual(loan.borrower_id, "test_123")
         self.assertEqual(loan.principal, 10000)
@@ -49,12 +42,7 @@ class TestLoan(unittest.TestCase):
 
     def test_loan_split_auto_creation(self):
         """Test that loan split is automatically created."""
-        loan = Loan(
-            borrower_id="test_123",
-            principal=10000,
-            interest_rate=8.0,
-            term_months=36
-        )
+        loan = Loan(borrower_id="test_123", principal=10000, interest_rate=8.0, term_months=36)
 
         self.assertIsNotNone(loan.split)
         self.assertEqual(loan.split.investment_amount, 6000)
@@ -62,12 +50,7 @@ class TestLoan(unittest.TestCase):
 
     def test_monthly_payment_calculation(self):
         """Test monthly payment calculation."""
-        loan = Loan(
-            borrower_id="test_123",
-            principal=10000,
-            interest_rate=8.0,
-            term_months=36
-        )
+        loan = Loan(borrower_id="test_123", principal=10000, interest_rate=8.0, term_months=36)
 
         # Should calculate amortized payment
         self.assertGreater(loan.monthly_payment, 0)
@@ -76,49 +59,39 @@ class TestLoan(unittest.TestCase):
 
     def test_zero_interest_loan(self):
         """Test loan with zero interest."""
-        loan = Loan(
-            borrower_id="test_123",
-            principal=12000,
-            interest_rate=0.0,
-            term_months=12
-        )
+        loan = Loan(borrower_id="test_123", principal=12000, interest_rate=0.0, term_months=12)
 
         # With 0% interest, payment should be principal / months
         self.assertEqual(loan.monthly_payment, 1000)
 
     def test_loan_to_dict(self):
         """Test conversion to dictionary."""
-        loan = Loan(
-            borrower_id="test_123",
-            principal=10000,
-            interest_rate=8.0,
-            term_months=36
-        )
+        loan = Loan(borrower_id="test_123", principal=10000, interest_rate=8.0, term_months=36)
 
         loan_dict = loan.to_dict()
 
-        self.assertEqual(loan_dict['borrower_id'], "test_123")
-        self.assertEqual(loan_dict['principal'], 10000)
-        self.assertEqual(loan_dict['interest_rate'], 8.0)
-        self.assertIn('split', loan_dict)
-        self.assertEqual(loan_dict['split']['investment_amount'], 6000)
+        self.assertEqual(loan_dict["borrower_id"], "test_123")
+        self.assertEqual(loan_dict["principal"], 10000)
+        self.assertEqual(loan_dict["interest_rate"], 8.0)
+        self.assertIn("split", loan_dict)
+        self.assertEqual(loan_dict["split"]["investment_amount"], 6000)
 
     def test_loan_from_dict(self):
         """Test creation from dictionary."""
         loan_dict = {
-            'borrower_id': "test_456",
-            'principal': 15000,
-            'interest_rate': 8.0,
-            'term_months': 48,
-            'status': 'active',
-            'split': {
-                'total_amount': 15000,
-                'investment_amount': 9000,
-                'borrower_amount': 6000,
+            "borrower_id": "test_456",
+            "principal": 15000,
+            "interest_rate": 8.0,
+            "term_months": 48,
+            "status": "active",
+            "split": {
+                "total_amount": 15000,
+                "investment_amount": 9000,
+                "borrower_amount": 6000,
             },
-            'monthly_payment': 366.19,
-            'investment_balance': 9000,
-            'outstanding_balance': 15000,
+            "monthly_payment": 366.19,
+            "investment_balance": 9000,
+            "outstanding_balance": 15000,
         }
 
         loan = Loan.from_dict(loan_dict)
@@ -153,12 +126,7 @@ class TestLoanEconomics(unittest.TestCase):
 
     def test_investment_coverage(self):
         """Test that 60% investment can theoretically cover payments."""
-        loan = Loan(
-            borrower_id="test_123",
-            principal=10000,
-            interest_rate=8.0,
-            term_months=36
-        )
+        loan = Loan(borrower_id="test_123", principal=10000, interest_rate=8.0, term_months=36)
 
         # With 10% annual return on $6,000
         investment_amount = loan.split.investment_amount
@@ -174,5 +142,5 @@ class TestLoanEconomics(unittest.TestCase):
         self.assertLess(coverage_ratio, 0.30)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

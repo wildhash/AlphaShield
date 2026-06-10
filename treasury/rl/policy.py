@@ -1,4 +1,5 @@
 """RL policy for treasury optimization."""
+
 import os
 
 import numpy as np
@@ -13,7 +14,7 @@ class TreasuryPolicy:
 
     def __init__(self):
         """Initialize policy."""
-        self.use_rl = os.getenv('USE_RL', 'false').lower() == 'true'
+        self.use_rl = os.getenv("USE_RL", "false").lower() == "true"
 
     def select_action(self, state: np.ndarray) -> np.ndarray:
         """Select action based on current state.

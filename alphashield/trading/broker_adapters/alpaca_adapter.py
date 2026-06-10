@@ -78,8 +78,7 @@ class AlpacaAdapter(BrokerAdapter):
 
         except ImportError as e:
             raise ImportError(
-                "alpaca-py is required for AlpacaAdapter. "
-                "Install with: pip install alpaca-py"
+                "alpaca-py is required for AlpacaAdapter. " "Install with: pip install alpaca-py"
             ) from e
 
         # Get credentials
@@ -100,9 +99,7 @@ class AlpacaAdapter(BrokerAdapter):
         else:
             # Default based on paper flag
             self.base_url = (
-                "https://paper-api.alpaca.markets"
-                if paper
-                else "https://api.alpaca.markets"
+                "https://paper-api.alpaca.markets" if paper else "https://api.alpaca.markets"
             )
 
         self.paper = paper
@@ -119,9 +116,7 @@ class AlpacaAdapter(BrokerAdapter):
             secret_key=self.secret_key,
         )
 
-        logger.info(
-            f"Initialized Alpaca adapter (paper={paper}, base_url={self.base_url})"
-        )
+        logger.info(f"Initialized Alpaca adapter (paper={paper}, base_url={self.base_url})")
 
     def get_account(self) -> Account:
         """Get account information."""
@@ -292,11 +287,7 @@ class AlpacaAdapter(BrokerAdapter):
             logger.error(f"Failed to cancel order {order_id}: {e}")
             return False
 
-    def get_orders(
-        self,
-        status: OrderStatus | None = None,
-        limit: int = 100
-    ) -> list[Order]:
+    def get_orders(self, status: OrderStatus | None = None, limit: int = 100) -> list[Order]:
         """Get orders, optionally filtered by status."""
         try:
             from alpaca.trading.requests import GetOrdersRequest
@@ -403,11 +394,7 @@ class AlpacaAdapter(BrokerAdapter):
         status = status_map.get(alpaca_order.status, OrderStatus.PENDING)
 
         # Map side
-        side = (
-            OrderSide.BUY
-            if alpaca_order.side == self._alpaca_order_side.BUY
-            else OrderSide.SELL
-        )
+        side = OrderSide.BUY if alpaca_order.side == self._alpaca_order_side.BUY else OrderSide.SELL
 
         # Map order type
         type_str = str(alpaca_order.order_type).lower()
@@ -430,7 +417,9 @@ class AlpacaAdapter(BrokerAdapter):
             limit_price=float(alpaca_order.limit_price) if alpaca_order.limit_price else None,
             stop_price=float(alpaca_order.stop_price) if alpaca_order.stop_price else None,
             filled_quantity=float(alpaca_order.filled_qty) if alpaca_order.filled_qty else 0.0,
-            filled_avg_price=float(alpaca_order.filled_avg_price) if alpaca_order.filled_avg_price else None,
+            filled_avg_price=(
+                float(alpaca_order.filled_avg_price) if alpaca_order.filled_avg_price else None
+            ),
             submitted_at=alpaca_order.submitted_at,
             filled_at=alpaca_order.filled_at,
         )

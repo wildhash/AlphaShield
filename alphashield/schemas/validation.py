@@ -1,4 +1,5 @@
 """Schema validation and helper utilities for agents."""
+
 from typing import Any, TypeVar
 
 from alphashield.schemas.agent_schemas import (
@@ -10,11 +11,10 @@ from alphashield.schemas.agent_schemas import (
     TaxOptimizerAgentOutput,
 )
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
-def create_output_from_dict(schema_class: type[T], data: dict[str, Any],
-                           strict: bool = False) -> T:
+def create_output_from_dict(schema_class: type[T], data: dict[str, Any], strict: bool = False) -> T:
     """Create schema output from dictionary with optional strict validation.
 
     Args:
@@ -31,6 +31,7 @@ def create_output_from_dict(schema_class: type[T], data: dict[str, Any],
     if strict:
         # Filter data to only include fields defined in the schema
         import inspect
+
         valid_fields = set(inspect.signature(schema_class).parameters.keys())
         filtered_data = {k: v for k, v in data.items() if k in valid_fields}
         return schema_class(**filtered_data)
@@ -53,6 +54,7 @@ def merge_with_defaults(schema_class: type[T], partial_data: dict[str, Any]) -> 
     """
     # Get default instance
     import inspect
+
     sig = inspect.signature(schema_class)
 
     # Build kwargs with defaults where not provided
@@ -102,6 +104,7 @@ def validate_and_prepare_for_mongo(output_instance) -> dict[str, Any]:
 
 
 # Agent-specific helper functions
+
 
 def prepare_lender_output(borrower_id: str, **kwargs) -> LenderAgentOutput:
     """Helper to prepare LenderAgent output with required fields."""

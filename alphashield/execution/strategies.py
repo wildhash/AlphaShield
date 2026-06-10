@@ -113,9 +113,7 @@ class AlphaShieldYieldStrategy(Strategy):
             target_value = portfolio_value * target_weight
             current_position = self.get_position(ticker)
             current_value = (
-                current_position.quantity * self.get_last_price(ticker)
-                if current_position
-                else 0.0
+                current_position.quantity * self.get_last_price(ticker) if current_position else 0.0
             )
             delta = target_value - current_value
 

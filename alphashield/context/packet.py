@@ -1,4 +1,5 @@
 """Context packet for agent orchestration."""
+
 import hashlib
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -12,6 +13,7 @@ class ContextPacket:
     Contains trace_id, user_id, loan_app_id, and accumulated context
     from each agent in the workflow.
     """
+
     trace_id: str
     user_id: str
     loan_app_id: str
@@ -30,9 +32,9 @@ class ContextPacket:
             data: Context data from the agent
         """
         self.context[agent_name] = {
-            'data': data,
-            'timestamp': datetime.utcnow(),
-            'input_hash': self._hash_data(data),
+            "data": data,
+            "timestamp": datetime.utcnow(),
+            "input_hash": self._hash_data(data),
         }
 
     def get_context(self, agent_name: str) -> dict[str, Any] | None:
@@ -46,7 +48,7 @@ class ContextPacket:
         """
         agent_ctx = self.context.get(agent_name)
         if agent_ctx:
-            return agent_ctx.get('data')
+            return agent_ctx.get("data")
         return None
 
     @staticmethod
@@ -66,11 +68,11 @@ class ContextPacket:
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
-            'trace_id': self.trace_id,
-            'user_id': self.user_id,
-            'loan_app_id': self.loan_app_id,
-            'context': self.context,
-            'timestamp': self.timestamp,
+            "trace_id": self.trace_id,
+            "user_id": self.user_id,
+            "loan_app_id": self.loan_app_id,
+            "context": self.context,
+            "timestamp": self.timestamp,
         }
 
 

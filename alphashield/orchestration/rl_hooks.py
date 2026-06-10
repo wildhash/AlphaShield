@@ -2,6 +2,7 @@
 
 Integrates RL training into agent decision-making flow.
 """
+
 from typing import Any
 
 from alphashield.rl.trainer import RLTrainer
@@ -23,12 +24,14 @@ class RLOrchestrator:
         self.trainer = RLTrainer(db_client=db_client, mock_mode=mock_mode)
         self.enabled = True
 
-    def wrap_agent_decide(self,
-                         agent,
-                         user_id: str,
-                         decision_input: dict[str, Any],
-                         recent_metrics: dict[str, Any] | None = None,
-                         memory_hits: list | None = None) -> dict[str, Any]:
+    def wrap_agent_decide(
+        self,
+        agent,
+        user_id: str,
+        decision_input: dict[str, Any],
+        recent_metrics: dict[str, Any] | None = None,
+        memory_hits: list | None = None,
+    ) -> dict[str, Any]:
         """Wrap agent decision with RL training.
 
         Parameters
@@ -64,23 +67,25 @@ class RLOrchestrator:
                 decision_input=decision_input,
                 agent_output=agent_output,
                 recent_metrics=recent_metrics,
-                memory_hits=memory_hits
+                memory_hits=memory_hits,
             )
 
             # Augment output with RL info
-            agent_output['rl'] = rl_result
+            agent_output["rl"] = rl_result
 
         except Exception as e:
             # Log error but don't break agent decision
-            agent_output['rl_error'] = str(e)
+            agent_output["rl_error"] = str(e)
 
         return agent_output
 
-    def get_suggested_action(self,
-                           agent_name: str,
-                           user_id: str,
-                           decision_input: dict[str, Any],
-                           recent_metrics: dict[str, Any] | None = None) -> int:
+    def get_suggested_action(
+        self,
+        agent_name: str,
+        user_id: str,
+        decision_input: dict[str, Any],
+        recent_metrics: dict[str, Any] | None = None,
+    ) -> int:
         """Get RL-suggested action without executing agent.
 
         Parameters
@@ -105,15 +110,15 @@ class RLOrchestrator:
             agent_name=agent_name,
             user_id=user_id,
             decision_input=decision_input,
-            recent_metrics=recent_metrics
+            recent_metrics=recent_metrics,
         )
 
         bandit = self.trainer._get_bandit(agent_name)
         return bandit.suggest_action(context)
 
-    def run_nightly_optimization(self,
-                                n_days: int = 30,
-                                max_generations: int = 30) -> dict[str, Any]:
+    def run_nightly_optimization(
+        self, n_days: int = 30, max_generations: int = 30
+    ) -> dict[str, Any]:
         """Run nightly meta-optimization.
 
         Parameters
@@ -129,8 +134,7 @@ class RLOrchestrator:
             Optimization results
         """
         return self.trainer.nightly_meta_optimization(
-            n_days=n_days,
-            max_generations=max_generations
+            n_days=n_days, max_generations=max_generations
         )
 
     def get_statistics(self, agent: str | None = None, days: int = 7) -> dict[str, Any]:

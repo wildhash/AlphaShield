@@ -1,4 +1,5 @@
 """Gym-like RL environment for treasury optimization."""
+
 from typing import Any
 
 import numpy as np
@@ -17,7 +18,7 @@ class TreasuryEnv:
         n_assets: int = 4,
         min_coverage: float = 1.30,
         max_weight: float = 0.40,
-        min_cash: float = 0.05
+        min_cash: float = 0.05,
     ):
         """Initialize treasury environment.
 
@@ -51,10 +52,7 @@ class TreasuryEnv:
         coverage_ratio = 1.35
         market_volatility = 0.15
 
-        self.state = np.concatenate([
-            initial_weights,
-            [coverage_ratio, market_volatility]
-        ])
+        self.state = np.concatenate([initial_weights, [coverage_ratio, market_volatility]])
 
         return self.state
 
@@ -68,7 +66,7 @@ class TreasuryEnv:
             Tuple of (next_state, reward, done, info)
         """
         # Extract current state
-        current_weights = self.state[:self.n_assets]
+        current_weights = self.state[: self.n_assets]
         coverage_ratio = self.state[self.n_assets]
         market_volatility = self.state[self.n_assets + 1]
 
@@ -87,25 +85,18 @@ class TreasuryEnv:
         new_coverage = coverage_ratio * (1 + portfolio_return * 0.1)
 
         # Calculate reward
-        reward = self._calculate_reward(
-            new_weights,
-            new_coverage,
-            portfolio_return
-        )
+        reward = self._calculate_reward(new_weights, new_coverage, portfolio_return)
 
         # Check if coverage ratio constraint is violated
         done = bool(new_coverage < self.min_coverage)
 
         # Update state
-        self.state = np.concatenate([
-            new_weights,
-            [new_coverage, market_volatility]
-        ])
+        self.state = np.concatenate([new_weights, [new_coverage, market_volatility]])
 
         info = {
-            'coverage_ratio': new_coverage,
-            'portfolio_return': portfolio_return,
-            'constraint_violated': done,
+            "coverage_ratio": new_coverage,
+            "portfolio_return": portfolio_return,
+            "constraint_violated": done,
         }
 
         return self.state, reward, done, info
@@ -162,10 +153,7 @@ class TreasuryEnv:
         return np.ones(self.n_assets) / self.n_assets
 
     def _calculate_reward(
-        self,
-        weights: np.ndarray,
-        coverage_ratio: float,
-        portfolio_return: float
+        self, weights: np.ndarray, coverage_ratio: float, portfolio_return: float
     ) -> float:
         """Calculate reward for the current state.
 

@@ -19,7 +19,9 @@ class SlippageModel:
         impact_ratio = float(quantity) / float(avg_daily_volume)
         base_slippage = 0.001  # 10 bps
         slippage = base_slippage * np.sqrt(max(impact_ratio * 100.0, 0.0))
-        return float(min(slippage, 0.01))  # Cap at 100 bps
+        return float(
+            min(max(slippage, base_slippage), 0.01)
+        )  # Floor at base_slippage, cap at 100 bps
 
     def _get_avg_volume(self, ticker: str) -> float:
         # Placeholder: to be connected to data provider
@@ -78,14 +80,18 @@ class ExecutionEngine:
         trades = self._calculate_trades(current_positions, target_weights, total_value)
         confirmations: dict[str, dict] = {}
 
-        logger.info(f"Executing rebalance: {len(trades)} trades, portfolio value ${total_value:,.2f}")
+        logger.info(
+            f"Executing rebalance: {len(trades)} trades, portfolio value ${total_value:,.2f}"
+        )
 
         # Sells first (to free up cash)
         for ticker, quantity in trades.items():
             if quantity < 0:
                 try:
                     estimated_slippage = self.slippage_model.estimate(ticker, abs(quantity))
-                    limit_price = self._get_conservative_limit_price(ticker, "sell", estimated_slippage)
+                    limit_price = self._get_conservative_limit_price(
+                        ticker, "sell", estimated_slippage
+                    )
                     order = self.broker.submit_order(
                         ticker=ticker,
                         qty=int(abs(quantity)),
@@ -110,7 +116,9 @@ class ExecutionEngine:
             if quantity > 0:
                 try:
                     estimated_slippage = self.slippage_model.estimate(ticker, quantity)
-                    limit_price = self._get_conservative_limit_price(ticker, "buy", estimated_slippage)
+                    limit_price = self._get_conservative_limit_price(
+                        ticker, "buy", estimated_slippage
+                    )
                     order = self.broker.submit_order(
                         ticker=ticker,
                         qty=int(quantity),
@@ -148,7 +156,9 @@ class ExecutionEngine:
             delta_value = target_value - current_value
             delta_shares = delta_value / max(price, 1e-6)
             if abs(delta_shares) > 1.0:
-                trades[ticker] = int(round(delta_shares))
+                trades[ticker] = int(
+                    delta_shares
+                )  # truncate toward zero to avoid over-committing cash
         return trades
 
     def _get_conservative_limit_price(self, ticker: str, side: str, slippage: float) -> float:

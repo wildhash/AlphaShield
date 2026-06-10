@@ -3,10 +3,11 @@
 NOTE: This script uses synthetic/demo data for illustration purposes only.
 All user IDs, loan IDs, and trace IDs are non-sensitive test identifiers.
 """
+
 import os
 
-os.environ['USE_RL'] = 'false'
-os.environ['QUANTUM'] = 'false'
+os.environ["USE_RL"] = "false"
+os.environ["QUANTUM"] = "false"
 
 from alphashield.agents.spending_guard.agent import SpendingGuardAgent
 from alphashield.orchestrator import execute
@@ -23,9 +24,9 @@ def demo_orchestration():
     # NOTE: Using demo identifiers, not real user data
     print("1. Executing orchestrator DAG...")
     bundle = execute(
-        trace_id='demo_trace_001',  # Synthetic trace ID for demo
-        user_id='demo_user_123',  # Synthetic user ID for demo
-        loan_app_id='demo_loan_456'  # Synthetic loan ID for demo
+        trace_id="demo_trace_001",  # Synthetic trace ID for demo
+        user_id="demo_user_123",  # Synthetic user ID for demo
+        loan_app_id="demo_loan_456",  # Synthetic loan ID for demo
     )
 
     print(f"   ✓ Trace ID: {bundle.trace_id}")
@@ -51,7 +52,7 @@ def demo_orchestration():
     print(f"   Coverage Ratio: {bundle.coverage.get('coverage_ratio'):.2f}")
     print(f"   Risk Level: {bundle.coverage.get('risk_level')}")
     print("   Allocation:")
-    for asset, weight in bundle.coverage.get('allocation', {}).items():
+    for asset, weight in bundle.coverage.get("allocation", {}).items():
         print(f"      {asset:20s}: {weight*100:5.1f}%")
     print()
 
@@ -66,7 +67,7 @@ def demo_orchestration():
     # Show compliance
     print("6. Compliance:")
     print(f"   Compliant: {bundle.compliance.get('compliant')}")
-    for check, passed in bundle.compliance.get('checks', {}).items():
+    for check, passed in bundle.compliance.get("checks", {}).items():
         status = "✓" if passed else "✗"
         print(f"   {status} {check}")
     print()
@@ -83,14 +84,14 @@ def demo_spending_guard():
 
     # Simulate transactions with an anomaly
     transactions = [
-        {'category': 'groceries', 'amount': 150.0, 'date': '2024-01-01'},
-        {'category': 'groceries', 'amount': 145.0, 'date': '2024-01-08'},
-        {'category': 'groceries', 'amount': 155.0, 'date': '2024-01-15'},
-        {'category': 'groceries', 'amount': 148.0, 'date': '2024-01-22'},
-        {'category': 'groceries', 'amount': 800.0, 'date': '2024-01-29'},  # Anomaly
-        {'category': 'dining', 'amount': 50.0, 'date': '2024-01-05'},
-        {'category': 'dining', 'amount': 45.0, 'date': '2024-01-12'},
-        {'category': 'gambling', 'amount': 200.0, 'date': '2024-01-20'},  # High risk
+        {"category": "groceries", "amount": 150.0, "date": "2024-01-01"},
+        {"category": "groceries", "amount": 145.0, "date": "2024-01-08"},
+        {"category": "groceries", "amount": 155.0, "date": "2024-01-15"},
+        {"category": "groceries", "amount": 148.0, "date": "2024-01-22"},
+        {"category": "groceries", "amount": 800.0, "date": "2024-01-29"},  # Anomaly
+        {"category": "dining", "amount": 50.0, "date": "2024-01-05"},
+        {"category": "dining", "amount": 45.0, "date": "2024-01-12"},
+        {"category": "gambling", "amount": 200.0, "date": "2024-01-20"},  # High risk
     ]
 
     print("Analyzing transactions...")
@@ -112,7 +113,7 @@ def demo_spending_guard():
         print()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     demo_orchestration()
     print()
     demo_spending_guard()

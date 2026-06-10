@@ -17,7 +17,15 @@ def test_reward_respects_fairness_and_compliance_gates():
         "calibration": 1.0,
         "compliance_ok": True,
     }
-    cfg = {"alpha": .4, "beta": .15, "gamma": .15, "delta": .10, "lambda1": .10, "lambda2": .05, "lambda3": .05}
+    cfg = {
+        "alpha": 0.4,
+        "beta": 0.15,
+        "gamma": 0.15,
+        "delta": 0.10,
+        "lambda1": 0.10,
+        "lambda2": 0.05,
+        "lambda3": 0.05,
+    }
     r_ok = compute_reward(metrics_ok, cfg)
     assert r_ok > 0.0
 

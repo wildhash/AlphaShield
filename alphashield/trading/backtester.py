@@ -1,23 +1,11 @@
 from __future__ import annotations
 
+import contextlib
 from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
 import pandas as pd
-
-
-@dataclass
-class BacktestResult:
-    total_return: float
-    cagr: float
-    sharpe_ratio: float
-    max_drawdown: float
-    win_rate: float
-    avg_monthly_return: float
-
-
-import contextlib
 
 from alphashield.utils.metrics import time_block
 
@@ -32,6 +20,16 @@ from .signal_generator import (
     momentum_signal,
     trend_sma200_signal,
 )
+
+
+@dataclass
+class BacktestResult:
+    total_return: float
+    cagr: float
+    sharpe_ratio: float
+    max_drawdown: float
+    win_rate: float
+    avg_monthly_return: float
 
 
 class Backtester:
@@ -136,7 +134,7 @@ class Backtester:
 
             # Signals in [0,1]
             with time_block("signals"):
-                mom = momentum_signal(window, window_6m=mom_w//2, window_12m=mom_w)
+                mom = momentum_signal(window, window_6m=mom_w // 2, window_12m=mom_w)
                 tr = trend_sma200_signal(window, window=tr_w)
                 mr = mean_reversion_signal(window, window=mr_w)
                 combined = combine_signals({"momentum": mom, "trend": tr, "meanrev": mr}, wts)
@@ -153,6 +151,7 @@ class Backtester:
             cov_ok = cr >= emergency_ratio
             if not cov_ok:
                 from alphashield.utils.metrics import coverage_breach_inc
+
                 with contextlib.suppress(Exception):
                     coverage_breach_inc()
                 # shift 20% from equities to bonds

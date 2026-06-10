@@ -23,7 +23,9 @@ def validate_template(weights: dict[str, float]) -> dict[str, float]:
     return norm
 
 
-def apply_tilts(base: dict[str, float], tilts: dict[str, float] | None = None, tilt_strength: float = 0.1) -> dict[str, float]:
+def apply_tilts(
+    base: dict[str, float], tilts: dict[str, float] | None = None, tilt_strength: float = 0.1
+) -> dict[str, float]:
     if tilts is None or not tilts:
         return validate_template(base)
     w = base.copy()

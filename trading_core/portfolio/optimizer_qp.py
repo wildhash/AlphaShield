@@ -12,6 +12,7 @@ def shrink_cov(cov: np.ndarray, shrink: float = 0.2) -> np.ndarray:
     diag = np.diag(np.diag(cov))
     return (1 - shrink) * cov + shrink * diag
 
+
 def optimize_classical(
     expected_returns: np.ndarray,
     covariance_matrix: np.ndarray,
@@ -19,7 +20,7 @@ def optimize_classical(
     max_position_size: float = 0.25,
     risk_aversion: float = 1.0,
     turnover_budget: float = 0.20,
-    solver: str = "ECOS"
+    solver: str = "ECOS",
 ) -> np.ndarray:
     """
     Long-only mean-variance with L1 turnover penalty and hard turnover budget.
@@ -43,7 +44,7 @@ def optimize_classical(
         cp.sum(w) == 1.0,
         w >= 0.0,
         w <= max_position_size,
-        cp.norm1(w - w_prev) <= turnover_budget
+        cp.norm1(w - w_prev) <= turnover_budget,
     ]
     prob = cp.Problem(obj, cons)
     prob.solve(solver=solver, max_iters=20000, abstol=1e-8, reltol=1e-8, feastol=1e-8)
@@ -53,9 +54,9 @@ def optimize_classical(
     return w_prev
 
 
-def create_detailed_qubo_formulation(expected_returns: np.ndarray,
-                                   covariance_matrix: np.ndarray,
-                                   n_discrete_levels: int = 10) -> dict:
+def create_detailed_qubo_formulation(
+    expected_returns: np.ndarray, covariance_matrix: np.ndarray, n_discrete_levels: int = 10
+) -> dict:
     """
     DETAILED QUBO Formulation for Portfolio Optimization
     Converts continuous portfolio problem to binary quantum problem
@@ -111,7 +112,9 @@ def create_detailed_qubo_formulation(expected_returns: np.ndarray,
                     var2_idx = i2 * n_discrete_levels + j2
 
                     if var1_idx != var2_idx:
-                        Q[var1_idx, var2_idx] += penalty_weight * weight_levels[j1] * weight_levels[j2]
+                        Q[var1_idx, var2_idx] += (
+                            penalty_weight * weight_levels[j1] * weight_levels[j2]
+                        )
 
     # Linear terms for sum-to-one constraint
     for i in range(n_assets):
@@ -120,12 +123,12 @@ def create_detailed_qubo_formulation(expected_returns: np.ndarray,
             Q[var_idx, var_idx] -= 2 * penalty_weight * weight_levels[j]
 
     return {
-        'Q_matrix': Q,
-        'n_assets': n_assets,
-        'n_levels': n_discrete_levels,
-        'weight_levels': weight_levels,
-        'variable_mapping': _create_variable_mapping(n_assets, n_discrete_levels),
-        'total_variables': total_vars
+        "Q_matrix": Q,
+        "n_assets": n_assets,
+        "n_levels": n_discrete_levels,
+        "weight_levels": weight_levels,
+        "variable_mapping": _create_variable_mapping(n_assets, n_discrete_levels),
+        "total_variables": total_vars,
     }
 
 
@@ -149,15 +152,14 @@ def optimize_quantum_dwave(qubo_formulation: dict) -> np.ndarray | None:
     """
     try:
         # Import D-Wave Ocean SDK
-        import dwave.inspector
         from dwave.system import DWaveSampler, EmbeddingComposite
 
         # Get QUBO matrix and parameters
-        Q = qubo_formulation['Q_matrix']
-        n_assets = qubo_formulation['n_assets']
-        n_levels = qubo_formulation['n_levels']
-        weight_levels = qubo_formulation['weight_levels']
-        variable_mapping = qubo_formulation['variable_mapping']
+        Q = qubo_formulation["Q_matrix"]
+        n_assets = qubo_formulation["n_assets"]
+        n_levels = qubo_formulation["n_levels"]
+        weight_levels = qubo_formulation["weight_levels"]
+        variable_mapping = qubo_formulation["variable_mapping"]
 
         # Convert numpy matrix to dict format for D-Wave
         Q_dict = {}
@@ -180,7 +182,7 @@ def optimize_quantum_dwave(qubo_formulation: dict) -> np.ndarray | None:
             num_reads=num_reads,
             chain_strength=chain_strength,
             annealing_time=20,  # Microseconds of annealing
-            label="AlphaShield Portfolio Optimization"
+            label="AlphaShield Portfolio Optimization",
         )
 
         # Get best solution
@@ -211,11 +213,13 @@ def optimize_quantum_dwave(qubo_formulation: dict) -> np.ndarray | None:
         return None
 
 
-def _decode_quantum_solution(binary_solution: dict[int, int],
-                            variable_mapping: dict[int, tuple[int, int]],
-                            n_assets: int,
-                            n_levels: int,
-                            weight_levels: np.ndarray) -> np.ndarray:
+def _decode_quantum_solution(
+    binary_solution: dict[int, int],
+    variable_mapping: dict[int, tuple[int, int]],
+    n_assets: int,
+    n_levels: int,
+    weight_levels: np.ndarray,
+) -> np.ndarray:
     """
     Convert binary quantum solution back to portfolio weights
     """
@@ -247,17 +251,16 @@ def _validate_quantum_solution(weights: np.ndarray) -> bool:
         return False
 
     # Check position limits
-    if np.any(weights > 0.51):  # Allow small tolerance
-        return False
-
-    return True
+    return not np.any(weights > 0.51)  # Allow small tolerance
 
 
-def optimize_with_fallback(expected_returns: np.ndarray,
-                          covariance_matrix: np.ndarray,
-                          current_weights: np.ndarray,
-                          risk_aversion: float = 1.0,
-                          quantum_available: bool = False) -> tuple[np.ndarray, str]:
+def optimize_with_fallback(
+    expected_returns: np.ndarray,
+    covariance_matrix: np.ndarray,
+    current_weights: np.ndarray,
+    risk_aversion: float = 1.0,
+    quantum_available: bool = False,
+) -> tuple[np.ndarray, str]:
     """
     Try quantum first, fallback to classical with detailed logging
     Returns (weights, method_used)
@@ -269,9 +272,7 @@ def optimize_with_fallback(expected_returns: np.ndarray,
 
         try:
             # Prepare QUBO formulation
-            qubo_formulation = create_detailed_qubo_formulation(
-                expected_returns, covariance_matrix
-            )
+            qubo_formulation = create_detailed_qubo_formulation(expected_returns, covariance_matrix)
 
             # Try quantum optimization
             quantum_weights = optimize_quantum_dwave(qubo_formulation)
@@ -320,7 +321,9 @@ def setup_quantum_environment() -> bool:
         sampler = DWaveSampler()
         properties = sampler.properties
 
-        logging.info(f"Connected to D-Wave {properties.get('chip_id', 'Unknown')} quantum processor")
+        logging.info(
+            f"Connected to D-Wave {properties.get('chip_id', 'Unknown')} quantum processor"
+        )
         logging.info(f"Available qubits: {len(properties.get('qubits', []))}")
 
         return True
@@ -334,6 +337,7 @@ def setup_quantum_environment() -> bool:
 @dataclass
 class OptimizationMetrics:
     """Track performance of different optimization methods"""
+
     method: str
     solve_time_seconds: float
     final_portfolio_value: float
@@ -350,11 +354,9 @@ class PerformanceTracker:
     def __init__(self):
         self.metrics_history: list[OptimizationMetrics] = []
 
-    def log_optimization(self,
-                        method: str,
-                        solve_time: float,
-                        portfolio_value: float,
-                        returns: pd.Series):
+    def log_optimization(
+        self, method: str, solve_time: float, portfolio_value: float, returns: pd.Series
+    ):
         """Log optimization performance metrics"""
 
         # Calculate metrics
@@ -367,7 +369,7 @@ class PerformanceTracker:
             final_portfolio_value=portfolio_value,
             sharpe_ratio=sharpe,
             max_drawdown=max_dd,
-            constraint_violations=0  # Would be calculated based on constraints
+            constraint_violations=0,  # Would be calculated based on constraints
         )
 
         self.metrics_history.append(metrics)
@@ -385,19 +387,21 @@ class PerformanceTracker:
 
         data = []
         for metric in self.metrics_history:
-            data.append({
-                'method': metric.method,
-                'solve_time': metric.solve_time_seconds,
-                'sharpe_ratio': metric.sharpe_ratio,
-                'max_drawdown': metric.max_drawdown
-            })
+            data.append(
+                {
+                    "method": metric.method,
+                    "solve_time": metric.solve_time_seconds,
+                    "sharpe_ratio": metric.sharpe_ratio,
+                    "max_drawdown": metric.max_drawdown,
+                }
+            )
 
         df = pd.DataFrame(data)
-        return df.groupby('method').agg({
-            'solve_time': 'mean',
-            'sharpe_ratio': 'mean',
-            'max_drawdown': 'mean'
-        }).round(3)
+        return (
+            df.groupby("method")
+            .agg({"solve_time": "mean", "sharpe_ratio": "mean", "max_drawdown": "mean"})
+            .round(3)
+        )
 
     def _calculate_max_drawdown(self, returns: pd.Series) -> float:
         """Calculate maximum drawdown from returns series"""

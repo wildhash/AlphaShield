@@ -1,4 +1,3 @@
-
 import numpy as np
 import pandas as pd
 
@@ -19,14 +18,14 @@ class BacktestEngine:
 
     def __init__(
         self,
-        data: pd.DataFrame,                   # price DF with columns = symbols
+        data: pd.DataFrame,  # price DF with columns = symbols
         loan_terms: LoanTerms,
         initial_nav: float = 5000.0,
         max_position_size: float = 0.25,
         risk: RiskLimits = RiskLimits(),
-        fee_bps: float = 1.0,                 # 1bp per trade
-        spread_bps: float = 5.0,              # 5bp half-spread impact
-        turnover_budget: float = 0.20
+        fee_bps: float = 1.0,  # 1bp per trade
+        spread_bps: float = 5.0,  # 5bp half-spread impact
+        turnover_budget: float = 0.20,
     ):
         self.data = data.dropna(how="all")
         self.symbols: list[str] = list(self.data.columns)
@@ -85,7 +84,7 @@ class BacktestEngine:
             current_weights=self.w,
             max_position_size=self.max_position_size,
             risk_aversion=1.0,
-            turnover_budget=self.turnover_budget
+            turnover_budget=self.turnover_budget,
         )
         w_target = enforce_caps(w_target, self.risk)
 
@@ -124,7 +123,7 @@ class BacktestEngine:
             "trading_cost": float(trading_cost),
             "cr": float(cr),
             "nav": float(self.nav),
-            "violations": violations if not is_ok else []
+            "violations": violations if not is_ok else [],
         }
 
     def run(self) -> dict:
@@ -135,5 +134,5 @@ class BacktestEngine:
             "final_nav": float(self.nav),
             "nav_series": self.nav_history,
             "cr_series": self.cr_history,
-            "logs": logs
+            "logs": logs,
         }

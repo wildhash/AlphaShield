@@ -2,6 +2,7 @@
 
 Implements simple evolutionary strategy for optimizing global hyper-parameters.
 """
+
 from collections.abc import Callable
 from copy import deepcopy
 
@@ -14,13 +15,15 @@ class EvolutionaryOptimizer:
     Uses (μ, λ) evolution strategy with Gaussian mutations.
     """
 
-    def __init__(self,
-                 population_size: int = 20,
-                 elite_frac: float = 0.3,
-                 sigma: float = 0.1,
-                 patience: int = 5,
-                 epsilon_improve: float = 0.01,
-                 seed: int | None = None):
+    def __init__(
+        self,
+        population_size: int = 20,
+        elite_frac: float = 0.3,
+        sigma: float = 0.1,
+        patience: int = 5,
+        epsilon_improve: float = 0.01,
+        seed: int | None = None,
+    ):
         """Initialize evolutionary optimizer.
 
         Parameters
@@ -49,7 +52,9 @@ class EvolutionaryOptimizer:
         self.best_fitness = -np.inf
         self.history = []
 
-    def _mutate(self, candidate: dict[str, float], bounds: dict[str, tuple[float, float]]) -> dict[str, float]:
+    def _mutate(
+        self, candidate: dict[str, float], bounds: dict[str, tuple[float, float]]
+    ) -> dict[str, float]:
         """Mutate a candidate with Gaussian noise.
 
         Parameters
@@ -98,8 +103,9 @@ class EvolutionaryOptimizer:
                 offspring[key] = parent2[key]
         return offspring
 
-    def initialize_population(self, base_config: dict[str, float],
-                            bounds: dict[str, tuple[float, float]]) -> list[dict[str, float]]:
+    def initialize_population(
+        self, base_config: dict[str, float], bounds: dict[str, tuple[float, float]]
+    ) -> list[dict[str, float]]:
         """Initialize population around base configuration.
 
         Parameters
@@ -123,9 +129,12 @@ class EvolutionaryOptimizer:
 
         return population
 
-    def evolve_generation(self, population: list[dict[str, float]],
-                         fitness_scores: list[float],
-                         bounds: dict[str, tuple[float, float]]) -> list[dict[str, float]]:
+    def evolve_generation(
+        self,
+        population: list[dict[str, float]],
+        fitness_scores: list[float],
+        bounds: dict[str, tuple[float, float]],
+    ) -> list[dict[str, float]]:
         """Evolve population for one generation.
 
         Parameters
@@ -144,7 +153,7 @@ class EvolutionaryOptimizer:
         """
         # Sort by fitness
         sorted_indices = np.argsort(fitness_scores)[::-1]
-        elites = [population[i] for i in sorted_indices[:self.n_elite]]
+        elites = [population[i] for i in sorted_indices[: self.n_elite]]
 
         # Track best
         best_idx = sorted_indices[0]
@@ -171,11 +180,13 @@ class EvolutionaryOptimizer:
 
         return next_gen
 
-    def optimize(self,
-                fitness_fn: Callable[[dict[str, float]], float],
-                base_config: dict[str, float],
-                bounds: dict[str, tuple[float, float]],
-                max_generations: int = 50) -> tuple[dict[str, float], float]:
+    def optimize(
+        self,
+        fitness_fn: Callable[[dict[str, float]], float],
+        base_config: dict[str, float],
+        bounds: dict[str, tuple[float, float]],
+        max_generations: int = 50,
+    ) -> tuple[dict[str, float], float]:
         """Run evolutionary optimization.
 
         Parameters
@@ -204,12 +215,14 @@ class EvolutionaryOptimizer:
             fitness_scores = [fitness_fn(candidate) for candidate in population]
 
             # Track history
-            self.history.append({
-                'generation': gen,
-                'best_fitness': max(fitness_scores),
-                'mean_fitness': np.mean(fitness_scores),
-                'std_fitness': np.std(fitness_scores)
-            })
+            self.history.append(
+                {
+                    "generation": gen,
+                    "best_fitness": max(fitness_scores),
+                    "mean_fitness": np.mean(fitness_scores),
+                    "std_fitness": np.std(fitness_scores),
+                }
+            )
 
             # Check for improvement
             current_best = max(fitness_scores)
@@ -230,10 +243,9 @@ class EvolutionaryOptimizer:
         return self.best_candidate, self.best_fitness
 
 
-def optimize_reward_weights(replay_buffer,
-                           base_config: dict[str, float],
-                           n_days: int = 30,
-                           max_generations: int = 30) -> dict[str, float]:
+def optimize_reward_weights(
+    replay_buffer, base_config: dict[str, float], n_days: int = 30, max_generations: int = 30
+) -> dict[str, float]:
     """Optimize reward weights using evolutionary search.
 
     Parameters
@@ -256,13 +268,13 @@ def optimize_reward_weights(replay_buffer,
 
     # Define bounds for reward weights
     bounds = {
-        'alpha': (0.2, 0.6),     # wealth weight
-        'beta': (0.05, 0.25),    # coverage weight
-        'gamma': (0.05, 0.25),   # fairness weight
-        'delta': (0.05, 0.20),   # satisfaction weight
-        'lambda1': (0.05, 0.20), # drawdown penalty
-        'lambda2': (0.0, 0.10),  # anomaly penalty
-        'lambda3': (0.0, 0.10),  # tax risk penalty
+        "alpha": (0.2, 0.6),  # wealth weight
+        "beta": (0.05, 0.25),  # coverage weight
+        "gamma": (0.05, 0.25),  # fairness weight
+        "delta": (0.05, 0.20),  # satisfaction weight
+        "lambda1": (0.05, 0.20),  # drawdown penalty
+        "lambda2": (0.0, 0.10),  # anomaly penalty
+        "lambda3": (0.0, 0.10),  # tax risk penalty
     }
 
     # Sample experiences for evaluation
@@ -280,12 +292,12 @@ def optimize_reward_weights(replay_buffer,
         fairness_violations = 0
 
         for exp in experiences:
-            metrics = exp.get('metrics', {})
+            metrics = exp.get("metrics", {})
             reward = compute_reward(metrics, config)
             rewards.append(reward)
 
             # Penalize fairness violations
-            if metrics.get('fairness', 1.0) < 0.5:
+            if metrics.get("fairness", 1.0) < 0.5:
                 fairness_violations += 1
 
         if not rewards:
@@ -302,18 +314,14 @@ def optimize_reward_weights(replay_buffer,
 
     # Run optimization
     optimizer = EvolutionaryOptimizer(
-        population_size=20,
-        elite_frac=0.3,
-        sigma=0.1,
-        patience=5,
-        epsilon_improve=0.01
+        population_size=20, elite_frac=0.3, sigma=0.1, patience=5, epsilon_improve=0.01
     )
 
     best_config, best_fitness = optimizer.optimize(
         fitness_fn=fitness_function,
         base_config=base_config,
         bounds=bounds,
-        max_generations=max_generations
+        max_generations=max_generations,
     )
 
     return best_config if best_config else base_config

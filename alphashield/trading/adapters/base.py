@@ -15,6 +15,7 @@ from typing import Any
 
 class OrderStatus(Enum):
     """Order execution status."""
+
     PENDING = "pending"
     SUBMITTED = "submitted"
     PARTIAL = "partial"
@@ -26,12 +27,14 @@ class OrderStatus(Enum):
 
 class OrderSide(Enum):
     """Order direction."""
+
     BUY = "buy"
     SELL = "sell"
 
 
 class OrderType(Enum):
     """Order execution type."""
+
     MARKET = "market"
     LIMIT = "limit"
     STOP = "stop"
@@ -41,6 +44,7 @@ class OrderType(Enum):
 
 class TimeInForce(Enum):
     """Order time-in-force."""
+
     DAY = "day"
     GTC = "gtc"  # Good 'til cancelled
     IOC = "ioc"  # Immediate or cancel
@@ -52,6 +56,7 @@ class TimeInForce(Enum):
 @dataclass
 class Position:
     """Represents a portfolio position."""
+
     symbol: str
     quantity: Decimal
     avg_entry_price: Decimal
@@ -73,6 +78,7 @@ class Position:
 @dataclass
 class Order:
     """Represents a trading order."""
+
     id: str
     client_order_id: str
     symbol: str
@@ -102,6 +108,7 @@ class Order:
 @dataclass
 class AccountInfo:
     """Account summary information."""
+
     account_id: str
     status: str
     currency: str = "USD"
@@ -124,6 +131,7 @@ class AccountInfo:
 @dataclass
 class Bar:
     """Price bar (OHLCV) data."""
+
     symbol: str
     timestamp: datetime
     open: Decimal
@@ -138,6 +146,7 @@ class Bar:
 @dataclass
 class Quote:
     """Real-time quote data."""
+
     symbol: str
     timestamp: datetime
     bid: Decimal
@@ -337,34 +346,41 @@ class BrokerAdapter(ABC):
 
 class BrokerError(Exception):
     """Base exception for broker errors."""
+
     pass
 
 
 class ConnectionError(BrokerError):
     """Error connecting to broker."""
+
     pass
 
 
 class OrderError(BrokerError):
     """Error submitting or managing orders."""
+
     pass
 
 
 class InsufficientFundsError(OrderError):
     """Insufficient funds to execute order."""
+
     pass
 
 
 class InvalidOrderError(OrderError):
     """Invalid order parameters."""
+
     pass
 
 
 class PositionError(BrokerError):
     """Error managing positions."""
+
     pass
 
 
 class MarketDataError(BrokerError):
     """Error fetching market data."""
+
     pass

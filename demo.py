@@ -1,4 +1,5 @@
 """Simple demo of AlphaShield system without external dependencies."""
+
 from alphashield.models.loan import Loan, LoanSplit
 
 
@@ -30,12 +31,7 @@ def main():
     print("LOAN EXAMPLE")
     print("=" * 70)
 
-    loan = Loan(
-        borrower_id="borrower_123",
-        principal=principal,
-        interest_rate=8.0,
-        term_months=36
-    )
+    loan = Loan(borrower_id="borrower_123", principal=principal, interest_rate=8.0, term_months=36)
 
     print(f"\nBorrower ID: {loan.borrower_id}")
     print(f"Principal: ${loan.principal:,.2f}")
@@ -50,10 +46,7 @@ def main():
     print("=" * 70)
 
     predatory_loan = Loan(
-        borrower_id="borrower_123",
-        principal=principal,
-        interest_rate=24.0,
-        term_months=36
+        borrower_id="borrower_123", principal=principal, interest_rate=24.0, term_months=36
     )
 
     alphashield_total = loan.monthly_payment * loan.term_months
@@ -67,7 +60,9 @@ def main():
     print(f"\n{'':20} AlphaShield (8%)  Predatory (24%)")
     print(f"{'─' * 60}")
     print(f"{'Principal:':20} ${principal:>12,.2f}  ${principal:>12,.2f}")
-    print(f"{'Monthly Payment:':20} ${loan.monthly_payment:>12,.2f}  ${predatory_loan.monthly_payment:>12,.2f}")
+    print(
+        f"{'Monthly Payment:':20} ${loan.monthly_payment:>12,.2f}  ${predatory_loan.monthly_payment:>12,.2f}"
+    )
     print(f"{'Total Interest:':20} ${alphashield_interest:>12,.2f}  ${predatory_interest:>12,.2f}")
     print(f"{'Total Paid:':20} ${alphashield_total:>12,.2f}  ${predatory_total:>12,.2f}")
     print(f"\n💰 TOTAL SAVINGS: ${savings:,.2f}")

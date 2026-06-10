@@ -1,4 +1,5 @@
 """Contract Review agent for analyzing loan contracts."""
+
 from typing import Any
 
 from alphashield.agents.base_agent import BaseAgent
@@ -22,13 +23,13 @@ class ContractReviewAgent(BaseAgent):
         """
         loan_data = self.get_loan(loan_id)
         if not loan_data:
-            return {'error': 'Loan not found'}
+            return {"error": "Loan not found"}
 
         # Extract key terms
-        interest_rate = contract_terms.get('interest_rate', loan_data.get('interest_rate'))
-        term_months = contract_terms.get('term_months', loan_data.get('term_months'))
-        fees = contract_terms.get('fees', {})
-        penalties = contract_terms.get('penalties', {})
+        interest_rate = contract_terms.get("interest_rate", loan_data.get("interest_rate"))
+        term_months = contract_terms.get("term_months", loan_data.get("term_months"))
+        fees = contract_terms.get("fees", {})
+        penalties = contract_terms.get("penalties", {})
 
         # Analyze fairness
         issues = []
@@ -42,60 +43,59 @@ class ContractReviewAgent(BaseAgent):
             highlights.append(f"Interest rate of {interest_rate}% is favorable (below 10%)")
 
         # Check for excessive fees
-        origination_fee = fees.get('origination', 0)
-        if origination_fee > 0.05 * loan_data.get('principal', 0):
+        origination_fee = fees.get("origination", 0)
+        if origination_fee > 0.05 * loan_data.get("principal", 0):
             issues.append(f"Origination fee is excessive (>{5}% of loan amount)")
 
         # Check prepayment penalties
-        prepayment_penalty = penalties.get('prepayment', 0)
+        prepayment_penalty = penalties.get("prepayment", 0)
         if prepayment_penalty > 0:
-            warnings.append("Prepayment penalty detected - borrower cannot pay off early without cost")
+            warnings.append(
+                "Prepayment penalty detected - borrower cannot pay off early without cost"
+            )
         else:
             highlights.append("No prepayment penalty - borrower can pay off early")
 
         # Check late payment fees
-        late_fee = penalties.get('late_payment', 0)
-        monthly_payment = loan_data.get('monthly_payment', 0)
+        late_fee = penalties.get("late_payment", 0)
+        monthly_payment = loan_data.get("monthly_payment", 0)
         if late_fee > 0.05 * monthly_payment:
             warnings.append(f"Late fee is high (>{5}% of monthly payment)")
 
         # Calculate APR including fees
         total_fees = sum(fees.values())
         effective_rate = self._calculate_apr(
-            loan_data.get('principal', 0),
-            monthly_payment,
-            term_months,
-            total_fees
+            loan_data.get("principal", 0), monthly_payment, term_months, total_fees
         )
 
         review = {
-            'loan_id': loan_id,
-            'stated_interest_rate': interest_rate,
-            'effective_apr': effective_rate,
-            'term_months': term_months,
-            'fees': fees,
-            'penalties': penalties,
-            'issues': issues,
-            'warnings': warnings,
-            'highlights': highlights,
-            'overall_rating': self._calculate_rating(issues, warnings),
-            'compliant': len(issues) == 0,
-            'recommended': len(issues) == 0 and interest_rate <= 10
+            "loan_id": loan_id,
+            "stated_interest_rate": interest_rate,
+            "effective_apr": effective_rate,
+            "term_months": term_months,
+            "fees": fees,
+            "penalties": penalties,
+            "issues": issues,
+            "warnings": warnings,
+            "highlights": highlights,
+            "overall_rating": self._calculate_rating(issues, warnings),
+            "compliant": len(issues) == 0,
+            "recommended": len(issues) == 0 and interest_rate <= 10,
         }
 
-        self.store_context('contract_review', review, generate_embedding=True)
+        self.store_context("contract_review", review, generate_embedding=True)
 
         if issues:
-            self.log_action('contract_issues_found', {
-                'loan_id': loan_id,
-                'issue_count': len(issues),
-                'issues': issues
-            })
+            self.log_action(
+                "contract_issues_found",
+                {"loan_id": loan_id, "issue_count": len(issues), "issues": issues},
+            )
 
         return review
 
-    def _calculate_apr(self, principal: float, monthly_payment: float,
-                      term_months: int, fees: float) -> float:
+    def _calculate_apr(
+        self, principal: float, monthly_payment: float, term_months: int, fees: float
+    ) -> float:
         """Calculate effective APR including fees."""
         if principal == 0 or term_months == 0:
             return 0
@@ -112,13 +112,13 @@ class ContractReviewAgent(BaseAgent):
     def _calculate_rating(self, issues: list[str], warnings: list[str]) -> str:
         """Calculate overall contract rating."""
         if len(issues) > 2:
-            return 'poor'
+            return "poor"
         elif len(issues) > 0:
-            return 'fair'
+            return "fair"
         elif len(warnings) > 2:
-            return 'good'
+            return "good"
         else:
-            return 'excellent'
+            return "excellent"
 
     def process(self, loan_id: str, **kwargs) -> dict[str, Any]:
         """Process contract review for a loan.
@@ -130,7 +130,7 @@ class ContractReviewAgent(BaseAgent):
         Returns:
             Contract review results.
         """
-        contract_terms = kwargs.get('contract_terms', {})
+        contract_terms = kwargs.get("contract_terms", {})
         return self.review_loan_terms(loan_id, contract_terms)
 
     def compare_to_market(self, loan_id: str) -> dict[str, Any]:
@@ -144,40 +144,42 @@ class ContractReviewAgent(BaseAgent):
         """
         loan_data = self.get_loan(loan_id)
         if not loan_data:
-            return {'error': 'Loan not found'}
+            return {"error": "Loan not found"}
 
-        interest_rate = loan_data.get('interest_rate', 0)
+        interest_rate = loan_data.get("interest_rate", 0)
 
         # Market benchmarks
         market_rates = {
-            'predatory_lenders': 24.0,
-            'credit_cards': 19.99,
-            'personal_loans': 12.0,
-            'alphashield_target': 8.0,
-            'prime_rate': 5.5
+            "predatory_lenders": 24.0,
+            "credit_cards": 19.99,
+            "personal_loans": 12.0,
+            "alphashield_target": 8.0,
+            "prime_rate": 5.5,
         }
 
         comparison = {
-            'loan_id': loan_id,
-            'loan_rate': interest_rate,
-            'market_rates': market_rates,
-            'savings_vs_predatory': (market_rates['predatory_lenders'] - interest_rate),
-            'position': 'competitive' if interest_rate <= market_rates['personal_loans'] else 'expensive'
+            "loan_id": loan_id,
+            "loan_rate": interest_rate,
+            "market_rates": market_rates,
+            "savings_vs_predatory": (market_rates["predatory_lenders"] - interest_rate),
+            "position": (
+                "competitive" if interest_rate <= market_rates["personal_loans"] else "expensive"
+            ),
         }
 
         # Calculate potential savings
-        principal = loan_data.get('principal', 0)
-        term_years = loan_data.get('term_months', 36) / 12
+        principal = loan_data.get("principal", 0)
+        term_years = loan_data.get("term_months", 36) / 12
 
-        comparison['annual_savings_vs_predatory'] = principal * (
-            market_rates['predatory_lenders'] - interest_rate
-        ) / 100
-
-        comparison['total_savings_vs_predatory'] = (
-            comparison['annual_savings_vs_predatory'] * term_years
+        comparison["annual_savings_vs_predatory"] = (
+            principal * (market_rates["predatory_lenders"] - interest_rate) / 100
         )
 
-        self.store_context('market_comparison', comparison, generate_embedding=True)
+        comparison["total_savings_vs_predatory"] = (
+            comparison["annual_savings_vs_predatory"] * term_years
+        )
+
+        self.store_context("market_comparison", comparison, generate_embedding=True)
 
         return comparison
 
@@ -192,20 +194,22 @@ class ContractReviewAgent(BaseAgent):
         """
         recommendations = []
 
-        if review.get('issues'):
+        if review.get("issues"):
             recommendations.append("Address contract issues before proceeding")
-            for issue in review['issues']:
+            for issue in review["issues"]:
                 recommendations.append(f"- {issue}")
 
-        if review.get('warnings'):
+        if review.get("warnings"):
             recommendations.append("Consider the following warnings:")
-            for warning in review['warnings']:
+            for warning in review["warnings"]:
                 recommendations.append(f"- {warning}")
 
-        if review.get('effective_apr', 0) > review.get('stated_interest_rate', 0) + 2:
-            recommendations.append("Effective APR is significantly higher than stated rate due to fees")
+        if review.get("effective_apr", 0) > review.get("stated_interest_rate", 0) + 2:
+            recommendations.append(
+                "Effective APR is significantly higher than stated rate due to fees"
+            )
 
-        if review.get('recommended'):
+        if review.get("recommended"):
             recommendations.append("Contract terms are favorable - recommended to proceed")
 
         return recommendations

@@ -1,6 +1,7 @@
 """
 Tests for quantum portfolio optimization functionality.
 """
+
 import unittest
 
 import numpy as np
@@ -24,23 +25,21 @@ class TestQUBOFormulation(unittest.TestCase):
         """Test basic QUBO formulation"""
         n_assets = 3
         expected_returns = np.array([0.1, 0.15, 0.08])
-        covariance_matrix = np.array([
-            [0.01, 0.002, 0.001],
-            [0.002, 0.015, 0.003],
-            [0.001, 0.003, 0.012]
-        ])
+        covariance_matrix = np.array(
+            [[0.01, 0.002, 0.001], [0.002, 0.015, 0.003], [0.001, 0.003, 0.012]]
+        )
 
         qubo = create_detailed_qubo_formulation(
             expected_returns, covariance_matrix, n_discrete_levels=5
         )
 
         # Check structure
-        self.assertEqual(qubo['n_assets'], n_assets)
-        self.assertEqual(qubo['n_levels'], 5)
-        self.assertEqual(qubo['total_variables'], n_assets * 5)
-        self.assertEqual(qubo['Q_matrix'].shape, (15, 15))
-        self.assertEqual(len(qubo['weight_levels']), 5)
-        self.assertEqual(len(qubo['variable_mapping']), 15)
+        self.assertEqual(qubo["n_assets"], n_assets)
+        self.assertEqual(qubo["n_levels"], 5)
+        self.assertEqual(qubo["total_variables"], n_assets * 5)
+        self.assertEqual(qubo["Q_matrix"].shape, (15, 15))
+        self.assertEqual(len(qubo["weight_levels"]), 5)
+        self.assertEqual(len(qubo["variable_mapping"]), 15)
 
     def test_qubo_weight_levels(self):
         """Test that weight levels are correctly generated"""
@@ -51,7 +50,7 @@ class TestQUBOFormulation(unittest.TestCase):
             expected_returns, covariance_matrix, n_discrete_levels=10
         )
 
-        weight_levels = qubo['weight_levels']
+        weight_levels = qubo["weight_levels"]
         self.assertEqual(len(weight_levels), 10)
         self.assertAlmostEqual(weight_levels[0], 0.0)
         self.assertAlmostEqual(weight_levels[-1], 0.5)
@@ -120,11 +119,9 @@ class TestOptimizeWithFallback(unittest.TestCase):
     def test_fallback_to_classical(self):
         """Test that fallback to classical works when quantum unavailable"""
         expected_returns = np.array([0.1, 0.15, 0.08])
-        covariance_matrix = np.array([
-            [0.01, 0.002, 0.001],
-            [0.002, 0.015, 0.003],
-            [0.001, 0.003, 0.012]
-        ])
+        covariance_matrix = np.array(
+            [[0.01, 0.002, 0.001], [0.002, 0.015, 0.003], [0.001, 0.003, 0.012]]
+        )
         current_weights = np.array([0.33, 0.33, 0.34])
 
         # Test with quantum_available=False
@@ -133,7 +130,7 @@ class TestOptimizeWithFallback(unittest.TestCase):
             covariance_matrix,
             current_weights,
             risk_aversion=1.0,
-            quantum_available=False
+            quantum_available=False,
         )
 
         # Should fallback to classical
@@ -145,11 +142,9 @@ class TestOptimizeWithFallback(unittest.TestCase):
         """Test that system can handle edge cases gracefully"""
         # Create valid inputs for optimization
         expected_returns = np.array([0.1, 0.15, 0.08])
-        covariance_matrix = np.array([
-            [0.01, 0.002, 0.001],
-            [0.002, 0.015, 0.003],
-            [0.001, 0.003, 0.012]
-        ])
+        covariance_matrix = np.array(
+            [[0.01, 0.002, 0.001], [0.002, 0.015, 0.003], [0.001, 0.003, 0.012]]
+        )
         current_weights = np.array([0.33, 0.33, 0.34])
 
         weights, method = optimize_with_fallback(
@@ -157,7 +152,7 @@ class TestOptimizeWithFallback(unittest.TestCase):
             covariance_matrix,
             current_weights,
             risk_aversion=1.0,
-            quantum_available=False
+            quantum_available=False,
         )
 
         # Should have valid weights
@@ -178,7 +173,7 @@ class TestOptimizationMetrics(unittest.TestCase):
             final_portfolio_value=10500.0,
             sharpe_ratio=1.5,
             max_drawdown=-0.15,
-            constraint_violations=0
+            constraint_violations=0,
         )
 
         self.assertEqual(metrics.method, "quantum_dwave")
@@ -202,10 +197,7 @@ class TestPerformanceTracker(unittest.TestCase):
         returns = pd.Series([0.01, -0.005, 0.015, 0.02, -0.01] * 50)
 
         tracker.log_optimization(
-            method="classical_cvxpy",
-            solve_time=0.1,
-            portfolio_value=10500.0,
-            returns=returns
+            method="classical_cvxpy", solve_time=0.1, portfolio_value=10500.0, returns=returns
         )
 
         self.assertEqual(len(tracker.metrics_history), 1)
@@ -227,8 +219,8 @@ class TestPerformanceTracker(unittest.TestCase):
 
         # Should have 2 methods
         self.assertEqual(len(comparison), 2)
-        self.assertIn('classical_cvxpy', comparison.index)
-        self.assertIn('quantum_dwave', comparison.index)
+        self.assertIn("classical_cvxpy", comparison.index)
+        self.assertIn("quantum_dwave", comparison.index)
 
     def test_calculate_max_drawdown(self):
         """Test max drawdown calculation"""
@@ -243,5 +235,5 @@ class TestPerformanceTracker(unittest.TestCase):
         self.assertLess(max_dd, 0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

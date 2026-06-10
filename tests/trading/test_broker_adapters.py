@@ -166,14 +166,19 @@ class TestAlpacaAdapter:
 
     def test_initialization_without_credentials(self):
         """Test that initialization fails without credentials."""
-        with patch.dict("os.environ", {}, clear=True):
-            with pytest.raises(ValueError, match="credentials required"):
-                AlpacaAdapter()
+        with (
+            patch.dict("os.environ", {}, clear=True),
+            pytest.raises(ValueError, match="credentials required"),
+        ):
+            AlpacaAdapter()
 
-    @patch.dict("os.environ", {
-        "ALPACA_API_KEY": "test_key",
-        "ALPACA_SECRET_KEY": "test_secret",
-    })
+    @patch.dict(
+        "os.environ",
+        {
+            "ALPACA_API_KEY": "test_key",
+            "ALPACA_SECRET_KEY": "test_secret",
+        },
+    )
     def test_initialization_with_env_vars(self):
         """Test initialization with environment variables."""
         # This will still fail without alpaca-py installed
@@ -186,10 +191,13 @@ class TestAlpacaAdapter:
         except ImportError:
             pytest.skip("alpaca-py not installed")
 
-    @patch.dict("os.environ", {
-        "ALPACA_API_KEY": "test_key",
-        "ALPACA_SECRET_KEY": "test_secret",
-    })
+    @patch.dict(
+        "os.environ",
+        {
+            "ALPACA_API_KEY": "test_key",
+            "ALPACA_SECRET_KEY": "test_secret",
+        },
+    )
     def test_paper_vs_live_urls(self):
         """Test that paper and live mode use different URLs."""
         try:
@@ -210,11 +218,13 @@ class TestExecutionEngineWithBrokers:
         from alphashield.trading.execution_engine import ExecutionEngine
 
         adapter = PaperTradingAdapter(initial_cash=100_000.0)
-        adapter.set_prices({
-            "AAPL": 150.0,
-            "GOOGL": 2800.0,
-            "MSFT": 370.0,
-        })
+        adapter.set_prices(
+            {
+                "AAPL": 150.0,
+                "GOOGL": 2800.0,
+                "MSFT": 370.0,
+            }
+        )
 
         engine = ExecutionEngine(broker=adapter)
 

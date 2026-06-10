@@ -1,5 +1,6 @@
 # tests/rl/test_train_nightly_logs_dir.py
 """Tests that the nightly training job creates the logs directory before logging."""
+
 import sys
 import unittest.mock as mock
 

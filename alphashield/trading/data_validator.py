@@ -68,9 +68,7 @@ def validate_prices(
 
     ok = len(errors) == 0
     if strict and not ok:
-        raise DataValidationError(
-            f"Validation failed: {', '.join(errors)}"
-        )
+        raise DataValidationError(f"Validation failed: {', '.join(errors)}")
     return ok, errors
 
 
@@ -94,7 +92,7 @@ def detect_outliers(returns: pd.Series, method: str = "iqr") -> pd.Series:
             mask = pd.Series(False, index=x.index)
         else:
             z = (x - mu) / sigma
-            mask = z.abs() > 3.0
+            mask = z.abs() >= 3.0
         return mask.reindex(returns.index, fill_value=False)
     else:
         raise ValueError("method must be 'iqr' or 'zscore'")

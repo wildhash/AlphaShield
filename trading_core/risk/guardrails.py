@@ -9,14 +9,16 @@ class RiskLimits:
     max_monthly_dd: float = 0.03
     es95_limit: float = 0.04
     cr_floor: float = 1.30
-    pos_cap: float = 0.25        # 25% per asset
-    min_cash: float = 0.05       # 5% cash buffer
+    pos_cap: float = 0.25  # 25% per asset
+    min_cash: float = 0.05  # 5% cash buffer
     turnover_budget: float = 0.20  # <= 20% of NAV per rebalance
+
 
 def enforce_caps(weights: np.ndarray, limits: RiskLimits) -> np.ndarray:
     w = np.clip(weights, 0.0, limits.pos_cap)
     s = w.sum()
     return w / s if s > 1e-12 else w
+
 
 def expected_shortfall(pnl_series: np.ndarray, alpha: float = 0.95) -> float:
     """Positive number == loss magnitude at ES level."""
@@ -28,11 +30,12 @@ def expected_shortfall(pnl_series: np.ndarray, alpha: float = 0.95) -> float:
         return 0.0
     return float(-tail.mean())
 
+
 def check_risk_limits(
     current_cash_ratio: float,
     proposed_weights: np.ndarray,
     coverage_ratio_value: float,
-    limits: RiskLimits
+    limits: RiskLimits,
 ) -> tuple[bool, list[str]]:
     violations = []
     if coverage_ratio_value < limits.cr_floor:
@@ -42,6 +45,7 @@ def check_risk_limits(
     if current_cash_ratio < limits.min_cash - 1e-9:
         violations.append(f"Cash {current_cash_ratio:.1%} < min {limits.min_cash:.0%}")
     return len(violations) == 0, violations
+
 
 def emergency_weights(n_assets: int, venue: str = "equities") -> np.ndarray:
     """

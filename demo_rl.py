@@ -7,6 +7,7 @@ Demonstrates:
 - Action distribution changes over time
 - Reward tracking
 """
+
 import sys
 
 import numpy as np
@@ -21,8 +22,9 @@ def print_section(title: str):
     print("=" * 70)
 
 
-def simulate_user_decisions(rl: RLOrchestrator, agent_name: str,
-                            user_id: str, n_decisions: int = 50):
+def simulate_user_decisions(
+    rl: RLOrchestrator, agent_name: str, user_id: str, n_decisions: int = 50
+):
     """Simulate a series of user decisions to train the RL agent.
 
     Parameters
@@ -47,21 +49,21 @@ def simulate_user_decisions(rl: RLOrchestrator, agent_name: str,
     for i in range(n_decisions):
         # Varying decision inputs
         decision_input = {
-            'amount': 5000 + i * 100,
-            'interest_rate': 8.0 + np.random.uniform(-1, 1),
-            'term_months': 36,
-            'loan_id': f'loan_{user_id}_{i}'
+            "amount": 5000 + i * 100,
+            "interest_rate": 8.0 + np.random.uniform(-1, 1),
+            "term_months": 36,
+            "loan_id": f"loan_{user_id}_{i}",
         }
 
         # Mock recent metrics (improving over time to simulate learning)
         recent_metrics = {
-            'coverage_ratio': 1.2 + i * 0.01,
-            'risk_score': max(0.1, 0.5 - i * 0.005),
-            'satisfaction': 0.5 + i * 0.008,
-            'wealth_delta': 0.3 + i * 0.005,
-            'drawdown': max(0, 0.15 - i * 0.002),
-            'anomaly': 0.0,
-            'tax_risk': 0.0
+            "coverage_ratio": 1.2 + i * 0.01,
+            "risk_score": max(0.1, 0.5 - i * 0.005),
+            "satisfaction": 0.5 + i * 0.008,
+            "wealth_delta": 0.3 + i * 0.005,
+            "drawdown": max(0, 0.15 - i * 0.002),
+            "anomaly": 0.0,
+            "tax_risk": 0.0,
         }
 
         # Get suggested action (without executing agent)
@@ -69,15 +71,11 @@ def simulate_user_decisions(rl: RLOrchestrator, agent_name: str,
             agent_name=agent_name,
             user_id=user_id,
             decision_input=decision_input,
-            recent_metrics=recent_metrics
+            recent_metrics=recent_metrics,
         )
 
         # Simulate agent execution (mock)
-        agent_output = {
-            'status': 'success',
-            'fairness_score': 0.8,
-            'compliant': True
-        }
+        agent_output = {"status": "success", "fairness_score": 0.8, "compliant": True}
 
         # Train RL
         result = rl.trainer.train_step(
@@ -85,17 +83,17 @@ def simulate_user_decisions(rl: RLOrchestrator, agent_name: str,
             user_id=user_id,
             decision_input=decision_input,
             agent_output=agent_output,
-            recent_metrics=recent_metrics
+            recent_metrics=recent_metrics,
         )
 
         actions.append(action)
-        rewards.append(result['reward'])
+        rewards.append(result["reward"])
 
     return {
-        'actions': actions,
-        'rewards': rewards,
-        'avg_reward': np.mean(rewards),
-        'final_reward': np.mean(rewards[-10:])  # last 10
+        "actions": actions,
+        "rewards": rewards,
+        "avg_reward": np.mean(rewards),
+        "final_reward": np.mean(rewards[-10:]),  # last 10
     }
 
 
@@ -106,8 +104,8 @@ def demo_single_agent():
     # Initialize RL in mock mode
     rl = RLOrchestrator(db_client=None, mock_mode=True)
 
-    agent_name = 'Lender'
-    user_id = 'demo_user_1'
+    agent_name = "Lender"
+    user_id = "demo_user_1"
 
     print(f"\nTraining {agent_name} agent for user {user_id}...")
     print("Simulating 50 loan decisions...\n")
@@ -123,18 +121,18 @@ def demo_single_agent():
 
     # Action distribution
     action_counts = {}
-    for a in results['actions']:
+    for a in results["actions"]:
         action_counts[a] = action_counts.get(a, 0) + 1
 
     print("\n  Action distribution:")
     for action, count in sorted(action_counts.items()):
-        pct = 100 * count / len(results['actions'])
-        bar = '█' * int(pct / 2)
+        pct = 100 * count / len(results["actions"])
+        bar = "█" * int(pct / 2)
         print(f"    Action {action}: {count:2d} times ({pct:5.1f}%) {bar}")
 
     # Show action shift over time
-    early_actions = results['actions'][:10]
-    late_actions = results['actions'][-10:]
+    early_actions = results["actions"][:10]
+    late_actions = results["actions"][-10:]
 
     print(f"\n  Early actions (1-10): {early_actions}")
     print(f"  Late actions (41-50): {late_actions}")
@@ -148,17 +146,19 @@ def demo_multi_agent():
 
     rl = RLOrchestrator(db_client=None, mock_mode=True)
 
-    agents = ['Lender', 'AlphaTrading', 'SpendingGuard']
-    user_id = 'demo_user_2'
+    agents = ["Lender", "AlphaTrading", "SpendingGuard"]
+    user_id = "demo_user_2"
 
     print(f"\nTraining {len(agents)} agents for user {user_id}...")
     print("Each agent learns from 30 decisions...\n")
 
     for agent_name in agents:
         results = simulate_user_decisions(rl, agent_name, user_id, n_decisions=30)
-        print(f"✓ {agent_name:15s}: avg reward={results['avg_reward']:.3f}, "
-              f"final={results['final_reward']:.3f}, "
-              f"improvement={results['final_reward'] - results['avg_reward']:+.3f}")
+        print(
+            f"✓ {agent_name:15s}: avg reward={results['avg_reward']:.3f}, "
+            f"final={results['final_reward']:.3f}, "
+            f"improvement={results['final_reward'] - results['avg_reward']:+.3f}"
+        )
 
     return rl
 
@@ -175,18 +175,20 @@ def demo_statistics(rl: RLOrchestrator):
     print(f"  Min reward: {stats['min_reward']:.3f}")
     print(f"  Max reward: {stats['max_reward']:.3f}")
 
-    if 'agents_active' in stats:
+    if "agents_active" in stats:
         print(f"  Active agents: {', '.join(stats['agents_active'])}")
 
     # Per-agent statistics
     print("\nPer-agent statistics:")
-    for agent in ['Lender', 'AlphaTrading', 'SpendingGuard']:
+    for agent in ["Lender", "AlphaTrading", "SpendingGuard"]:
         try:
             agent_stats = rl.get_statistics(agent=agent, days=7)
-            if agent_stats['count'] > 0:
-                print(f"  {agent:15s}: {agent_stats['count']:3d} experiences, "
-                      f"avg reward={agent_stats['avg_reward']:.3f}")
-        except:
+            if agent_stats["count"] > 0:
+                print(
+                    f"  {agent:15s}: {agent_stats['count']:3d} experiences, "
+                    f"avg reward={agent_stats['avg_reward']:.3f}"
+                )
+        except Exception:
             pass
 
 
@@ -198,19 +200,24 @@ def demo_reward_components():
 
     print("\nTest Case 1: Ideal scenario")
     metrics_good = {
-        'wealth_delta': 0.8,
-        'coverage_ratio': 1.5,
-        'fairness': 0.9,
-        'satisfaction': 0.85,
-        'drawdown': 0.05,
-        'anomaly': 0.0,
-        'tax_risk': 0.0,
-        'calibration': 1.0,
-        'compliance_ok': True
+        "wealth_delta": 0.8,
+        "coverage_ratio": 1.5,
+        "fairness": 0.9,
+        "satisfaction": 0.85,
+        "drawdown": 0.05,
+        "anomaly": 0.0,
+        "tax_risk": 0.0,
+        "calibration": 1.0,
+        "compliance_ok": True,
     }
     config = {
-        'alpha': 0.40, 'beta': 0.15, 'gamma': 0.15, 'delta': 0.10,
-        'lambda1': 0.10, 'lambda2': 0.05, 'lambda3': 0.05
+        "alpha": 0.40,
+        "beta": 0.15,
+        "gamma": 0.15,
+        "delta": 0.10,
+        "lambda1": 0.10,
+        "lambda2": 0.05,
+        "lambda3": 0.05,
     }
 
     reward = compute_reward(metrics_good, config)
@@ -246,28 +253,28 @@ def demo_policy_versioning():
     # Create multiple versions
     for v in range(1, 4):
         policy = manager.bump_version(
-            agent='Lender',
-            algo='LinUCB',
-            params={'version': v, 'alpha': 1.5 + v * 0.1},
-            metadata={'fitness': 0.5 + v * 0.1, 'date': f'2024-01-0{v}'}
+            agent="Lender",
+            algo="LinUCB",
+            params={"version": v, "alpha": 1.5 + v * 0.1},
+            metadata={"fitness": 0.5 + v * 0.1, "date": f"2024-01-0{v}"},
         )
         print(f"  Created version {policy.version}: fitness={policy.metadata['fitness']:.2f}")
 
     # Load latest
-    latest = manager.load_policy('Lender')
+    latest = manager.load_policy("Lender")
     print(f"\n✓ Latest version: {latest.version}")
     print(f"  Algorithm: {latest.algo}")
     print(f"  Fitness: {latest.metadata['fitness']:.2f}")
 
     # List versions
     print("\nAll versions:")
-    versions = manager.list_versions('Lender', limit=10)
+    versions = manager.list_versions("Lender", limit=10)
     for v in versions:
         print(f"  v{v.version}: created={v.created_at}, fitness={v.metadata.get('fitness', 'N/A')}")
 
     # Rollback
     print("\nRollback to version 2...")
-    v2 = manager.load_policy('Lender', version=2)
+    v2 = manager.load_policy("Lender", version=2)
     print(f"  Loaded version {v2.version}: fitness={v2.metadata['fitness']:.2f}")
 
 
@@ -319,9 +326,10 @@ def main():
     except Exception as e:
         print(f"\n❌ Error: {e}")
         import traceback
+
         traceback.print_exc()
         return 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

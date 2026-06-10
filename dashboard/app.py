@@ -30,7 +30,8 @@ st.set_page_config(
 )
 
 # Custom CSS
-st.markdown("""
+st.markdown(
+    """
 <style>
     .metric-card {
         background-color: #f0f2f6;
@@ -47,7 +48,9 @@ st.markdown("""
         color: #1f77b4;
     }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 
 def load_training_metrics(data_dir: str = "data/training") -> pd.DataFrame:
@@ -85,16 +88,18 @@ def generate_sample_metrics() -> pd.DataFrame:
             day_idx = dates.index(date)
             base_reward = 0.5 + (day_idx / n_days) * 0.3 + np.random.normal(0, 0.05)
 
-            records.append({
-                "date": date,
-                "agent": agent,
-                "avg_reward": max(0, min(1, base_reward)),
-                "episodes": 1000 + np.random.randint(-100, 100),
-                "exploration_rate": max(0.1, 0.5 - (day_idx / n_days) * 0.4),
-                "loss": max(0.01, 0.5 - (day_idx / n_days) * 0.3 + np.random.normal(0, 0.05)),
-                "policy_version": f"v{day_idx + 1}",
-                "training_time_seconds": 300 + np.random.randint(-50, 50),
-            })
+            records.append(
+                {
+                    "date": date,
+                    "agent": agent,
+                    "avg_reward": max(0, min(1, base_reward)),
+                    "episodes": 1000 + np.random.randint(-100, 100),
+                    "exploration_rate": max(0.1, 0.5 - (day_idx / n_days) * 0.4),
+                    "loss": max(0.01, 0.5 - (day_idx / n_days) * 0.3 + np.random.normal(0, 0.05)),
+                    "policy_version": f"v{day_idx + 1}",
+                    "training_time_seconds": 300 + np.random.randint(-50, 50),
+                }
+            )
 
     return pd.DataFrame(records)
 
@@ -127,14 +132,16 @@ def generate_sample_policies() -> pd.DataFrame:
     records = []
     for agent in agents:
         for version in range(1, 31):
-            records.append({
-                "agent": agent,
-                "version": f"v{version}",
-                "created_at": datetime.now() - timedelta(days=30 - version),
-                "validation_score": 0.5 + (version / 30) * 0.35 + np.random.normal(0, 0.02),
-                "is_active": version == 30,
-                "rollback_count": np.random.randint(0, 3) if version < 25 else 0,
-            })
+            records.append(
+                {
+                    "agent": agent,
+                    "version": f"v{version}",
+                    "created_at": datetime.now() - timedelta(days=30 - version),
+                    "validation_score": 0.5 + (version / 30) * 0.35 + np.random.normal(0, 0.02),
+                    "is_active": version == 30,
+                    "rollback_count": np.random.randint(0, 3) if version < 25 else 0,
+                }
+            )
 
     return pd.DataFrame(records)
 
@@ -155,7 +162,14 @@ def main():
     )
 
     # Agent filter
-    agents = ["All", "lender", "alpha_trading", "spending_guard", "budget_analyzer", "tax_optimizer"]
+    agents = [
+        "All",
+        "lender",
+        "alpha_trading",
+        "spending_guard",
+        "budget_analyzer",
+        "tax_optimizer",
+    ]
     selected_agent = st.sidebar.selectbox("Agent", agents)
 
     # Auto-refresh toggle
@@ -191,14 +205,20 @@ def main():
         policies_df = policies_df[policies_df["agent"] == selected_agent]
 
     # Main content
-    st.markdown('<p class="main-header">🛡️ AlphaShield RL Training Dashboard</p>', unsafe_allow_html=True)
+    st.markdown(
+        '<p class="main-header">🛡️ AlphaShield RL Training Dashboard</p>', unsafe_allow_html=True
+    )
 
     # Top metrics row
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
         avg_reward = metrics_df["avg_reward"].mean()
-        delta = metrics_df["avg_reward"].iloc[-1] - metrics_df["avg_reward"].iloc[0] if len(metrics_df) > 1 else 0
+        delta = (
+            metrics_df["avg_reward"].iloc[-1] - metrics_df["avg_reward"].iloc[0]
+            if len(metrics_df) > 1
+            else 0
+        )
         st.metric(
             "Avg Reward",
             f"{avg_reward:.3f}",
@@ -297,18 +317,22 @@ def main():
         latest_metrics = metrics_df.groupby("agent").last().reset_index()
 
         fig = go.Figure()
-        fig.add_trace(go.Bar(
-            name="Avg Reward",
-            x=latest_metrics["agent"],
-            y=latest_metrics["avg_reward"],
-            marker_color="#1f77b4",
-        ))
-        fig.add_trace(go.Bar(
-            name="1 - Loss",
-            x=latest_metrics["agent"],
-            y=1 - latest_metrics["loss"],
-            marker_color="#2ca02c",
-        ))
+        fig.add_trace(
+            go.Bar(
+                name="Avg Reward",
+                x=latest_metrics["agent"],
+                y=latest_metrics["avg_reward"],
+                marker_color="#1f77b4",
+            )
+        )
+        fig.add_trace(
+            go.Bar(
+                name="1 - Loss",
+                x=latest_metrics["agent"],
+                y=1 - latest_metrics["loss"],
+                marker_color="#2ca02c",
+            )
+        )
         fig.update_layout(
             barmode="group",
             title="Current Agent Performance",
@@ -344,17 +368,23 @@ def main():
 
     with col2:
         st.markdown("### Active Policies")
-        active_policies_df = policies_df[policies_df["is_active"]][["agent", "version", "validation_score"]]
-        active_policies_df = active_policies_df.rename(columns={
-            "agent": "Agent",
-            "version": "Version",
-            "validation_score": "Score",
-        })
+        active_policies_df = policies_df[policies_df["is_active"]][
+            ["agent", "version", "validation_score"]
+        ]
+        active_policies_df = active_policies_df.rename(
+            columns={
+                "agent": "Agent",
+                "version": "Version",
+                "validation_score": "Score",
+            }
+        )
         active_policies_df["Score"] = active_policies_df["Score"].round(3)
         st.dataframe(active_policies_df, use_container_width=True, hide_index=True)
 
         st.markdown("### Recent Rollbacks")
-        rollbacks = policies_df[policies_df["rollback_count"] > 0][["agent", "version", "rollback_count"]].tail(5)
+        rollbacks = policies_df[policies_df["rollback_count"] > 0][
+            ["agent", "version", "rollback_count"]
+        ].tail(5)
         if not rollbacks.empty:
             st.dataframe(rollbacks, use_container_width=True, hide_index=True)
         else:
@@ -372,16 +402,18 @@ def main():
     display_df["loss"] = display_df["loss"].round(4)
     display_df["exploration_rate"] = display_df["exploration_rate"].round(3)
 
-    display_df = display_df.rename(columns={
-        "date": "Date",
-        "agent": "Agent",
-        "avg_reward": "Avg Reward",
-        "episodes": "Episodes",
-        "exploration_rate": "ε",
-        "loss": "Loss",
-        "policy_version": "Version",
-        "training_time_seconds": "Time (s)",
-    })
+    display_df = display_df.rename(
+        columns={
+            "date": "Date",
+            "agent": "Agent",
+            "avg_reward": "Avg Reward",
+            "episodes": "Episodes",
+            "exploration_rate": "ε",
+            "loss": "Loss",
+            "policy_version": "Version",
+            "training_time_seconds": "Time (s)",
+        }
+    )
 
     st.dataframe(
         display_df.sort_values("Date", ascending=False).head(50),
@@ -424,7 +456,9 @@ def main():
         <div style="text-align: center; color: #888;">
             AlphaShield RL Dashboard v1.0 |
             <a href="https://github.com/wildhash/AlphaShield">GitHub</a> |
-            Last updated: """ + datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC") + """
+            Last updated: """
+        + datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
+        + """
         </div>
         """,
         unsafe_allow_html=True,

@@ -176,7 +176,12 @@ class PaperTradingAdapter(BrokerAdapter):
                 )
 
             # Check if limit price allows fill
-            if side == OrderSide.BUY and execution_price > limit_price or side == OrderSide.SELL and execution_price < limit_price:
+            if (
+                side == OrderSide.BUY
+                and execution_price > limit_price
+                or side == OrderSide.SELL
+                and execution_price < limit_price
+            ):
                 status = OrderStatus.SUBMITTED  # Would wait for better price
             else:
                 status = OrderStatus.FILLED
@@ -266,11 +271,7 @@ class PaperTradingAdapter(BrokerAdapter):
         logger.info(f"Cancelled paper order {order_id}")
         return True
 
-    def get_orders(
-        self,
-        status: OrderStatus | None = None,
-        limit: int = 100
-    ) -> list[Order]:
+    def get_orders(self, status: OrderStatus | None = None, limit: int = 100) -> list[Order]:
         """Get orders, optionally filtered by status."""
         orders = list(self.orders.values())
 

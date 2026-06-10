@@ -84,42 +84,43 @@ def market_data() -> dict:
 class TestFullPipelineIntegration:
     """Test complete pipeline from loan application to trading execution."""
 
-    def test_loan_approval_and_trading_workflow(
-        self, orchestrator, loan_application, market_data
-    ):
+    def test_loan_approval_and_trading_workflow(self, orchestrator, loan_application, market_data):
         """Test full workflow: loan approval -> trading setup -> execution."""
 
         # Mock agent responses
-        with patch.object(
-            orchestrator.agents["Lender"],
-            "run",
-            return_value=ContextPacket(
-                agent="Lender",
-                data={
-                    "decision": "approved",
-                    "loan_amount": 50000,
-                    "interest_rate": 0.05,
-                    "term_months": 36,
-                    "risk_score": 0.25,
-                }
-            )
-        ), patch.object(
-            orchestrator.agents["AlphaTrading"],
-            "run",
-            return_value=ContextPacket(
-                agent="AlphaTrading",
-                data={
-                    "portfolio": {
-                        "SPY": 0.40,
-                        "QQQ": 0.30,
-                        "IWM": 0.20,
-                        "AGG": 0.10,
+        with (
+            patch.object(
+                orchestrator.agents["Lender"],
+                "run",
+                return_value=ContextPacket(
+                    agent="Lender",
+                    data={
+                        "decision": "approved",
+                        "loan_amount": 50000,
+                        "interest_rate": 0.05,
+                        "term_months": 36,
+                        "risk_score": 0.25,
                     },
-                    "expected_return": 0.08,
-                    "risk_level": "moderate",
-                    "rebalance_frequency": "monthly",
-                }
-            )
+                ),
+            ),
+            patch.object(
+                orchestrator.agents["AlphaTrading"],
+                "run",
+                return_value=ContextPacket(
+                    agent="AlphaTrading",
+                    data={
+                        "portfolio": {
+                            "SPY": 0.40,
+                            "QQQ": 0.30,
+                            "IWM": 0.20,
+                            "AGG": 0.10,
+                        },
+                        "expected_return": 0.08,
+                        "risk_level": "moderate",
+                        "rebalance_frequency": "monthly",
+                    },
+                ),
+            ),
         ):
             # Execute orchestration
             initial_context = ContextCapsule(
@@ -131,7 +132,7 @@ class TestFullPipelineIntegration:
             initial_context.add_packet(
                 ContextPacket(
                     agent="System",
-                    data={"loan_application": loan_application, "market_data": market_data}
+                    data={"loan_application": loan_application, "market_data": market_data},
                 )
             )
 
@@ -166,52 +167,52 @@ class TestFullPipelineIntegration:
             {"date": "2024-12-05", "amount": -200, "category": "shopping"},
         ]
 
-        with patch.object(
-            orchestrator.agents["BudgetAnalyzer"],
-            "run",
-            return_value=ContextPacket(
-                agent="BudgetAnalyzer",
-                data={
-                    "monthly_spending": {
-                        "groceries": 450,
-                        "gas": 200,
-                        "rent": 1200,
-                        "dining": 300,
-                        "shopping": 400,
+        with (
+            patch.object(
+                orchestrator.agents["BudgetAnalyzer"],
+                "run",
+                return_value=ContextPacket(
+                    agent="BudgetAnalyzer",
+                    data={
+                        "monthly_spending": {
+                            "groceries": 450,
+                            "gas": 200,
+                            "rent": 1200,
+                            "dining": 300,
+                            "shopping": 400,
+                        },
+                        "budget_limits": {
+                            "groceries": 500,
+                            "gas": 250,
+                            "dining": 350,
+                            "shopping": 400,
+                        },
+                        "total_spending": 2550,
+                        "income": 5000,
                     },
-                    "budget_limits": {
-                        "groceries": 500,
-                        "gas": 250,
-                        "dining": 350,
-                        "shopping": 400,
+                ),
+            ),
+            patch.object(
+                orchestrator.agents["SpendingGuard"],
+                "run",
+                return_value=ContextPacket(
+                    agent="SpendingGuard",
+                    data={
+                        "alerts": [],
+                        "recommendations": [
+                            "Good budget adherence",
+                            "Consider increasing savings rate",
+                        ],
+                        "spending_health": "good",
                     },
-                    "total_spending": 2550,
-                    "income": 5000,
-                }
-            )
-        ), patch.object(
-            orchestrator.agents["SpendingGuard"],
-            "run",
-            return_value=ContextPacket(
-                agent="SpendingGuard",
-                data={
-                    "alerts": [],
-                    "recommendations": [
-                        "Good budget adherence",
-                        "Consider increasing savings rate",
-                    ],
-                    "spending_health": "good",
-                }
-            )
+                ),
+            ),
         ):
             initial_context = ContextCapsule(
                 borrower_id="test_borrower_123",
                 timestamp=datetime.utcnow(),
                 packets=[
-                    ContextPacket(
-                        agent="System",
-                        data={"transactions": monthly_transactions}
-                    )
+                    ContextPacket(agent="System", data={"transactions": monthly_transactions})
                 ],
             )
 
@@ -237,18 +238,13 @@ class TestFullPipelineIntegration:
 
         # Make Lender agent fail
         with patch.object(
-            orchestrator.agents["Lender"],
-            "run",
-            side_effect=Exception("Agent processing error")
+            orchestrator.agents["Lender"], "run", side_effect=Exception("Agent processing error")
         ):
             initial_context = ContextCapsule(
                 borrower_id=loan_application["borrower_id"],
                 timestamp=datetime.utcnow(),
                 packets=[
-                    ContextPacket(
-                        agent="System",
-                        data={"loan_application": loan_application}
-                    )
+                    ContextPacket(agent="System", data={"loan_application": loan_application})
                 ],
             )
 
@@ -272,18 +268,13 @@ class TestFullPipelineIntegration:
                     "decision": "approved",
                     "loan_amount": 50000,
                     "portfolio_split": 0.75,  # Should be 0.8 for borrower
-                }
-            )
+                },
+            ),
         ):
             initial_context = ContextCapsule(
                 borrower_id="test_borrower",
                 timestamp=datetime.utcnow(),
-                packets=[
-                    ContextPacket(
-                        agent="System",
-                        data={"loan_request": 50000}
-                    )
-                ],
+                packets=[ContextPacket(agent="System", data={"loan_request": 50000})],
             )
 
             result = orchestrator.run(initial_context)
@@ -308,22 +299,27 @@ class TestContextCapsuleFlowIntegration:
         # Simulate sequential agent execution
         agents_to_run = ["Lender", "BudgetAnalyzer", "AlphaTrading", "SpendingGuard"]
 
-        with patch.object(
-            orchestrator.agents["Lender"],
-            "run",
-            return_value=ContextPacket(agent="Lender", data={"loan_approved": True})
-        ), patch.object(
-            orchestrator.agents["BudgetAnalyzer"],
-            "run",
-            return_value=ContextPacket(agent="BudgetAnalyzer", data={"budget_healthy": True})
-        ), patch.object(
-            orchestrator.agents["AlphaTrading"],
-            "run",
-            return_value=ContextPacket(agent="AlphaTrading", data={"strategy": "moderate"})
-        ), patch.object(
-            orchestrator.agents["SpendingGuard"],
-            "run",
-            return_value=ContextPacket(agent="SpendingGuard", data={"alerts": []})
+        with (
+            patch.object(
+                orchestrator.agents["Lender"],
+                "run",
+                return_value=ContextPacket(agent="Lender", data={"loan_approved": True}),
+            ),
+            patch.object(
+                orchestrator.agents["BudgetAnalyzer"],
+                "run",
+                return_value=ContextPacket(agent="BudgetAnalyzer", data={"budget_healthy": True}),
+            ),
+            patch.object(
+                orchestrator.agents["AlphaTrading"],
+                "run",
+                return_value=ContextPacket(agent="AlphaTrading", data={"strategy": "moderate"}),
+            ),
+            patch.object(
+                orchestrator.agents["SpendingGuard"],
+                "run",
+                return_value=ContextPacket(agent="SpendingGuard", data={"alerts": []}),
+            ),
         ):
             context = ContextCapsule(
                 borrower_id="test_borrower",
@@ -344,14 +340,17 @@ class TestContextCapsuleFlowIntegration:
     def test_context_packet_ordering(self, orchestrator):
         """Test that context packets maintain proper ordering."""
 
-        with patch.object(
-            orchestrator.agents["Lender"],
-            "run",
-            return_value=ContextPacket(agent="Lender", data={"order": 1})
-        ), patch.object(
-            orchestrator.agents["AlphaTrading"],
-            "run",
-            return_value=ContextPacket(agent="AlphaTrading", data={"order": 2})
+        with (
+            patch.object(
+                orchestrator.agents["Lender"],
+                "run",
+                return_value=ContextPacket(agent="Lender", data={"order": 1}),
+            ),
+            patch.object(
+                orchestrator.agents["AlphaTrading"],
+                "run",
+                return_value=ContextPacket(agent="AlphaTrading", data={"order": 2}),
+            ),
         ):
             context = ContextCapsule(
                 borrower_id="test_borrower",
@@ -364,7 +363,9 @@ class TestContextCapsuleFlowIntegration:
             # Packets should be in execution order
             # Lender should come before AlphaTrading (due to dependency)
             lender_idx = next((i for i, p in enumerate(result.packets) if p.agent == "Lender"), -1)
-            trading_idx = next((i for i, p in enumerate(result.packets) if p.agent == "AlphaTrading"), -1)
+            trading_idx = next(
+                (i for i, p in enumerate(result.packets) if p.agent == "AlphaTrading"), -1
+            )
 
             if lender_idx >= 0 and trading_idx >= 0:
                 assert lender_idx < trading_idx, "Lender should execute before AlphaTrading"
@@ -384,9 +385,8 @@ class TestConcurrentBorrowerHandling:
                 orchestrator.agents["Lender"],
                 "run",
                 return_value=ContextPacket(
-                    agent="Lender",
-                    data={"borrower_id": borrower_id, "decision": "approved"}
-                )
+                    agent="Lender", data={"borrower_id": borrower_id, "decision": "approved"}
+                ),
             ):
                 context = ContextCapsule(
                     borrower_id=borrower_id,
@@ -418,7 +418,7 @@ class TestPerformanceAndScaling:
         with patch.object(
             orchestrator.agents["Lender"],
             "run",
-            return_value=ContextPacket(agent="Lender", data={"status": "ok"})
+            return_value=ContextPacket(agent="Lender", data={"status": "ok"}),
         ):
             context = ContextCapsule(
                 borrower_id="test_borrower",
@@ -438,10 +438,7 @@ class TestPerformanceAndScaling:
 
         # Create large context with many packets
         large_packets = [
-            ContextPacket(
-                agent=f"Agent_{i}",
-                data={"index": i, "large_data": "x" * 1000}
-            )
+            ContextPacket(agent=f"Agent_{i}", data={"index": i, "large_data": "x" * 1000})
             for i in range(100)
         ]
 
@@ -455,7 +452,7 @@ class TestPerformanceAndScaling:
         with patch.object(
             orchestrator.agents["Lender"],
             "run",
-            return_value=ContextPacket(agent="Lender", data={"status": "processed"})
+            return_value=ContextPacket(agent="Lender", data={"status": "processed"}),
         ):
             result = orchestrator.run(context)
 

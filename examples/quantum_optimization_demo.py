@@ -64,9 +64,7 @@ def main():
     print("\n3. Creating QUBO formulation...")
 
     qubo = create_detailed_qubo_formulation(
-        expected_returns,
-        covariance_matrix,
-        n_discrete_levels=10
+        expected_returns, covariance_matrix, n_discrete_levels=10
     )
 
     print(f"   QUBO matrix shape: {qubo['Q_matrix'].shape}")
@@ -84,7 +82,7 @@ def main():
         covariance_matrix,
         current_weights,
         risk_aversion=1.0,
-        quantum_available=quantum_available
+        quantum_available=quantum_available,
     )
 
     solve_time = time.time() - start_time
@@ -101,10 +99,7 @@ def main():
 
     classical_start = time.time()
     classical_weights = optimize_classical(
-        expected_returns,
-        covariance_matrix,
-        current_weights,
-        risk_aversion=1.0
+        expected_returns, covariance_matrix, current_weights, risk_aversion=1.0
     )
     classical_time = time.time() - classical_start
 
@@ -153,14 +148,14 @@ def main():
         method=method,
         solve_time=solve_time,
         portfolio_value=10000 * (1 + opt_return),
-        returns=mock_returns
+        returns=mock_returns,
     )
 
     tracker.log_optimization(
         method="classical_cvxpy",
         solve_time=classical_time,
         portfolio_value=10000 * (1 + class_return),
-        returns=mock_returns
+        returns=mock_returns,
     )
 
     print("\n   Performance comparison:")

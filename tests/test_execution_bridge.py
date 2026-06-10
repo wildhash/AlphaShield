@@ -43,7 +43,12 @@ def _make_stats_df(
 class TestExtractMetrics:
     def test_none_returns_zeroed_dict(self):
         result = _extract_metrics(None)
-        assert result == {"cagr": 0.0, "sharpe_ratio": 0.0, "max_drawdown": 0.0, "total_return": 0.0}
+        assert result == {
+            "cagr": 0.0,
+            "sharpe_ratio": 0.0,
+            "max_drawdown": 0.0,
+            "total_return": 0.0,
+        }
 
     def test_tuple_result_parsed(self):
         stats = _make_stats_df(cagr=0.15, sharpe=1.3, max_dd=-0.10, total_return=0.50)
@@ -66,7 +71,12 @@ class TestExtractMetrics:
         # DataFrame exists but has unrecognised columns
         stats = pd.DataFrame({"foo": [1], "bar": [2]})
         result = _extract_metrics((stats,))
-        assert result == {"cagr": 0.0, "sharpe_ratio": 0.0, "max_drawdown": 0.0, "total_return": 0.0}
+        assert result == {
+            "cagr": 0.0,
+            "sharpe_ratio": 0.0,
+            "max_drawdown": 0.0,
+            "total_return": 0.0,
+        }
 
 
 # ---------------------------------------------------------------------------

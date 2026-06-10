@@ -77,7 +77,11 @@ class TradingOrchestrator:
         exp_ret = float(cov_cfg.get("exp_return_assumption", 0.10))
         target_ratio = float(cov_cfg.get("target_ratio", 1.3))
         emergency_ratio = float(cov_cfg.get("emergency_ratio", 1.2))
-        mpay = monthly_payment(float(loan_params.get("principal", 100000.0)), float(loan_params.get("rate", 0.08)), int(loan_params.get("term_months", 36)))
+        mpay = monthly_payment(
+            float(loan_params.get("principal", 100000.0)),
+            float(loan_params.get("rate", 0.08)),
+            int(loan_params.get("term_months", 36)),
+        )
         cr = compute_cr(portfolio_value, mpay, exp_ret)
         is_coverage_ok(cr, target_ratio, emergency_ratio)
 
@@ -101,7 +105,11 @@ class TradingOrchestrator:
                 portfolio_value=float(portfolio_value),
             )
         self.current_weights = execution["final_weights"].reindex(prices_window.columns).fillna(0.0)
-        final_value = float(execution["final_value"]) if isinstance(execution.get("final_value"), (float, int)) else float(portfolio_value)
+        final_value = (
+            float(execution["final_value"])
+            if isinstance(execution.get("final_value"), (float, int))
+            else float(portfolio_value)
+        )
 
         risk_metrics = {
             "realized_vol": realized_vol,

@@ -15,7 +15,9 @@ class QuantumPortfolioOptimizer:
     """Quantum portfolio optimization using a QUBO formulation."""
 
     def __init__(self, api_token: str | None = None) -> None:
-        self.available = dimod is not None and DWaveSampler is not None and EmbeddingComposite is not None
+        self.available = (
+            dimod is not None and DWaveSampler is not None and EmbeddingComposite is not None
+        )
         self._sampler = None
         if self.available and api_token:
             try:

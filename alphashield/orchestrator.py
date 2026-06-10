@@ -1,4 +1,5 @@
 """AlphaShield orchestrator for coordinating multi-agent system."""
+
 from typing import Any
 
 from alphashield.agents.alpha_trading_agent import AlphaTradingAgent
@@ -14,8 +15,7 @@ from alphashield.database.mongodb_client import MongoDBClient
 class AlphaShieldOrchestrator:
     """Orchestrates the 6 AI agents for self-funding loan management."""
 
-    def __init__(self, mongodb_uri: str | None = None,
-                 voyage_api_key: str | None = None):
+    def __init__(self, mongodb_uri: str | None = None, voyage_api_key: str | None = None):
         """Initialize AlphaShield with all agents.
 
         Args:
@@ -35,17 +35,22 @@ class AlphaShieldOrchestrator:
         self.contract_review = ContractReviewAgent(self.db, self.embeddings)
 
         self.agents = {
-            'lender': self.lender,
-            'trading': self.trading,
-            'spending_guard': self.spending_guard,
-            'budget_analyzer': self.budget_analyzer,
-            'tax_optimizer': self.tax_optimizer,
-            'contract_review': self.contract_review,
+            "lender": self.lender,
+            "trading": self.trading,
+            "spending_guard": self.spending_guard,
+            "budget_analyzer": self.budget_analyzer,
+            "tax_optimizer": self.tax_optimizer,
+            "contract_review": self.contract_review,
         }
 
-    def originate_loan(self, borrower_id: str, principal: float,
-                      interest_rate: float = 8.0, term_months: int = 36,
-                      contract_terms: dict[str, Any] | None = None) -> dict[str, Any]:
+    def originate_loan(
+        self,
+        borrower_id: str,
+        principal: float,
+        interest_rate: float = 8.0,
+        term_months: int = 36,
+        contract_terms: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Originate a new self-funding loan with full agent coordination.
 
         Args:
@@ -62,20 +67,22 @@ class AlphaShieldOrchestrator:
         contract_review = None
         if contract_terms:
             temp_loan_data = {
-                'principal': principal,
-                'interest_rate': interest_rate,
-                'term_months': term_months,
-                'monthly_payment': principal * (interest_rate/1200) / (1 - (1 + interest_rate/1200)**(-term_months))
+                "principal": principal,
+                "interest_rate": interest_rate,
+                "term_months": term_months,
+                "monthly_payment": principal
+                * (interest_rate / 1200)
+                / (1 - (1 + interest_rate / 1200) ** (-term_months)),
             }
             # Temporarily store for review
             temp_id = self.db.store_loan(temp_loan_data)
             contract_review = self.contract_review.review_loan_terms(temp_id, contract_terms)
 
-            if not contract_review.get('recommended', False):
+            if not contract_review.get("recommended", False):
                 return {
-                    'status': 'rejected',
-                    'reason': 'Contract terms not recommended',
-                    'contract_review': contract_review
+                    "status": "rejected",
+                    "reason": "Contract terms not recommended",
+                    "contract_review": contract_review,
                 }
 
         # Step 2: Originate loan through Lender agent
@@ -83,30 +90,29 @@ class AlphaShieldOrchestrator:
             borrower_id=borrower_id,
             principal=principal,
             interest_rate=interest_rate,
-            term_months=term_months
+            term_months=term_months,
         )
 
         # Step 3: Invest 60% through Alpha Trading agent
-        investment_plan = self.trading.invest_loan_funds(loan_id, strategy='balanced')
+        investment_plan = self.trading.invest_loan_funds(loan_id, strategy="balanced")
 
         # Step 4: Get initial risk assessment
         risk_assessment = self.lender.assess_risk(loan_id)
 
         return {
-            'status': 'success',
-            'loan_id': loan_id,
-            'principal': principal,
-            'interest_rate': interest_rate,
-            'split': {
-                'investment': principal * 0.6,
-                'borrower': principal * 0.4
-            },
-            'investment_plan': investment_plan,
-            'risk_assessment': risk_assessment,
-            'contract_review': contract_review,
+            "status": "success",
+            "loan_id": loan_id,
+            "principal": principal,
+            "interest_rate": interest_rate,
+            "split": {"investment": principal * 0.6, "borrower": principal * 0.4},
+            "investment_plan": investment_plan,
+            "risk_assessment": risk_assessment,
+            "contract_review": contract_review,
         }
 
-    def monitor_loan(self, loan_id: str, borrower_data: dict[str, Any] | None = None) -> dict[str, Any]:
+    def monitor_loan(
+        self, loan_id: str, borrower_data: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Monitor loan with all agents providing insights.
 
         Args:
@@ -127,45 +133,42 @@ class AlphaShieldOrchestrator:
 
         # Spending analysis from Spending Guard
         spending_analysis = None
-        if 'transactions' in borrower_data:
+        if "transactions" in borrower_data:
             spending_analysis = self.spending_guard.process(
-                loan_id,
-                transactions=borrower_data['transactions']
+                loan_id, transactions=borrower_data["transactions"]
             )
 
         # Budget analysis from Budget Analyzer
         budget_analysis = None
-        if 'income' in borrower_data and 'expenses' in borrower_data:
+        if "income" in borrower_data and "expenses" in borrower_data:
             budget_analysis = self.budget_analyzer.process(
-                loan_id,
-                income=borrower_data['income'],
-                expenses=borrower_data['expenses']
+                loan_id, income=borrower_data["income"], expenses=borrower_data["expenses"]
             )
 
         # Tax optimization from Tax Optimizer
         tax_optimization = None
-        if 'income' in borrower_data and 'deductions' in borrower_data:
+        if "income" in borrower_data and "deductions" in borrower_data:
             tax_optimization = self.tax_optimizer.process(
                 loan_id,
-                income=borrower_data['income'],
-                deductions=borrower_data['deductions'],
-                filing_status=borrower_data.get('filing_status', 'single')
+                income=borrower_data["income"],
+                deductions=borrower_data["deductions"],
+                filing_status=borrower_data.get("filing_status", "single"),
             )
 
         # Overall risk assessment
         risk_assessment = self.lender.assess_risk(loan_id)
 
         return {
-            'loan_id': loan_id,
-            'portfolio_metrics': portfolio_metrics,
-            'investment': {
-                'performance': investment_performance,
-                'risk_capacity': risk_capacity,
+            "loan_id": loan_id,
+            "portfolio_metrics": portfolio_metrics,
+            "investment": {
+                "performance": investment_performance,
+                "risk_capacity": risk_capacity,
             },
-            'spending_analysis': spending_analysis,
-            'budget_analysis': budget_analysis,
-            'tax_optimization': tax_optimization,
-            'risk_assessment': risk_assessment,
+            "spending_analysis": spending_analysis,
+            "budget_analysis": budget_analysis,
+            "tax_optimization": tax_optimization,
+            "risk_assessment": risk_assessment,
         }
 
     def get_borrower_recommendations(self, loan_id: str) -> dict[str, Any]:
@@ -179,49 +182,51 @@ class AlphaShieldOrchestrator:
         """
         loan_data = self.db.get_loan(loan_id)
         if not loan_data:
-            return {'error': 'Loan not found'}
+            return {"error": "Loan not found"}
 
-        borrower_id = loan_data.get('borrower_id')
+        borrower_id = loan_data.get("borrower_id")
 
         # Get latest analyses from each agent
         recommendations = {
-            'loan_id': loan_id,
-            'borrower_id': borrower_id,
-            'spending_recommendations': [],
-            'budget_recommendations': [],
-            'tax_recommendations': [],
-            'investment_recommendations': [],
+            "loan_id": loan_id,
+            "borrower_id": borrower_id,
+            "spending_recommendations": [],
+            "budget_recommendations": [],
+            "tax_recommendations": [],
+            "investment_recommendations": [],
         }
 
         # Spending recommendations
         spending_contexts = self.spending_guard.get_shared_context(
-            agent_name='SpendingGuard',
-            limit=1
+            agent_name="SpendingGuard", limit=1
         )
         if spending_contexts:
-            analysis = spending_contexts[0].get('data', {})
-            recommendations['spending_recommendations'] = self.spending_guard.generate_recommendations(analysis)
+            analysis = spending_contexts[0].get("data", {})
+            recommendations["spending_recommendations"] = (
+                self.spending_guard.generate_recommendations(analysis)
+            )
 
         # Budget recommendations
         budget_contexts = self.budget_analyzer.get_shared_context(
-            agent_name='BudgetAnalyzer',
-            limit=1
+            agent_name="BudgetAnalyzer", limit=1
         )
         if budget_contexts:
-            analysis = budget_contexts[0].get('data', {})
-            recommendations['budget_recommendations'] = analysis.get('recommendations', [])
+            analysis = budget_contexts[0].get("data", {})
+            recommendations["budget_recommendations"] = analysis.get("recommendations", [])
 
         # Tax strategy
         tax_strategy = self.tax_optimizer.generate_tax_strategy(borrower_id, loan_id)
-        recommendations['tax_recommendations'] = {
-            'short_term': tax_strategy.get('short_term_actions', []),
-            'long_term': tax_strategy.get('long_term_actions', []),
-            'estimated_benefit': tax_strategy.get('estimated_annual_benefit', 0)
+        recommendations["tax_recommendations"] = {
+            "short_term": tax_strategy.get("short_term_actions", []),
+            "long_term": tax_strategy.get("long_term_actions", []),
+            "estimated_benefit": tax_strategy.get("estimated_annual_benefit", 0),
         }
 
         # Investment recommendations
         risk_capacity = self.trading.assess_risk_capacity(loan_id)
-        recommendations['investment_recommendations'] = [risk_capacity.get('recommendation', 'maintain')]
+        recommendations["investment_recommendations"] = [
+            risk_capacity.get("recommendation", "maintain")
+        ]
 
         return recommendations
 

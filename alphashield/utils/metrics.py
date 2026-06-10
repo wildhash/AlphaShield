@@ -7,6 +7,7 @@ from collections.abc import Iterator
 # Optional Prometheus import
 try:
     from prometheus_client import Counter, Gauge
+
     _PROM = True
 except Exception:
     Gauge = object  # type: ignore

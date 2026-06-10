@@ -1,4 +1,5 @@
 """Loan models for AlphaShield system."""
+
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
@@ -7,6 +8,7 @@ from typing import Any
 
 class LoanStatus(Enum):
     """Loan status enumeration."""
+
     PENDING = "pending"
     ACTIVE = "active"
     PAID_OFF = "paid_off"
@@ -16,12 +18,13 @@ class LoanStatus(Enum):
 @dataclass
 class LoanSplit:
     """Represents the 60/40 split of loan funds."""
+
     total_amount: float
     investment_amount: float  # 60%
-    borrower_amount: float    # 40%
+    borrower_amount: float  # 40%
 
     @classmethod
-    def from_total(cls, total: float) -> 'LoanSplit':
+    def from_total(cls, total: float) -> "LoanSplit":
         """Create loan split from total amount.
 
         Args:
@@ -30,16 +33,13 @@ class LoanSplit:
         Returns:
             LoanSplit with 60% to investment, 40% to borrower.
         """
-        return cls(
-            total_amount=total,
-            investment_amount=total * 0.6,
-            borrower_amount=total * 0.4
-        )
+        return cls(total_amount=total, investment_amount=total * 0.6, borrower_amount=total * 0.4)
 
 
 @dataclass
 class Loan:
     """Represents a self-funding loan in the AlphaShield system."""
+
     borrower_id: str
     principal: float
     interest_rate: float
@@ -80,37 +80,37 @@ class Loan:
     def to_dict(self) -> dict[str, Any]:
         """Convert loan to dictionary for storage."""
         return {
-            'borrower_id': self.borrower_id,
-            'principal': self.principal,
-            'interest_rate': self.interest_rate,
-            'term_months': self.term_months,
-            'status': self.status.value,
-            'split': {
-                'total_amount': self.split.total_amount,
-                'investment_amount': self.split.investment_amount,
-                'borrower_amount': self.split.borrower_amount,
+            "borrower_id": self.borrower_id,
+            "principal": self.principal,
+            "interest_rate": self.interest_rate,
+            "term_months": self.term_months,
+            "status": self.status.value,
+            "split": {
+                "total_amount": self.split.total_amount,
+                "investment_amount": self.split.investment_amount,
+                "borrower_amount": self.split.borrower_amount,
             },
-            'investment_balance': self.investment_balance,
-            'outstanding_balance': self.outstanding_balance,
-            'monthly_payment': self.monthly_payment,
+            "investment_balance": self.investment_balance,
+            "outstanding_balance": self.outstanding_balance,
+            "monthly_payment": self.monthly_payment,
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> 'Loan':
+    def from_dict(cls, data: dict[str, Any]) -> "Loan":
         """Create loan from dictionary."""
-        split = LoanSplit(**data['split']) if 'split' in data else None
-        status = LoanStatus(data.get('status', 'pending'))
+        split = LoanSplit(**data["split"]) if "split" in data else None
+        status = LoanStatus(data.get("status", "pending"))
 
         return cls(
-            loan_id=str(data.get('_id', '')),
-            borrower_id=data['borrower_id'],
-            principal=data['principal'],
-            interest_rate=data['interest_rate'],
-            term_months=data['term_months'],
+            loan_id=str(data.get("_id", "")),
+            borrower_id=data["borrower_id"],
+            principal=data["principal"],
+            interest_rate=data["interest_rate"],
+            term_months=data["term_months"],
             status=status,
             split=split,
-            investment_balance=data.get('investment_balance', 0.0),
-            outstanding_balance=data.get('outstanding_balance', 0.0),
-            monthly_payment=data.get('monthly_payment', 0.0),
-            created_at=data.get('created_at'),
+            investment_balance=data.get("investment_balance", 0.0),
+            outstanding_balance=data.get("outstanding_balance", 0.0),
+            monthly_payment=data.get("monthly_payment", 0.0),
+            created_at=data.get("created_at"),
         )

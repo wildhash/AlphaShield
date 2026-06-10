@@ -1,14 +1,12 @@
 """QUBO formulation for quantum portfolio optimization."""
+
 import os
 
 import numpy as np
 
 
 def build_qubo(
-    mu: np.ndarray,
-    Sigma: np.ndarray,
-    prev_level_idx: np.ndarray | None = None,
-    levels: int = 10
+    mu: np.ndarray, Sigma: np.ndarray, prev_level_idx: np.ndarray | None = None, levels: int = 10
 ) -> tuple[dict, float]:
     """Build QUBO formulation for portfolio optimization.
 
@@ -49,14 +47,14 @@ def build_qubo(
 
             # Linear terms from expected returns
             # Maximize returns -> minimize negative returns
-            weight_value = (2 ** j) / (2 ** levels)
+            weight_value = (2**j) / (2**levels)
             Q[(var_idx, var_idx)] = Q.get((var_idx, var_idx), 0) - mu[i] * weight_value
 
             # Add risk terms (quadratic)
             for k in range(n_assets):
-                for l in range(levels):
-                    var_idx2 = k * levels + l
-                    weight_value2 = (2 ** l) / (2 ** levels)
+                for level_idx in range(levels):
+                    var_idx2 = k * levels + level_idx
+                    weight_value2 = (2**level_idx) / (2**levels)
 
                     risk_term = lambda_risk * Sigma[i, k] * weight_value * weight_value2
 
@@ -68,28 +66,30 @@ def build_qubo(
     for i in range(n_assets):
         for j in range(levels):
             var_idx = i * levels + j
-            weight_value = (2 ** j) / (2 ** levels)
+            weight_value = (2**j) / (2**levels)
 
             # Linear part of (sum - 1)^2
-            Q[(var_idx, var_idx)] = Q.get((var_idx, var_idx), 0) + penalty * (2 * weight_value - 2 * weight_value)
+            Q[(var_idx, var_idx)] = Q.get((var_idx, var_idx), 0) + penalty * (
+                2 * weight_value - 2 * weight_value
+            )
 
             # Quadratic part
             for k in range(n_assets):
-                for l in range(levels):
-                    var_idx2 = k * levels + l
-                    weight_value2 = (2 ** l) / (2 ** levels)
+                for level_idx in range(levels):
+                    var_idx2 = k * levels + level_idx
+                    weight_value2 = (2**level_idx) / (2**levels)
 
                     if var_idx <= var_idx2:
-                        Q[(var_idx, var_idx2)] = Q.get((var_idx, var_idx2), 0) + penalty * 2 * weight_value * weight_value2
+                        Q[(var_idx, var_idx2)] = (
+                            Q.get((var_idx, var_idx2), 0)
+                            + penalty * 2 * weight_value * weight_value2
+                        )
 
     return Q, penalty
 
 
 def solve_qubo(
-    Q: dict,
-    penalty: float,
-    num_reads: int = 1000,
-    api_token: str | None = None
+    Q: dict, penalty: float, num_reads: int = 1000, api_token: str | None = None
 ) -> np.ndarray | None:
     """Solve QUBO using quantum annealer or classical solver.
 
@@ -103,7 +103,7 @@ def solve_qubo(
         Weight vector if successful, None otherwise
     """
     # Check if quantum is enabled
-    quantum_enabled = os.getenv('QUANTUM', 'false').lower() == 'true'
+    quantum_enabled = os.getenv("QUANTUM", "false").lower() == "true"
 
     if not quantum_enabled:
         # Return None to trigger fallback to classical QP
@@ -160,14 +160,10 @@ def decode_solution(binary_solution: dict, levels: int = 10, n_assets: int = 4) 
         for j in range(levels):
             var_idx = i * levels + j
             if var_idx in binary_solution and binary_solution[var_idx] == 1:
-                weights[i] += (2 ** j) / (2 ** levels)
+                weights[i] += (2**j) / (2**levels)
 
     # Normalize to sum to 1
     weight_sum = weights.sum()
-    if weight_sum > 0:
-        weights = weights / weight_sum
-    else:
-        # If all zeros, return equal weights
-        weights = np.ones(n_assets) / n_assets
+    weights = weights / weight_sum if weight_sum > 0 else np.ones(n_assets) / n_assets
 
     return weights

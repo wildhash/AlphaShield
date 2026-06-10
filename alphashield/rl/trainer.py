@@ -2,6 +2,7 @@
 
 Coordinates bandit updates, reward computation, and experience replay.
 """
+
 from datetime import datetime
 from typing import Any
 
@@ -18,10 +19,9 @@ from alphashield.rl.reward import RewardConfig, compute_reward
 class RLTrainer:
     """RL trainer for AlphaShield agents."""
 
-    def __init__(self,
-                 db_client=None,
-                 reward_config: RewardConfig | None = None,
-                 mock_mode: bool = False):
+    def __init__(
+        self, db_client=None, reward_config: RewardConfig | None = None, mock_mode: bool = False
+    ):
         """Initialize RL trainer.
 
         Parameters
@@ -59,25 +59,22 @@ class RLTrainer:
         """
         if agent_name not in self._bandits:
             action_space = build_action_space(agent_name)
-            n_actions = action_space['n_actions']
+            n_actions = action_space["n_actions"]
             d = get_context_dimension()
 
-            self._bandits[agent_name] = LinUCB(
-                n_actions=n_actions,
-                d=d,
-                alpha=1.5,
-                reg=1e-2
-            )
+            self._bandits[agent_name] = LinUCB(n_actions=n_actions, d=d, alpha=1.5, reg=1e-2)
 
         return self._bandits[agent_name]
 
-    def train_step(self,
-                  agent_name: str,
-                  user_id: str,
-                  decision_input: dict[str, Any],
-                  agent_output: dict[str, Any],
-                  recent_metrics: dict[str, Any] | None = None,
-                  memory_hits: list | None = None) -> dict[str, Any]:
+    def train_step(
+        self,
+        agent_name: str,
+        user_id: str,
+        decision_input: dict[str, Any],
+        agent_output: dict[str, Any],
+        recent_metrics: dict[str, Any] | None = None,
+        memory_hits: list | None = None,
+    ) -> dict[str, Any]:
         """Execute a single training step.
 
         Parameters
@@ -106,7 +103,7 @@ class RLTrainer:
             user_id=user_id,
             decision_input=decision_input,
             recent_metrics=recent_metrics,
-            memory_hits=memory_hits
+            memory_hits=memory_hits,
         )
 
         # Get bandit and suggest action
@@ -134,19 +131,20 @@ class RLTrainer:
             action=action,
             metrics=metrics,
             reward=reward,
-            policy_version=policy_version
+            policy_version=policy_version,
         )
 
         return {
-            'action': action,
-            'reward': reward,
-            'metrics': metrics,
-            'policy_version': policy_version,
-            'context_dim': len(context)
+            "action": action,
+            "reward": reward,
+            "metrics": metrics,
+            "policy_version": policy_version,
+            "context_dim": len(context),
         }
 
-    def _extract_metrics(self, agent_output: dict[str, Any],
-                        recent_metrics: dict[str, Any] | None) -> dict[str, Any]:
+    def _extract_metrics(
+        self, agent_output: dict[str, Any], recent_metrics: dict[str, Any] | None
+    ) -> dict[str, Any]:
         """Extract metrics from agent output and recent data.
 
         Parameters
@@ -165,28 +163,28 @@ class RLTrainer:
 
         # Extract from recent metrics if available
         if recent_metrics:
-            metrics['wealth_delta'] = recent_metrics.get('wealth_delta', 0.0)
-            metrics['coverage_ratio'] = recent_metrics.get('coverage_ratio', 1.0)
-            metrics['drawdown'] = recent_metrics.get('drawdown', 0.0)
-            metrics['anomaly'] = recent_metrics.get('anomaly', 0.0)
-            metrics['tax_risk'] = recent_metrics.get('tax_risk', 0.0)
-            metrics['satisfaction'] = recent_metrics.get('satisfaction', 0.5)
-            metrics['calibration'] = recent_metrics.get('calibration', 1.0)
+            metrics["wealth_delta"] = recent_metrics.get("wealth_delta", 0.0)
+            metrics["coverage_ratio"] = recent_metrics.get("coverage_ratio", 1.0)
+            metrics["drawdown"] = recent_metrics.get("drawdown", 0.0)
+            metrics["anomaly"] = recent_metrics.get("anomaly", 0.0)
+            metrics["tax_risk"] = recent_metrics.get("tax_risk", 0.0)
+            metrics["satisfaction"] = recent_metrics.get("satisfaction", 0.5)
+            metrics["calibration"] = recent_metrics.get("calibration", 1.0)
         else:
             # Defaults
-            metrics['wealth_delta'] = 0.0
-            metrics['coverage_ratio'] = 1.0
-            metrics['drawdown'] = 0.0
-            metrics['anomaly'] = 0.0
-            metrics['tax_risk'] = 0.0
-            metrics['satisfaction'] = 0.5
-            metrics['calibration'] = 1.0
+            metrics["wealth_delta"] = 0.0
+            metrics["coverage_ratio"] = 1.0
+            metrics["drawdown"] = 0.0
+            metrics["anomaly"] = 0.0
+            metrics["tax_risk"] = 0.0
+            metrics["satisfaction"] = 0.5
+            metrics["calibration"] = 1.0
 
         # Fairness and compliance from agent output
-        metrics['fairness'] = agent_output.get('fairness_score',
-                                               agent_output.get('fairness', 0.8))
-        metrics['compliance_ok'] = agent_output.get('compliant',
-                                                    agent_output.get('compliance_ok', True))
+        metrics["fairness"] = agent_output.get("fairness_score", agent_output.get("fairness", 0.8))
+        metrics["compliance_ok"] = agent_output.get(
+            "compliant", agent_output.get("compliance_ok", True)
+        )
 
         return metrics
 
@@ -207,27 +205,26 @@ class RLTrainer:
         """
         # Simple mock: better actions get better metrics
         action_space = build_action_space(agent_name)
-        n_actions = action_space['n_actions']
+        n_actions = action_space["n_actions"]
         action_quality = 1.0 - (action / max(1, n_actions - 1))
 
         noise = np.random.normal(0, 0.1)
 
         return {
-            'wealth_delta': max(0, min(1, 0.5 + 0.3 * action_quality + noise)),
-            'coverage_ratio': 1.2 + 0.4 * action_quality,
-            'fairness': max(0.5, min(1, 0.8 + 0.2 * action_quality + noise)),
-            'satisfaction': max(0, min(1, 0.6 + 0.3 * action_quality + noise)),
-            'drawdown': max(0, min(1, 0.1 - 0.1 * action_quality + abs(noise))),
-            'anomaly': max(0, min(1, 0.05 + abs(noise) * 0.1)),
-            'tax_risk': max(0, min(1, 0.03 + abs(noise) * 0.05)),
-            'calibration': 1.0,
-            'compliance_ok': action_quality > 0.3
+            "wealth_delta": max(0, min(1, 0.5 + 0.3 * action_quality + noise)),
+            "coverage_ratio": 1.2 + 0.4 * action_quality,
+            "fairness": max(0.5, min(1, 0.8 + 0.2 * action_quality + noise)),
+            "satisfaction": max(0, min(1, 0.6 + 0.3 * action_quality + noise)),
+            "drawdown": max(0, min(1, 0.1 - 0.1 * action_quality + abs(noise))),
+            "anomaly": max(0, min(1, 0.05 + abs(noise) * 0.1)),
+            "tax_risk": max(0, min(1, 0.03 + abs(noise) * 0.05)),
+            "calibration": 1.0,
+            "compliance_ok": action_quality > 0.3,
         }
 
-    def nightly_meta_optimization(self,
-                                 agents: list | None = None,
-                                 n_days: int = 30,
-                                 max_generations: int = 30) -> dict[str, Any]:
+    def nightly_meta_optimization(
+        self, agents: list | None = None, n_days: int = 30, max_generations: int = 30
+    ) -> dict[str, Any]:
         """Run nightly meta-optimization of reward weights.
 
         Parameters
@@ -245,9 +242,9 @@ class RLTrainer:
             Optimization results
         """
         results = {
-            'timestamp': datetime.utcnow().isoformat(),
-            'agents_optimized': [],
-            'improvements': {}
+            "timestamp": datetime.utcnow().isoformat(),
+            "agents_optimized": [],
+            "improvements": {},
         }
 
         # Get current reward config
@@ -258,7 +255,7 @@ class RLTrainer:
             replay_buffer=self.replay,
             base_config=base_config,
             n_days=n_days,
-            max_generations=max_generations
+            max_generations=max_generations,
         )
 
         # Check if improvement is significant
@@ -268,13 +265,13 @@ class RLTrainer:
         if optimized_fitness > baseline_fitness + 0.01:
             # Update configuration
             self.reward_config = RewardConfig(**optimized_config)
-            results['improved'] = True
-            results['baseline_fitness'] = baseline_fitness
-            results['optimized_fitness'] = optimized_fitness
-            results['new_config'] = optimized_config
+            results["improved"] = True
+            results["baseline_fitness"] = baseline_fitness
+            results["optimized_fitness"] = optimized_fitness
+            results["new_config"] = optimized_config
         else:
-            results['improved'] = False
-            results['fitness'] = baseline_fitness
+            results["improved"] = False
+            results["fitness"] = baseline_fitness
 
         return results
 
@@ -300,7 +297,7 @@ class RLTrainer:
 
         rewards = []
         for exp in experiences:
-            metrics = exp.get('metrics', {})
+            metrics = exp.get("metrics", {})
             reward = compute_reward(metrics, config)
             rewards.append(reward)
 
@@ -326,10 +323,10 @@ class RLTrainer:
         if agent:
             bandit = self._bandits.get(agent)
             if bandit:
-                stats['bandit_initialized'] = True
+                stats["bandit_initialized"] = True
             else:
-                stats['bandit_initialized'] = False
+                stats["bandit_initialized"] = False
         else:
-            stats['agents_active'] = list(self._bandits.keys())
+            stats["agents_active"] = list(self._bandits.keys())
 
         return stats

@@ -1,4 +1,5 @@
 """Voyage AI embeddings for semantic context sharing between agents."""
+
 import os
 
 import voyageai
@@ -13,7 +14,7 @@ class EmbeddingsClient:
         Args:
             api_key: Voyage API key. If None, reads from env.
         """
-        self.api_key = api_key or os.getenv('VOYAGE_API_KEY')
+        self.api_key = api_key or os.getenv("VOYAGE_API_KEY")
         if not self.api_key:
             raise ValueError("Voyage API key not provided")
 
@@ -56,6 +57,7 @@ class EmbeddingsClient:
             Cosine similarity score between -1 and 1.
         """
         import numpy as np
+
         vec1 = np.array(embedding1)
         vec2 = np.array(embedding2)
         return float(np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2)))

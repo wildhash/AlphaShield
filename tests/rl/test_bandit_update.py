@@ -1,6 +1,9 @@
 # tests/rl/test_bandit_update.py
 import numpy as np
 
+# ---- Minimal import path for LinUCB (Copilot will fill the implementation) ---
+from alphashield.rl.bandit import LinUCB  # type: ignore
+
 
 # ---- Helper: Simulated linear environment with noise -------------------------
 class LinearNoisyEnv:
@@ -11,6 +14,7 @@ class LinearNoisyEnv:
     Context x is sampled ~ N(0, I) then normalized.
     Rewards are squashed into [0,1] for stability.
     """
+
     def __init__(self, n_actions: int, d: int, noise_std: float = 0.05, seed: int = 7):
         self.n_actions = n_actions
         self.d = d
@@ -40,10 +44,8 @@ class LinearNoisyEnv:
         return int(np.argmax(scores))
 
 
-# ---- Minimal import path for LinUCB (Copilot will fill the implementation) ---
-from alphashield.rl.bandit import LinUCB  # type: ignore
-
 # ---- Tests -------------------------------------------------------------------
+
 
 def test_linucb_beats_random_policy():
     """
@@ -101,7 +103,9 @@ def test_linucb_converges_toward_best_action_short_horizon():
     # Random chance would be ~1/n_actions; require a decent lift
     random_rate = 1.0 / n_actions
     hit_rate = best_hits / T
-    assert hit_rate > random_rate + 0.15, f"Hit rate {hit_rate:.3f} not sufficiently above random {random_rate:.3f}"
+    assert (
+        hit_rate > random_rate + 0.15
+    ), f"Hit rate {hit_rate:.3f} not sufficiently above random {random_rate:.3f}"
 
 
 def test_linucb_is_numerically_stable_with_zero_contexts():

@@ -14,13 +14,15 @@ Where:
 - A: Anomaly penalty (0-1)
 - T: Tax risk penalty (0-1)
 """
+
 from typing import Any
 
 import numpy as np
 
 
-def compute_reward(metrics: dict[str, Any], config: dict[str, float],
-                  min_fairness_threshold: float = 0.50) -> float:
+def compute_reward(
+    metrics: dict[str, Any], config: dict[str, float], min_fairness_threshold: float = 0.50
+) -> float:
     """Compute shaped reward from metrics.
 
     Parameters
@@ -54,15 +56,15 @@ def compute_reward(metrics: dict[str, Any], config: dict[str, float],
         Shaped reward value
     """
     # Extract metrics with defaults
-    W = float(metrics.get('wealth_delta', 0.0))
-    coverage_raw = float(metrics.get('coverage_ratio', 1.0))
-    F = float(metrics.get('fairness', 1.0))
-    S = float(metrics.get('satisfaction', 0.5))
-    D = float(metrics.get('drawdown', 0.0))
-    A = float(metrics.get('anomaly', 0.0))
-    T = float(metrics.get('tax_risk', 0.0))
-    Q = float(metrics.get('calibration', 1.0))
-    compliance_ok = bool(metrics.get('compliance_ok', True))
+    W = float(metrics.get("wealth_delta", 0.0))
+    coverage_raw = float(metrics.get("coverage_ratio", 1.0))
+    F = float(metrics.get("fairness", 1.0))
+    S = float(metrics.get("satisfaction", 0.5))
+    D = float(metrics.get("drawdown", 0.0))
+    A = float(metrics.get("anomaly", 0.0))
+    T = float(metrics.get("tax_risk", 0.0))
+    Q = float(metrics.get("calibration", 1.0))
+    compliance_ok = bool(metrics.get("compliance_ok", True))
 
     # Normalize coverage ratio: C' = min(1, max(0, (C - 1.2) / 0.6))
     # This maps 1.2 -> 0, 1.8 -> 1, with linear scaling
@@ -72,24 +74,20 @@ def compute_reward(metrics: dict[str, Any], config: dict[str, float],
     Q = min(1.2, max(0.8, Q))
 
     # Extract weights from config
-    alpha = config.get('alpha', 0.40)
-    beta = config.get('beta', 0.15)
-    gamma = config.get('gamma', 0.15)
-    delta = config.get('delta', 0.10)
-    lambda1 = config.get('lambda1', 0.10)
-    lambda2 = config.get('lambda2', 0.05)
-    lambda3 = config.get('lambda3', 0.05)
+    alpha = config.get("alpha", 0.40)
+    beta = config.get("beta", 0.15)
+    gamma = config.get("gamma", 0.15)
+    delta = config.get("delta", 0.10)
+    lambda1 = config.get("lambda1", 0.10)
+    lambda2 = config.get("lambda2", 0.05)
+    lambda3 = config.get("lambda3", 0.05)
 
     # Compliance/Ethics gate: zero reward if violations
     G = 0.0 if (not compliance_ok or min_fairness_threshold > F) else 1.0
 
     # Compute shaped reward
     reward_core = (
-        alpha * W +
-        beta * C +
-        gamma * F +
-        delta * S -
-        (lambda1 * D + lambda2 * A + lambda3 * T)
+        alpha * W + beta * C + gamma * F + delta * S - (lambda1 * D + lambda2 * A + lambda3 * T)
     )
 
     reward = G * Q * reward_core
@@ -97,8 +95,9 @@ def compute_reward(metrics: dict[str, Any], config: dict[str, float],
     return reward
 
 
-def normalize_wealth_delta(wealth_change: float, baseline: float = 0.0,
-                          window_min: float = -0.05, window_max: float = 0.15) -> float:
+def normalize_wealth_delta(
+    wealth_change: float, baseline: float = 0.0, window_min: float = -0.05, window_max: float = 0.15
+) -> float:
     """Normalize wealth delta to [0, 1] using min-max scaling.
 
     Parameters
@@ -144,15 +143,17 @@ def normalize_drawdown(drawdown_pct: float, max_drawdown: float = 0.20) -> float
 class RewardConfig:
     """Configuration for reward computation."""
 
-    def __init__(self,
-                 alpha: float = 0.40,
-                 beta: float = 0.15,
-                 gamma: float = 0.15,
-                 delta: float = 0.10,
-                 lambda1: float = 0.10,
-                 lambda2: float = 0.05,
-                 lambda3: float = 0.05,
-                 min_fairness_threshold: float = 0.50):
+    def __init__(
+        self,
+        alpha: float = 0.40,
+        beta: float = 0.15,
+        gamma: float = 0.15,
+        delta: float = 0.10,
+        lambda1: float = 0.10,
+        lambda2: float = 0.05,
+        lambda3: float = 0.05,
+        min_fairness_threshold: float = 0.50,
+    ):
         """Initialize reward configuration.
 
         Parameters
@@ -186,11 +187,11 @@ class RewardConfig:
     def to_dict(self) -> dict[str, float]:
         """Convert to dictionary for compute_reward."""
         return {
-            'alpha': self.alpha,
-            'beta': self.beta,
-            'gamma': self.gamma,
-            'delta': self.delta,
-            'lambda1': self.lambda1,
-            'lambda2': self.lambda2,
-            'lambda3': self.lambda3,
+            "alpha": self.alpha,
+            "beta": self.beta,
+            "gamma": self.gamma,
+            "delta": self.delta,
+            "lambda1": self.lambda1,
+            "lambda2": self.lambda2,
+            "lambda3": self.lambda3,
         }

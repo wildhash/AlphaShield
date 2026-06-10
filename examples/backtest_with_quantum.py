@@ -31,7 +31,7 @@ class QuantumBacktestEngine:
         fee_bps: float = 1.0,
         spread_bps: float = 5.0,
         turnover_budget: float = 0.20,
-        use_quantum: bool = False
+        use_quantum: bool = False,
     ):
         self.data = data.dropna(how="all")
         self.symbols: list[str] = list(self.data.columns)
@@ -95,7 +95,7 @@ class QuantumBacktestEngine:
             covariance_matrix=Sigma,
             current_weights=self.w,
             risk_aversion=1.0,
-            quantum_available=self.quantum_available
+            quantum_available=self.quantum_available,
         )
 
         # Track which method was used
@@ -138,7 +138,7 @@ class QuantumBacktestEngine:
             "trading_cost": float(trading_cost),
             "cr": float(cr),
             "nav": float(self.nav),
-            "violations": violations if not is_ok else []
+            "violations": violations if not is_ok else [],
         }
 
     def run(self) -> dict:
@@ -165,7 +165,7 @@ class QuantumBacktestEngine:
             "nav_series": self.nav_history,
             "cr_series": self.cr_history,
             "logs": logs,
-            "method_counts": dict(method_counts)
+            "method_counts": dict(method_counts),
         }
 
 
@@ -178,13 +178,13 @@ def main():
     # Create sample price data
     print("\n1. Creating sample price data...")
     np.random.seed(42)
-    dates = pd.date_range(start='2020-01-01', periods=500, freq='D')
+    dates = pd.date_range(start="2020-01-01", periods=500, freq="D")
 
     # Generate correlated price series
     n_assets = 4
     returns = np.random.randn(500, n_assets) * 0.01 + 0.0005
     prices_data = {}
-    for i, symbol in enumerate(['AAPL', 'GOOGL', 'MSFT', 'AMZN']):
+    for i, symbol in enumerate(["AAPL", "GOOGL", "MSFT", "AMZN"]):
         price_series = 100 * (1 + returns[:, i]).cumprod()
         prices_data[symbol] = price_series
 
@@ -197,10 +197,7 @@ def main():
     # Run backtest with classical optimization
     print("\n2. Running backtest with classical optimization...")
     bt_classical = QuantumBacktestEngine(
-        data=prices,
-        loan_terms=terms,
-        initial_nav=5000.0,
-        use_quantum=False
+        data=prices, loan_terms=terms, initial_nav=5000.0, use_quantum=False
     )
     result_classical = bt_classical.run()
 
@@ -210,10 +207,7 @@ def main():
     # Run backtest with quantum optimization (will fallback to classical if unavailable)
     print("\n3. Running backtest with quantum optimization enabled...")
     bt_quantum = QuantumBacktestEngine(
-        data=prices,
-        loan_terms=terms,
-        initial_nav=5000.0,
-        use_quantum=True
+        data=prices, loan_terms=terms, initial_nav=5000.0, use_quantum=True
     )
     result_quantum = bt_quantum.run()
 
@@ -228,7 +222,7 @@ def main():
     print(f"\nClassical Final NAV: ${result_classical['final_nav']:.2f}")
     print(f"Quantum Final NAV:   ${result_quantum['final_nav']:.2f}")
 
-    pnl_diff = result_quantum['final_nav'] - result_classical['final_nav']
+    pnl_diff = result_quantum["final_nav"] - result_classical["final_nav"]
     print(f"\nDifference: ${pnl_diff:.2f}")
 
     if bt_quantum.quantum_available:

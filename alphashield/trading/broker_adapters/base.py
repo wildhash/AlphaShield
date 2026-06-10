@@ -168,11 +168,7 @@ class BrokerAdapter(ABC):
         pass
 
     @abstractmethod
-    def get_orders(
-        self,
-        status: OrderStatus | None = None,
-        limit: int = 100
-    ) -> list[Order]:
+    def get_orders(self, status: OrderStatus | None = None, limit: int = 100) -> list[Order]:
         """Get orders, optionally filtered by status.
 
         Args:

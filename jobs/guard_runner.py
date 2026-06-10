@@ -1,4 +1,5 @@
 """Daily guard runner for spending anomaly detection."""
+
 import uuid
 from datetime import datetime, timedelta
 
@@ -36,11 +37,11 @@ class GuardRunner:
             return all_events
 
         # Get all active loans
-        loans = self.db.get_collection('loans').find({'status': 'active'})
+        loans = self.db.get_collection("loans").find({"status": "active"})
 
         for loan in loans:
-            user_id = loan.get('borrower_id')
-            loan_id = str(loan.get('_id'))
+            user_id = loan.get("borrower_id")
+            loan_id = str(loan.get("_id"))
 
             # Get recent transactions (last 30 days)
             transactions = self._get_recent_transactions(user_id, days=30)
@@ -56,7 +57,7 @@ class GuardRunner:
 
             # Process high-severity events
             for event in events:
-                if event.severity in ['high', 'critical']:
+                if event.severity in ["high", "critical"]:
                     self._handle_high_severity_event(user_id, loan_id, event)
 
             all_events.extend(events)
@@ -79,17 +80,19 @@ class GuardRunner:
         cutoff_date = datetime.utcnow() - timedelta(days=days)
 
         # Query transactions from agent contexts
-        contexts = self.db.get_collection('agent_contexts').find({
-            'data.borrower_id': user_id,
-            'timestamp': {'$gte': cutoff_date},
-            'context_type': 'spending_analysis'
-        })
+        contexts = self.db.get_collection("agent_contexts").find(
+            {
+                "data.borrower_id": user_id,
+                "timestamp": {"$gte": cutoff_date},
+                "context_type": "spending_analysis",
+            }
+        )
 
         transactions = []
         for ctx in contexts:
-            data = ctx.get('data', {})
-            if 'transactions' in data:
-                transactions.extend(data['transactions'])
+            data = ctx.get("data", {})
+            if "transactions" in data:
+                transactions.extend(data["transactions"])
 
         return transactions
 
@@ -106,16 +109,18 @@ class GuardRunner:
             return None
 
         # Get historical spending data
-        contexts = self.db.get_collection('agent_contexts').find({
-            'data.borrower_id': user_id,
-            'context_type': 'budget_analysis'
-        }).sort('timestamp', -1).limit(1)
+        contexts = (
+            self.db.get_collection("agent_contexts")
+            .find({"data.borrower_id": user_id, "context_type": "budget_analysis"})
+            .sort("timestamp", -1)
+            .limit(1)
+        )
 
         for ctx in contexts:
-            data = ctx.get('data', {})
+            data = ctx.get("data", {})
             return {
-                'avg_weekly_spending': data.get('average_monthly_spending', 0.0) / 4.0,
-                'avg_monthly_spending': data.get('average_monthly_spending', 0.0),
+                "avg_weekly_spending": data.get("average_monthly_spending", 0.0) / 4.0,
+                "avg_monthly_spending": data.get("average_monthly_spending", 0.0),
             }
 
         return None
@@ -130,7 +135,7 @@ class GuardRunner:
             loan_id: Loan identifier
             event: GuardEvent with high/critical severity
         """
-        if event.suggested_action == 'micro_refi':
+        if event.suggested_action == "micro_refi":
             # Enqueue micro-refi orchestration task
             trace_id = f"guard-refi-{uuid.uuid4()}"
 
@@ -142,30 +147,34 @@ class GuardRunner:
                     loan_app_id=loan_id,
                     db_client=self.db,
                     embeddings_client=self.embeddings,
-                    short_term_relief=True
+                    short_term_relief=True,
                 )
 
                 # Log the micro-refi event
                 if self.db:
-                    self.db.get_collection('guard_events').insert_one({
-                        'user_id': user_id,
-                        'loan_id': loan_id,
-                        'event_type': event.event_type,
-                        'severity': event.severity,
-                        'action_taken': 'micro_refi',
-                        'trace_id': trace_id,
-                        'bundle_id': bundle.trace_id,
-                        'timestamp': datetime.utcnow(),
-                    })
+                    self.db.get_collection("guard_events").insert_one(
+                        {
+                            "user_id": user_id,
+                            "loan_id": loan_id,
+                            "event_type": event.event_type,
+                            "severity": event.severity,
+                            "action_taken": "micro_refi",
+                            "trace_id": trace_id,
+                            "bundle_id": bundle.trace_id,
+                            "timestamp": datetime.utcnow(),
+                        }
+                    )
             except Exception as e:
                 # Log error but don't fail
                 if self.db:
-                    self.db.get_collection('guard_errors').insert_one({
-                        'user_id': user_id,
-                        'loan_id': loan_id,
-                        'error': str(e),
-                        'timestamp': datetime.utcnow(),
-                    })
+                    self.db.get_collection("guard_errors").insert_one(
+                        {
+                            "user_id": user_id,
+                            "loan_id": loan_id,
+                            "error": str(e),
+                            "timestamp": datetime.utcnow(),
+                        }
+                    )
 
 
 def main():
@@ -176,8 +185,8 @@ def main():
     from alphashield.database.mongodb_client import MongoDBClient
 
     # Initialize clients
-    mongodb_uri = os.getenv('MONGODB_URI')
-    voyage_key = os.getenv('VOYAGE_API_KEY')
+    mongodb_uri = os.getenv("MONGODB_URI")
+    voyage_key = os.getenv("VOYAGE_API_KEY")
 
     db_client = MongoDBClient(mongodb_uri) if mongodb_uri else None
     embeddings_client = EmbeddingsClient(voyage_key) if voyage_key else None
@@ -190,5 +199,5 @@ def main():
     print(f"High/Critical events: {sum(1 for e in events if e.severity in ['high', 'critical'])}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

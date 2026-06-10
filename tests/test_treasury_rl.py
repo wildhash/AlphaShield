@@ -1,4 +1,5 @@
 """Tests for treasury RL environment and policy."""
+
 import os
 import unittest
 
@@ -41,7 +42,7 @@ class TestTreasuryEnv(unittest.TestCase):
         self.assertEqual(len(next_state), 6)
         self.assertIsInstance(reward, float)
         self.assertIsInstance(done, bool)
-        self.assertIn('coverage_ratio', info)
+        self.assertIn("coverage_ratio", info)
 
     def test_shielded_action(self):
         """Test that actions are shielded to satisfy constraints."""
@@ -70,7 +71,7 @@ class TestTreasuryEnv(unittest.TestCase):
         next_state, reward, done, info = env.step(action)
 
         # Should trigger done due to constraint violation
-        self.assertTrue(info['constraint_violated'])
+        self.assertTrue(info["constraint_violated"])
 
     def test_reward_calculation(self):
         """Test reward calculation components."""
@@ -107,7 +108,7 @@ class TestTreasuryPolicy(unittest.TestCase):
     def test_select_action_enabled(self):
         """Test action selection when RL is enabled."""
         # Temporarily enable RL
-        os.environ['USE_RL'] = 'true'
+        os.environ["USE_RL"] = "true"
 
         try:
             policy = TreasuryPolicy()
@@ -122,8 +123,8 @@ class TestTreasuryPolicy(unittest.TestCase):
             self.assertTrue(all(abs(a) < 0.1 for a in action))
         finally:
             # Clean up
-            os.environ['USE_RL'] = 'false'
+            os.environ["USE_RL"] = "false"
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -2,6 +2,7 @@
 
 Builds feature vectors from agent states, user data, and memory lookups.
 """
+
 from datetime import datetime
 from typing import Any
 
@@ -13,7 +14,7 @@ def build_context(
     user_id: str,
     decision_input: dict[str, Any],
     recent_metrics: dict[str, Any] | None = None,
-    memory_hits: list[dict[str, Any]] | None = None
+    memory_hits: list[dict[str, Any]] | None = None,
 ) -> np.ndarray:
     """Build context feature vector for RL decision.
 
@@ -57,29 +58,29 @@ def build_context(
     # Decision input features (generic extraction)
     if decision_input:
         # Extract numeric fields
-        amount = decision_input.get('amount', decision_input.get('principal', 0))
+        amount = decision_input.get("amount", decision_input.get("principal", 0))
         features.append(np.log1p(amount) / 10.0)  # log-scaled amount
 
-        interest_rate = decision_input.get('interest_rate', 0)
+        interest_rate = decision_input.get("interest_rate", 0)
         features.append(interest_rate / 100.0)
 
-        term = decision_input.get('term_months', decision_input.get('term', 0))
+        term = decision_input.get("term_months", decision_input.get("term", 0))
         features.append(term / 60.0)  # normalize by 5 years
     else:
         features.extend([0.0, 0.0, 0.0])
 
     # Recent metrics features
     if recent_metrics:
-        features.append(recent_metrics.get('coverage_ratio', 1.0) / 2.0)
-        features.append(recent_metrics.get('risk_score', 0.5))
-        features.append(recent_metrics.get('satisfaction', 0.5))
+        features.append(recent_metrics.get("coverage_ratio", 1.0) / 2.0)
+        features.append(recent_metrics.get("risk_score", 0.5))
+        features.append(recent_metrics.get("satisfaction", 0.5))
     else:
         features.extend([0.5, 0.5, 0.5])
 
     # Memory/embedding features (count and quality)
     if memory_hits:
         memory_count = min(len(memory_hits), 10) / 10.0
-        avg_similarity = np.mean([h.get('similarity', 0.5) for h in memory_hits])
+        avg_similarity = np.mean([h.get("similarity", 0.5) for h in memory_hits])
         features.extend([memory_count, avg_similarity])
     else:
         features.extend([0.0, 0.5])
@@ -114,66 +115,57 @@ def build_action_space(agent_name: str) -> dict[str, Any]:
         Action space definition with number of actions and descriptions
     """
     action_spaces = {
-        'Lender': {
-            'n_actions': 9,
-            'actions': [
-                'approve_standard',
-                'approve_reduced_rate',
-                'approve_extended_term',
-                'revise_amount_down',
-                'revise_amount_up',
-                'request_more_info',
-                'deny_high_risk',
-                'deny_insufficient_income',
-                'defer_review'
-            ]
+        "Lender": {
+            "n_actions": 9,
+            "actions": [
+                "approve_standard",
+                "approve_reduced_rate",
+                "approve_extended_term",
+                "revise_amount_down",
+                "revise_amount_up",
+                "request_more_info",
+                "deny_high_risk",
+                "deny_insufficient_income",
+                "defer_review",
+            ],
         },
-        'AlphaTrading': {
-            'n_actions': 5,
-            'actions': [
-                'conservative_allocation',
-                'balanced_allocation',
-                'growth_allocation',
-                'rebalance_defensive',
-                'rebalance_aggressive'
-            ]
+        "AlphaTrading": {
+            "n_actions": 5,
+            "actions": [
+                "conservative_allocation",
+                "balanced_allocation",
+                "growth_allocation",
+                "rebalance_defensive",
+                "rebalance_aggressive",
+            ],
         },
-        'SpendingGuard': {
-            'n_actions': 4,
-            'actions': [
-                'no_alert',
-                'soft_warning',
-                'strong_warning',
-                'block_transaction'
-            ]
+        "SpendingGuard": {
+            "n_actions": 4,
+            "actions": ["no_alert", "soft_warning", "strong_warning", "block_transaction"],
         },
-        'BudgetAnalyzer': {
-            'n_actions': 5,
-            'actions': [
-                'no_changes',
-                'minor_adjustments',
-                'major_reallocation',
-                'emergency_mode',
-                'savings_optimization'
-            ]
+        "BudgetAnalyzer": {
+            "n_actions": 5,
+            "actions": [
+                "no_changes",
+                "minor_adjustments",
+                "major_reallocation",
+                "emergency_mode",
+                "savings_optimization",
+            ],
         },
-        'TaxOptimizer': {
-            'n_actions': 4,
-            'actions': [
-                'standard_deduction',
-                'itemized_deduction',
-                'retirement_optimization',
-                'aggressive_optimization'
-            ]
+        "TaxOptimizer": {
+            "n_actions": 4,
+            "actions": [
+                "standard_deduction",
+                "itemized_deduction",
+                "retirement_optimization",
+                "aggressive_optimization",
+            ],
         },
-        'ContractReview': {
-            'n_actions': 3,
-            'actions': [
-                'approve_contract',
-                'request_revisions',
-                'reject_contract'
-            ]
-        }
+        "ContractReview": {
+            "n_actions": 3,
+            "actions": ["approve_contract", "request_revisions", "reject_contract"],
+        },
     }
 
-    return action_spaces.get(agent_name, {'n_actions': 3, 'actions': ['low', 'medium', 'high']})
+    return action_spaces.get(agent_name, {"n_actions": 3, "actions": ["low", "medium", "high"]})

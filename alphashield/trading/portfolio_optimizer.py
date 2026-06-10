@@ -15,8 +15,8 @@ from alphashield.utils.errors import OptimizationError
 
 @dataclass
 class OptimizerConfig:
-    method: str = "closed_form"           # or "cvxpy"
-    covariance: str = "ledoit_wolf"       # or "ewma"
+    method: str = "closed_form"  # or "cvxpy"
+    covariance: str = "ledoit_wolf"  # or "ewma"
     ewma_lambda: float = 0.94
     risk_aversion: float = 1.0
     max_position: float = 0.5
@@ -99,7 +99,7 @@ class PortfolioOptimizer:
             try:
                 inv = np.linalg.inv(cov)
             except np.linalg.LinAlgError as e:
-                raise OptimizationError(f"covariance inversion failed: {e}")
+                raise OptimizationError(f"covariance inversion failed: {e}") from e
 
         lam = float(self.cfg.risk_aversion)
         raw = (inv @ mu_vec) / max(lam, 1e-9)
