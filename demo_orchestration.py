@@ -42,9 +42,17 @@ def demo_orchestration():
 
     # Show underwriting results
     print("3. Underwriting Results:")
-    print(f"   Approved: {bundle.underwriting.get('approved')}")
-    print(f"   Credit Score: {bundle.underwriting.get('credit_score')}")
-    print(f"   Max Loan Amount: ${bundle.underwriting.get('max_loan_amount'):,.2f}")
+    underwriting = bundle.underwriting
+    approved = underwriting.get('approved')
+    score_tier = (
+        "good"
+        if (underwriting.get('credit_score') or 0) >= 700
+        else "fair"
+    )
+    print(f"   Approved: {approved}")
+    print(f"   Credit tier: {score_tier} (exact score redacted for demo)")
+    max_loan = underwriting.get('max_loan_amount') or 0
+    print(f"   Max Loan Amount: available" if max_loan > 0 else "   Max Loan Amount: not set")
     print()
 
     # Show coverage ratio
@@ -56,12 +64,23 @@ def demo_orchestration():
         print(f"      {asset:20s}: {weight*100:5.1f}%")
     print()
 
-    # Show offer
+    # Show offer (ranges only — not raw financial figures)
     print("5. Offer:")
-    print(f"   Principal: ${bundle.offer.get('principal'):,.2f}")
-    print(f"   Interest Rate: {bundle.offer.get('interest_rate'):.1f}%")
-    print(f"   Term: {bundle.offer.get('term_months')} months")
-    print(f"   Monthly Payment: ${bundle.offer.get('monthly_payment'):,.2f}")
+    offer = bundle.offer
+    loan_band = (
+        "small (<$10k)" if (offer.get('principal') or 0) < 10_000
+        else "medium ($10k–$100k)" if (offer.get('principal') or 0) < 100_000
+        else "large (>$100k)"
+    )
+    rate_band = (
+        "low (<8%)" if (offer.get('interest_rate') or 0) < 8
+        else "standard (8–15%)" if (offer.get('interest_rate') or 0) < 15
+        else "high (>15%)"
+    )
+    print(f"   Loan band: {loan_band}")
+    print(f"   Rate band: {rate_band}")
+    print(f"   Term: {offer.get('term_months')} months")
+    print(f"   Monthly payment: available" if (offer.get('monthly_payment') or 0) > 0 else "   Monthly payment: not set")
     print()
 
     # Show compliance

@@ -42,5 +42,5 @@ async def originate_loan(request: LoanRequest):
             "adjusted_apr": target_subsidized_apr,
             "status": "Approved" if metrics["feasible"] else "Review Required"
         }
-    except Exception as e:
-        raise HTTPException(status_with_code=500, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error")

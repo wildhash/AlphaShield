@@ -1,4 +1,3 @@
-from datetime import datetime
 from lumibot.backtesting import YahooDataBacktesting
 from lumibot.strategies import Strategy
 
@@ -17,7 +16,10 @@ class AlphaShieldYieldStrategy(Strategy):
         weight = 1.0 / len(self.assets)
         for asset in self.assets:
             if self.get_position(asset) is None:
-                order = self.create_order(asset, int(self.allocation * weight / self.get_last_price(asset)), "buy")
+                price = self.get_last_price(asset)
+                if not price or price <= 0:
+                    continue
+                order = self.create_order(asset, int(self.allocation * weight / price), "buy")
                 self.submit_order(order)
 
 def evaluate_portfolio_feasibility(assets: list, split_amount: float) -> dict:

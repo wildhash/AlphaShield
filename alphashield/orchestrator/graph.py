@@ -87,7 +87,7 @@ def _emit_audit_event(
     node_name: str,
     payload_id: str,
     input_hash: str,
-    status: str = "success"
+    status: str = "success",
 ) -> None:
     """Emit an audit trail event.
 
@@ -103,7 +103,7 @@ def _emit_audit_event(
         'payload_id': payload_id,
         'input_hash': input_hash,
         'status': status,
-        'timestamp': datetime.utcnow(),
+        'timestamp': datetime.now(UTC),
     }
     bundle.audit_trail.append(event)
 
@@ -178,7 +178,7 @@ def execute(
     db_client=None,
     embeddings_client=None,
     agents: dict[str, Any] | None = None,
-    short_term_relief: bool = False
+    short_term_relief: bool = False,
 ) -> OriginationBundle:
     """Execute the orchestration DAG.
 
