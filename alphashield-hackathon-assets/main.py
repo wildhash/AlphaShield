@@ -31,14 +31,21 @@ async def originate_loan(request: LoanRequest):
         metrics = evaluate_portfolio_feasibility(assets, investment_pool)
         
         target_subsidized_apr = 8.0 if metrics["feasible"] else 14.0
-        
+
+        # Only expose safe summary fields — not the raw metrics dict
+        telemetry_summary = {
+            "feasible": bool(metrics.get("feasible")),
+            "sharpe_ratio": float(metrics.get("sharpe_ratio", 0)),
+            "max_drawdown": float(metrics.get("max_drawdown", 0)),
+        }
+
         return {
             "user_id": request.user_id,
             "loan_allocation": {
                 "lending_principal_60": lending_pool,
                 "collateral_portfolio_40": investment_pool
             },
-            "backtest_telemetry": metrics,
+            "backtest_telemetry": telemetry_summary,
             "adjusted_apr": target_subsidized_apr,
             "status": "Approved" if metrics["feasible"] else "Review Required"
         }

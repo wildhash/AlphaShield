@@ -49,10 +49,9 @@ def demo_orchestration():
         if (underwriting.get('credit_score') or 0) >= 700
         else "fair"
     )
-    print(f"   Approved: {approved}")
+    print("   Decision: underwriting complete (see bundle.underwriting for details)")
     print(f"   Credit tier: {score_tier} (exact score redacted for demo)")
-    max_loan = underwriting.get('max_loan_amount') or 0
-    print(f"   Max Loan Amount: available" if max_loan > 0 else "   Max Loan Amount: not set")
+    print("   Max Loan Amount: computed (see bundle.underwriting for details)")
     print()
 
     # Show coverage ratio
@@ -79,8 +78,8 @@ def demo_orchestration():
     )
     print(f"   Loan band: {loan_band}")
     print(f"   Rate band: {rate_band}")
-    print(f"   Term: {offer.get('term_months')} months")
-    print(f"   Monthly payment: available" if (offer.get('monthly_payment') or 0) > 0 else "   Monthly payment: not set")
+    print("   Term: structured (see bundle.offer for details)")
+    print("   Monthly payment: computed (see bundle.offer for details)")
     print()
 
     # Show compliance

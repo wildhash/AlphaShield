@@ -36,5 +36,5 @@ def evaluate_portfolio_feasibility(assets: list, split_amount: float) -> dict:
             "avg_monthly_return": (split_amount * 0.11) / 12,
             "feasible": True
         }
-    except Exception as e:
-        return {"feasible": False, "error": str(e)}
+    except Exception:
+        return {"feasible": False}
