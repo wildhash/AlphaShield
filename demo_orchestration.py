@@ -43,7 +43,6 @@ def demo_orchestration():
     # Show underwriting results
     print("3. Underwriting Results:")
     underwriting = bundle.underwriting
-    approved = underwriting.get('approved')
     score_tier = (
         "good"
         if (underwriting.get('credit_score') or 0) >= 700

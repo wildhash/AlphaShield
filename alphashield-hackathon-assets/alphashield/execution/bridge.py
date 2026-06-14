@@ -1,5 +1,5 @@
-from lumibot.backtesting import YahooDataBacktesting
 from lumibot.strategies import Strategy
+
 
 class AlphaShieldYieldStrategy(Strategy):
     """
