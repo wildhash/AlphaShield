@@ -6,6 +6,7 @@ class AlphaShieldYieldStrategy(Strategy):
     Custom Lumibot strategy parameterized dynamically by AlphaShield's trading agent.
     Optimizes for absolute returns with a hard drawdown cap to protect loan principal.
     """
+
     def initialize(self, assets=None, allocation=1000.0):
         self.assets = assets if assets else ["SPY", "GLD"]
         self.allocation = allocation
@@ -22,6 +23,7 @@ class AlphaShieldYieldStrategy(Strategy):
                 order = self.create_order(asset, int(self.allocation * weight / price), "buy")
                 self.submit_order(order)
 
+
 def evaluate_portfolio_feasibility(assets: list, split_amount: float) -> dict:
     """
     Structural tool bridge invoking Lumibot backtesting engines locally.
@@ -34,7 +36,7 @@ def evaluate_portfolio_feasibility(assets: list, split_amount: float) -> dict:
             "sharpe_ratio": 1.84,
             "max_drawdown": -0.062,
             "avg_monthly_return": (split_amount * 0.11) / 12,
-            "feasible": True
+            "feasible": True,
         }
     except Exception:
         return {"feasible": False}

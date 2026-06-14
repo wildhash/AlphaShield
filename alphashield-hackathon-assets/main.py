@@ -5,17 +5,20 @@ from alphashield.execution.bridge import evaluate_portfolio_feasibility
 
 app = FastAPI(
     title="AlphaShield Autonomous Credit Core",
-    description="Orchestration API for Gemini 3 and Lumibot integration loops."
+    description="Orchestration API for Gemini 3 and Lumibot integration loops.",
 )
+
 
 class LoanRequest(BaseModel):
     user_id: str
     requested_amount: float
     current_market_apr: float = 24.0
 
+
 @app.get("/")
 def read_root():
     return {"status": "operational", "engine": "Gemini 3 + Lumibot Integration"}
+
 
 @app.post("/api/v1/originate")
 async def originate_loan(request: LoanRequest):
@@ -42,11 +45,11 @@ async def originate_loan(request: LoanRequest):
             "user_id": request.user_id,
             "loan_allocation": {
                 "lending_principal_60": lending_pool,
-                "collateral_portfolio_40": investment_pool
+                "collateral_portfolio_40": investment_pool,
             },
             "backtest_telemetry": telemetry_summary,
             "adjusted_apr": target_subsidized_apr,
-            "status": "Approved" if metrics["feasible"] else "Review Required"
+            "status": "Approved" if metrics["feasible"] else "Review Required",
         }
     except Exception as exc:
         raise HTTPException(status_code=500, detail="Internal server error") from exc

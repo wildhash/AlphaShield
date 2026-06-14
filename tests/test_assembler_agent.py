@@ -148,9 +148,12 @@ def test_test_mode_skips_execution_when_gate_blocks(tmp_path) -> None:
         rollback="None.",
     )
 
-    with patch("agents.assembler_agent.alpha_shield_gate", return_value="BLOCK"), patch(
-        "agents.assembler_agent.run_test_command",
-        side_effect=AssertionError("run_test_command should not execute when blocked"),
+    with (
+        patch("agents.assembler_agent.alpha_shield_gate", return_value="BLOCK"),
+        patch(
+            "agents.assembler_agent.run_test_command",
+            side_effect=AssertionError("run_test_command should not execute when blocked"),
+        ),
     ):
         exit_code = _run_test(tmp_path, state, task, plan)
 

@@ -56,4 +56,3 @@ def write_reflection(repo: str | Path, entry: ReflectionEntry) -> Path:
         handle.write(json.dumps(asdict(entry), sort_keys=True))
         handle.write("\n")
     return log_path
-

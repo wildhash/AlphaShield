@@ -98,6 +98,8 @@ def _is_test_file(path: str) -> bool:
 def _detect_test_command(repo_path: Path, tracked_files: tuple[str, ...]) -> str:
     if "tests/test_assembler_agent.py" in tracked_files:
         return "pytest -q tests/test_assembler_agent.py"
-    if (repo_path / "pyproject.toml").exists() or any(path.startswith("tests/") for path in tracked_files):
+    if (repo_path / "pyproject.toml").exists() or any(
+        path.startswith("tests/") for path in tracked_files
+    ):
         return "pytest -q"
     return "python -m compileall agents"

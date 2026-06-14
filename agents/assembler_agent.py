@@ -160,7 +160,9 @@ def _run_test(repo: Path, state: RepoState, task: SelectedTask, plan: PatchPlan)
         next_best_action="Reflect on the result and queue the next task.",
     )
     path = write_reflection(repo, entry)
-    print(render_report(state, task, plan, risk_result=gate_result, extra=_format_test(result, path)))
+    print(
+        render_report(state, task, plan, risk_result=gate_result, extra=_format_test(result, path))
+    )
     return result.returncode
 
 

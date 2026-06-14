@@ -67,4 +67,3 @@ def select_highest_leverage_task(state: RepoState) -> SelectedTask:
         risk_level="low",
         suggested_files=("reports/next_actions.md", "reports/reflection_log.jsonl"),
     )
-

@@ -14,6 +14,7 @@ class ContextCapsule:
     Contains rolling features from Mongo and top-k similar case IDs
     from vector store for shared agent context.
     """
+
     user_id: str | None = None
 
     # Rolling financial features from MongoDB
@@ -51,12 +52,12 @@ class ContextCapsule:
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
-            'user_id': self.user_id,
-            'borrower_id': self.borrower_id,
-            'rolling_features': self.rolling_features,
-            'similar_case_ids': self.similar_case_ids,
-            'packets': [packet.to_dict() for packet in self.packets],
-            'timestamp': self.timestamp,
+            "user_id": self.user_id,
+            "borrower_id": self.borrower_id,
+            "rolling_features": self.rolling_features,
+            "similar_case_ids": self.similar_case_ids,
+            "packets": [packet.to_dict() for packet in self.packets],
+            "timestamp": self.timestamp,
         }
 
 
@@ -71,17 +72,14 @@ class ContextPacket:
     def to_dict(self) -> dict[str, Any]:
         """Convert packet to dictionary."""
         return {
-            'agent': self.agent,
-            'data': self.data,
-            'timestamp': self.timestamp,
+            "agent": self.agent,
+            "data": self.data,
+            "timestamp": self.timestamp,
         }
 
 
 def build_financial_capsule(
-    user_id: str,
-    db_client=None,
-    embeddings_client=None,
-    top_k: int = 5
+    user_id: str, db_client=None, embeddings_client=None, top_k: int = 5
 ) -> ContextCapsule:
     """Build a financial context capsule for a user.
 
@@ -105,9 +103,12 @@ def build_financial_capsule(
         # This would typically query user's historical data
         try:
             # Get user's financial history
-            contexts = db_client.get_collection('agent_contexts').find(
-                {'data.borrower_id': user_id}
-            ).sort('timestamp', -1).limit(50)
+            contexts = (
+                db_client.get_collection("agent_contexts")
+                .find({"data.borrower_id": user_id})
+                .sort("timestamp", -1)
+                .limit(50)
+            )
 
             # Aggregate features
             income_values = []
@@ -115,28 +116,30 @@ def build_financial_capsule(
             credit_scores = []
 
             for ctx in contexts:
-                data = ctx.get('data', {})
-                if 'monthly_gross_income' in data:
-                    income_values.append(data['monthly_gross_income'])
-                if 'average_monthly_spending' in data:
-                    spending_values.append(data['average_monthly_spending'])
-                if 'credit_score' in data:
-                    credit_scores.append(data['credit_score'])
+                data = ctx.get("data", {})
+                if "monthly_gross_income" in data:
+                    income_values.append(data["monthly_gross_income"])
+                if "average_monthly_spending" in data:
+                    spending_values.append(data["average_monthly_spending"])
+                if "credit_score" in data:
+                    credit_scores.append(data["credit_score"])
 
             # Calculate rolling averages
             if income_values:
-                rolling_features['avg_monthly_income'] = sum(income_values) / len(income_values)
+                rolling_features["avg_monthly_income"] = sum(income_values) / len(income_values)
             if spending_values:
-                rolling_features['avg_monthly_spending'] = sum(spending_values) / len(spending_values)
+                rolling_features["avg_monthly_spending"] = sum(spending_values) / len(
+                    spending_values
+                )
             if credit_scores:
-                rolling_features['credit_score'] = int(sum(credit_scores) / len(credit_scores))
+                rolling_features["credit_score"] = int(sum(credit_scores) / len(credit_scores))
 
             # Calculate debt-to-income ratio if we have both
             if income_values and spending_values:
-                avg_income = rolling_features['avg_monthly_income']
-                avg_spending = rolling_features['avg_monthly_spending']
+                avg_income = rolling_features["avg_monthly_income"]
+                avg_spending = rolling_features["avg_monthly_spending"]
                 if avg_income > 0:
-                    rolling_features['debt_to_income_ratio'] = avg_spending / avg_income
+                    rolling_features["debt_to_income_ratio"] = avg_spending / avg_income
         except Exception:
             # If aggregation fails, continue with empty features
             pass

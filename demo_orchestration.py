@@ -43,11 +43,7 @@ def demo_orchestration():
     # Show underwriting results
     print("3. Underwriting Results:")
     underwriting = bundle.underwriting
-    score_tier = (
-        "good"
-        if (underwriting.get('credit_score') or 0) >= 700
-        else "fair"
-    )
+    score_tier = "good" if (underwriting.get("credit_score") or 0) >= 700 else "fair"
     print("   Decision: underwriting complete (see bundle.underwriting for details)")
     print(f"   Credit tier: {score_tier} (exact score redacted for demo)")
     print("   Max Loan Amount: computed (see bundle.underwriting for details)")
@@ -66,14 +62,14 @@ def demo_orchestration():
     print("5. Offer:")
     offer = bundle.offer
     loan_band = (
-        "small (<$10k)" if (offer.get('principal') or 0) < 10_000
-        else "medium ($10k–$100k)" if (offer.get('principal') or 0) < 100_000
-        else "large (>$100k)"
+        "small (<$10k)"
+        if (offer.get("principal") or 0) < 10_000
+        else "medium ($10k–$100k)" if (offer.get("principal") or 0) < 100_000 else "large (>$100k)"
     )
     rate_band = (
-        "low (<8%)" if (offer.get('interest_rate') or 0) < 8
-        else "standard (8–15%)" if (offer.get('interest_rate') or 0) < 15
-        else "high (>15%)"
+        "low (<8%)"
+        if (offer.get("interest_rate") or 0) < 8
+        else "standard (8–15%)" if (offer.get("interest_rate") or 0) < 15 else "high (>15%)"
     )
     print(f"   Loan band: {loan_band}")
     print(f"   Rate band: {rate_band}")
