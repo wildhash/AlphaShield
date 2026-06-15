@@ -1,7 +1,6 @@
-import numpy as np
 import pandas as pd
 
-from alphashield.trading.coverage_monitor import monthly_payment, coverage_ratio, is_coverage_ok
+from alphashield.trading.coverage_monitor import coverage_ratio, is_coverage_ok, monthly_payment
 from alphashield.trading.risk_manager import RiskManager
 
 

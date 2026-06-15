@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from typing import Dict, Tuple
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 
 def simulate_execution(
@@ -28,7 +27,7 @@ def simulate_execution(
     delta_w = tw - cw
 
     if spread_bps is None:
-        spread_bps = {t: 1.0 for t in idx}
+        spread_bps = dict.fromkeys(idx, 1.0)
 
     traded_value = {}
     total_cost = 0.0

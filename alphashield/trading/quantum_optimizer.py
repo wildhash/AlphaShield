@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional
-
 import numpy as np
 
 try:  # Optional quantum dependencies
@@ -16,8 +14,10 @@ except Exception:  # pragma: no cover
 class QuantumPortfolioOptimizer:
     """Quantum portfolio optimization using a QUBO formulation."""
 
-    def __init__(self, api_token: Optional[str] = None) -> None:
-        self.available = dimod is not None and DWaveSampler is not None and EmbeddingComposite is not None
+    def __init__(self, api_token: str | None = None) -> None:
+        self.available = (
+            dimod is not None and DWaveSampler is not None and EmbeddingComposite is not None
+        )
         self._sampler = None
         if self.available and api_token:
             try:
@@ -119,7 +119,7 @@ class HybridOptimizer:
         expected_returns: np.ndarray,
         covariance_matrix: np.ndarray,
         constraints: dict,
-        initial_guess: Optional[np.ndarray] = None,
+        initial_guess: np.ndarray | None = None,
     ) -> np.ndarray:
         quantum_weights = self.quantum.optimize_portfolio(
             expected_returns, covariance_matrix, num_bins=10

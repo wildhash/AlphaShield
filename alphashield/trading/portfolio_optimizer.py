@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Tuple
 
 import numpy as np
 import pandas as pd
+
 try:
     from sklearn.covariance import LedoitWolf  # type: ignore
 except Exception:
@@ -15,8 +15,8 @@ from alphashield.utils.errors import OptimizationError
 
 @dataclass
 class OptimizerConfig:
-    method: str = "closed_form"           # or "cvxpy"
-    covariance: str = "ledoit_wolf"       # or "ewma"
+    method: str = "closed_form"  # or "cvxpy"
+    covariance: str = "ledoit_wolf"  # or "ewma"
     ewma_lambda: float = 0.94
     risk_aversion: float = 1.0
     max_position: float = 0.5
@@ -71,7 +71,7 @@ class PortfolioOptimizer:
         mu: pd.Series,
         returns: pd.DataFrame,
         current_weights: pd.Series | None = None,
-    ) -> Tuple[pd.Series, dict]:
+    ) -> tuple[pd.Series, dict]:
         """
         Closed-form mean-variance: argmin_w lambda w^T Σ w - w^T μ
         subject to w>=0, sum w = 1, w<=max_pos. Projection handles constraints.
@@ -99,7 +99,7 @@ class PortfolioOptimizer:
             try:
                 inv = np.linalg.inv(cov)
             except np.linalg.LinAlgError as e:
-                raise OptimizationError(f"covariance inversion failed: {e}")
+                raise OptimizationError(f"covariance inversion failed: {e}") from e
 
         lam = float(self.cfg.risk_aversion)
         raw = (inv @ mu_vec) / max(lam, 1e-9)

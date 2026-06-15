@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-from typing import Dict, Optional
-
-import numpy as np
 import cvxpy as cp
+import numpy as np
 
 try:
     from sklearn.covariance import LedoitWolf
@@ -20,8 +18,8 @@ class ClassicalPortfolioOptimizer:
         self,
         expected_returns: np.ndarray,
         covariance_matrix: np.ndarray,
-        initial_weights: Optional[np.ndarray] = None,
-        constraints: Optional[Dict] = None,
+        initial_weights: np.ndarray | None = None,
+        constraints: dict | None = None,
     ) -> np.ndarray:
         if constraints is None:
             constraints = {}
@@ -67,11 +65,7 @@ class ClassicalPortfolioOptimizer:
         # Post-process for numerical stability
         weights = np.where(weights < 0, 0.0, weights)
         total = float(weights.sum())
-        if total <= 0:
-            # Fallback to equal weight
-            weights = np.ones(n_assets) / n_assets
-        else:
-            weights = weights / total
+        weights = np.ones(n_assets) / n_assets if total <= 0 else weights / total
         return weights
 
     def _shrink_covariance(self, Sigma: np.ndarray) -> np.ndarray:
@@ -94,7 +88,9 @@ class ClassicalPortfolioOptimizer:
                 n_samples = max(200, 5 * n_assets)
                 rng = np.random.default_rng(42)
                 try:
-                    pseudo = rng.multivariate_normal(np.zeros(n_assets), Sigma + np.eye(n_assets) * 1e-6, size=n_samples)
+                    pseudo = rng.multivariate_normal(
+                        np.zeros(n_assets), Sigma + np.eye(n_assets) * 1e-6, size=n_samples
+                    )
                 except np.linalg.LinAlgError:
                     pseudo = rng.standard_normal(size=(n_samples, n_assets))
                 lw.fit(pseudo)

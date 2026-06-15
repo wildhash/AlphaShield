@@ -1,9 +1,5 @@
 from __future__ import annotations
 
-from typing import Dict
-import pandas as pd
-
-
 TEMPLATES: dict[str, dict[str, float]] = {
     "risk_on": {"VTI": 0.70, "BND": 0.20, "VTIP": 0.10},
     "balanced": {"VTI": 0.50, "BND": 0.35, "VTIP": 0.15},
@@ -27,7 +23,9 @@ def validate_template(weights: dict[str, float]) -> dict[str, float]:
     return norm
 
 
-def apply_tilts(base: dict[str, float], tilts: dict[str, float] | None = None, tilt_strength: float = 0.1) -> dict[str, float]:
+def apply_tilts(
+    base: dict[str, float], tilts: dict[str, float] | None = None, tilt_strength: float = 0.1
+) -> dict[str, float]:
     if tilts is None or not tilts:
         return validate_template(base)
     w = base.copy()

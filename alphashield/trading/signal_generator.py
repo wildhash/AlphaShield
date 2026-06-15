@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+from typing import Literal
+
+import numpy as _np
 import numpy as np
+import pandas as _pd
 import pandas as pd
-from typing import Dict, Literal
 
 
 class MomentumSignal:
@@ -34,9 +37,7 @@ class MomentumSignal:
         returns_6m = prices.pct_change(126)
         returns_12m = prices.pct_change(252)
 
-        momentum_score = (
-            0.5 * returns_3m + 0.3 * returns_6m + 0.2 * returns_12m
-        )
+        momentum_score = 0.5 * returns_3m + 0.3 * returns_6m + 0.2 * returns_12m
 
         latest_scores = momentum_score.iloc[-1].replace([np.inf, -np.inf], np.nan).fillna(0.0)
 
@@ -179,7 +180,7 @@ class SignalAggregator:
         - balanced:   40% momentum, 30% trend, 30% mean_rev
         - high_vol:   20% momentum, 20% trend, 60% mean_rev
         """
-        weights: Dict[str, Dict[str, float]] = {
+        weights: dict[str, dict[str, float]] = {
             "low_vol": {"momentum": 0.6, "trend_following": 0.2, "mean_reversion": 0.2},
             "balanced": {"momentum": 0.4, "trend_following": 0.3, "mean_reversion": 0.3},
             "high_vol": {"momentum": 0.2, "trend_following": 0.2, "mean_reversion": 0.6},
@@ -191,7 +192,7 @@ class SignalAggregator:
         mean_rev = self.strategies["mean_reversion"].generate_signal(prices)
         trend = self.strategies["trend_following"].generate_signal(prices)
 
-        components: Dict[str, pd.Series] = {
+        components: dict[str, pd.Series] = {
             "momentum": momentum,
             "mean_reversion": mean_rev,
             "trend_following": trend,
@@ -210,11 +211,11 @@ class SignalAggregator:
 
 
 # === Light-weight API for Phase 1 tests ===
-import pandas as _pd
-import numpy as _np
 
 
-def momentum_signal(prices: _pd.DataFrame, window_6m: int = 126, window_12m: int = 252) -> _pd.Series:
+def momentum_signal(
+    prices: _pd.DataFrame, window_6m: int = 126, window_12m: int = 252
+) -> _pd.Series:
     """Rank-percentile momentum combining 6M and 12M returns.
 
     Returns values in [0,1].
