@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List
 
 
 @dataclass(frozen=True)
@@ -10,7 +9,7 @@ class Asset:
     sector: str | None = None
 
 
-DEFAULT_UNIVERSE: List[Asset] = [
+DEFAULT_UNIVERSE: list[Asset] = [
     Asset("SPY", sector="Equity"),
     Asset("QQQ", sector="Equity"),
     Asset("IWM", sector="Equity"),

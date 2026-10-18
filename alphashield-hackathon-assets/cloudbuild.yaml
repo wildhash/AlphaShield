@@ -1,0 +1,34 @@
+# Google Cloud Build Automation for Automated Serverless Deployment
+steps:
+  # Step 1: Build the optimized Docker container image using Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build', 
+      '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/alphashield-repo/alphashield-core:$COMMIT_SHA', 
+      '.'
+    ]
+
+  # Step 2: Push container artifact to secure project registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'push', 
+      'us-central1-docker.pkg.dev/$PROJECT_ID/alphashield-repo/alphashield-core:$COMMIT_SHA'
+    ]
+
+  # Step 3: Deploy the container directly to Google Cloud Run with appropriate scaling variables
+  - name: 'gcr.io/google.com/cloudsdktool/cloudsdk'
+    entrypoint: 'gcloud'
+    args: [
+      'run', 'deploy', 'alphashield-core',
+      '--image', 'us-central1-docker.pkg.dev/$PROJECT_ID/alphashield-repo/alphashield-core:$COMMIT_SHA',
+      '--region', 'us-central1',
+      '--platform', 'managed',
+      '--allow-unauthenticated',
+      '--min-instances', '0',
+      '--max-instances', '5',
+      '--memory', '2Gi',
+      '--cpu', '2'
+    ]
+
+images:
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/alphashield-repo/alphashield-core:$COMMIT_SHA'

@@ -1,21 +1,19 @@
 from __future__ import annotations
 
+import contextlib
 import json
 import logging
 import os
 from logging.handlers import RotatingFileHandler
 from typing import Any
 
-
 LOG_DIR = os.path.join(os.getcwd(), "logs")
 LOG_FILE = os.path.join(LOG_DIR, "trading.log")
 
 
 def _ensure_log_dir() -> None:
-    try:
+    with contextlib.suppress(Exception):
         os.makedirs(LOG_DIR, exist_ok=True)
-    except Exception:
-        pass
 
 
 class JsonFormatter(logging.Formatter):

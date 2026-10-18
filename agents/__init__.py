@@ -1,0 +1,1 @@
+"""Self-assembly agent package."""

@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import List, Tuple
-
 import numpy as np
 import pandas as pd
 
@@ -21,7 +19,7 @@ def validate_prices(
     df: pd.DataFrame,
     required_history: int = 252,
     strict: bool = False,
-) -> Tuple[bool, List[str]]:
+) -> tuple[bool, list[str]]:
     """
     Validate OHLC/close price DataFrame.
 
@@ -31,7 +29,7 @@ def validate_prices(
     - Daily move absolute > 0.5 -> flag possible split/corporate action
     - History length must be >= required_history
     """
-    errors: List[str] = []
+    errors: list[str] = []
 
     if df is None or df.empty:
         errors.append("empty_prices")
@@ -50,7 +48,7 @@ def validate_prices(
     full_index = pd.bdate_range(df.index.min(), df.index.max())
     reindexed = df.reindex(full_index)
     # Forward fill small gaps to avoid cascading NaNs
-    ffilled = reindexed.ffill()
+    reindexed.ffill()
     # Any stretch of NaNs longer than 5 indicates a gap
     is_nan = reindexed.isna().all(axis=1)
     if is_nan.any():
@@ -70,9 +68,7 @@ def validate_prices(
 
     ok = len(errors) == 0
     if strict and not ok:
-        raise DataValidationError(
-            f"Validation failed: {', '.join(errors)}"
-        )
+        raise DataValidationError(f"Validation failed: {', '.join(errors)}")
     return ok, errors
 
 
@@ -96,7 +92,7 @@ def detect_outliers(returns: pd.Series, method: str = "iqr") -> pd.Series:
             mask = pd.Series(False, index=x.index)
         else:
             z = (x - mu) / sigma
-            mask = z.abs() > 3.0
+            mask = z.abs() >= 3.0
         return mask.reindex(returns.index, fill_value=False)
     else:
         raise ValueError("method must be 'iqr' or 'zscore'")

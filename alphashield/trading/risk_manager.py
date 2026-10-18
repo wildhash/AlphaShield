@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict
 
 import numpy as np
 
@@ -21,7 +20,9 @@ class RiskManager:
         self.max_drawdown = max_drawdown
         self.peak_value: float | None = None
 
-    def calculate_coverage_ratio(self, portfolio_value: float, outstanding_payments: float) -> float:
+    def calculate_coverage_ratio(
+        self, portfolio_value: float, outstanding_payments: float
+    ) -> float:
         if outstanding_payments <= 0:
             return float("inf")
         return float(portfolio_value) / float(outstanding_payments)
@@ -39,7 +40,9 @@ class RiskManager:
             kelly_fraction *= cr_adjustment
         return kelly_fraction
 
-    def check_stop_loss(self, current_value: float, entry_value: float, stop_loss_pct: float = 0.10) -> bool:
+    def check_stop_loss(
+        self, current_value: float, entry_value: float, stop_loss_pct: float = 0.10
+    ) -> bool:
         if entry_value <= 0:
             return False
         loss = (entry_value - current_value) / entry_value
@@ -59,7 +62,9 @@ class RiskManager:
             return var
         return float(tail.mean())
 
-    def emergency_mode_check(self, coverage_ratio: float, portfolio_drawdown: float) -> EmergencyDecision:
+    def emergency_mode_check(
+        self, coverage_ratio: float, portfolio_drawdown: float
+    ) -> EmergencyDecision:
         if coverage_ratio < 1.2 or portfolio_drawdown > self.max_drawdown:
             return EmergencyDecision(
                 action="emergency",
@@ -71,4 +76,6 @@ class RiskManager:
                 instructions="Reduce equity exposure by 30%. Increase bonds.",
             )
         else:
-            return EmergencyDecision(action="normal", instructions="Proceed with standard rebalancing.")
+            return EmergencyDecision(
+                action="normal", instructions="Proceed with standard rebalancing."
+            )

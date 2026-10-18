@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import contextlib
 import time
-from typing import Iterator, Optional
+from collections.abc import Iterator
 
 # Optional Prometheus import
 try:
-    from prometheus_client import Gauge, Counter
+    from prometheus_client import Counter, Gauge
+
     _PROM = True
 except Exception:
     Gauge = object  # type: ignore

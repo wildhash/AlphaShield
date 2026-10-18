@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, List
 
 import numpy as np
 import pandas as pd
@@ -24,7 +23,7 @@ class DataProvider:
     def __init__(self) -> None:
         self._rng = np.random.default_rng(123)
 
-    def get_historical_prices(self, tickers: List[str], start: str, end: str) -> pd.DataFrame:
+    def get_historical_prices(self, tickers: list[str], start: str, end: str) -> pd.DataFrame:
         dates = pd.bdate_range(start=start, end=end, freq="C")
         n = len(dates)
         m = len(tickers)
@@ -42,7 +41,7 @@ class DataProvider:
         vix = np.clip(vix, 10, 60)
         return pd.Series(vix, index=dates, name="VIX")
 
-    def get_market_data(self, tickers: List[str], start: str, end: str) -> MarketData:
+    def get_market_data(self, tickers: list[str], start: str, end: str) -> MarketData:
         prices = self.get_historical_prices(tickers, start, end)
         returns = prices.pct_change().dropna()
         vix = self.get_vix_series(start, end).reindex(prices.index).ffill()

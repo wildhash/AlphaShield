@@ -15,6 +15,7 @@ voyageai>=0.2.0
 # Trading and Broker APIs
 alpaca-py>=0.15.0  # Modern Alpaca SDK
 # alpaca-trade-api>=3.0.0  # Legacy SDK (optional)
+lumibot>=3.0.0  # Automated trading & backtesting engine
 
 # Portfolio Optimization
 cvxpy>=1.4

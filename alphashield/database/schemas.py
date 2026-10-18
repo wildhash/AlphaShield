@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Dict, Any, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -20,8 +20,8 @@ class DecisionDoc(BaseModel):
     agent_id: str
     loan_id: str
     timestamp: datetime
-    allocation: Dict[str, float]
+    allocation: dict[str, float]
     coverage_ratio: float
-    metrics: Dict[str, Any]
-    rationale: List[str]
-    policy_version: Optional[int] = None
+    metrics: dict[str, Any]
+    rationale: list[str]
+    policy_version: int | None = None

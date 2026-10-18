@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-from typing import Dict, List, Tuple
 
-
-def default_constraints() -> Dict:
+def default_constraints() -> dict:
     """Default portfolio constraints used by optimizers."""
     # Example sector limits mapping
-    sector_limits: Dict[str, Tuple[List[int], float]] = {}
+    sector_limits: dict[str, tuple[list[int], float]] = {}
     return {
         "risk_aversion": 1.0,
         "max_weight": 0.20,

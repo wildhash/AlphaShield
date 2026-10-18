@@ -1,10 +1,25 @@
 from __future__ import annotations
 
+import contextlib
 from dataclasses import dataclass
-from typing import Dict, List, Any
+from typing import Any
 
 import numpy as np
 import pandas as pd
+
+from alphashield.utils.metrics import time_block
+
+from .coverage_monitor import coverage_ratio as compute_cr
+from .coverage_monitor import is_coverage_ok, monthly_payment
+from .data_validator import validate_prices
+from .execution_simulator import simulate_execution
+from .portfolio_optimizer import OptimizerConfig, PortfolioOptimizer
+from .signal_generator import (
+    combine_signals,
+    mean_reversion_signal,
+    momentum_signal,
+    trend_sma200_signal,
+)
 
 
 @dataclass
@@ -17,18 +32,10 @@ class BacktestResult:
     avg_monthly_return: float
 
 
-from .data_validator import validate_prices
-from .coverage_monitor import monthly_payment, coverage_ratio as compute_cr, is_coverage_ok
-from .portfolio_optimizer import PortfolioOptimizer, OptimizerConfig
-from .signal_generator import momentum_signal, trend_sma200_signal, mean_reversion_signal, combine_signals
-from .execution_simulator import simulate_execution
-from alphashield.utils.metrics import time_block
-
-
 class Backtester:
     """Monthly backtester implementing the AlphaShield flow."""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         self.config = config
 
     def _cagr(self, series: pd.Series) -> float:
@@ -60,10 +67,10 @@ class Backtester:
     def run(
         self,
         prices: pd.DataFrame,
-        loan_params: Dict[str, Any],
+        loan_params: dict[str, Any],
         rebalance_freq: str = "M",
         initial_capital: float = 100000.0,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         # 1) Validate once
         ok, errs = validate_prices(prices, required_history=252, strict=False)
         if not ok:
@@ -104,7 +111,7 @@ class Backtester:
         # 3) Setup loop
         portfolio_value = float(initial_capital)
         current_weights = pd.Series(0.0, index=prices.columns)
-        nav_series: List[float] = []
+        nav_series: list[float] = []
         dates = prices.resample(rebalance_freq).last().index
 
         mpay = monthly_payment(
@@ -127,7 +134,7 @@ class Backtester:
 
             # Signals in [0,1]
             with time_block("signals"):
-                mom = momentum_signal(window, window_6m=mom_w//2, window_12m=mom_w)
+                mom = momentum_signal(window, window_6m=mom_w // 2, window_12m=mom_w)
                 tr = trend_sma200_signal(window, window=tr_w)
                 mr = mean_reversion_signal(window, window=mr_w)
                 combined = combine_signals({"momentum": mom, "trend": tr, "meanrev": mr}, wts)
@@ -144,10 +151,9 @@ class Backtester:
             cov_ok = cr >= emergency_ratio
             if not cov_ok:
                 from alphashield.utils.metrics import coverage_breach_inc
-                try:
+
+                with contextlib.suppress(Exception):
                     coverage_breach_inc()
-                except Exception:
-                    pass
                 # shift 20% from equities to bonds
                 if "VTI" in w.index and "BND" in w.index:
                     shift = min(0.2, w.get("VTI", 0.0))
