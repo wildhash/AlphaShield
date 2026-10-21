@@ -33,6 +33,9 @@ from alphashield.rl.policy import Policy, PolicyManager
 # Ensure logs directory exists before configuring the file handler
 os.makedirs("logs", exist_ok=True)
 
+# Create logs directory if it doesn't exist
+Path('logs').mkdir(exist_ok=True)
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -405,9 +408,6 @@ def parse_args():
 
 def main():
     """Main entry point."""
-    # Create logs directory
-    Path("logs").mkdir(exist_ok=True)
-
     args = parse_args()
 
     agents = args.agents.split(",") if args.agents else None
